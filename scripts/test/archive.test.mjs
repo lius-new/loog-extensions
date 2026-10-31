@@ -14,7 +14,8 @@ test('packing is reproducible and unpacks to the same files', async t => {
   const second = await createPackage(dir, path.join(root, 'out/b.loomext'));
   assert.equal(first.sha256, second.sha256);
   const entries = await listPackage(first.file);
-  assert.deepEqual(entries.map(entry => entry.path).sort(), ['loom.theme.demo', 'loom.theme.demo/manifest.json', 'loom.theme.demo/themes/dark.json']);
+  assert.deepEqual(entries.map(entry => entry.path).sort(), ['loom.theme.demo', 'loom.theme.demo/CHANGELOG.md',
+    'loom.theme.demo/README.md', 'loom.theme.demo/icon.svg', 'loom.theme.demo/manifest.json', 'loom.theme.demo/themes/dark.json']);
   const unpacked = await extractPackage(first.file, path.join(root, 'unpacked'), 'loom.theme.demo');
   assert.equal(fs.readFileSync(path.join(unpacked, 'themes/dark.json'), 'utf8'), fs.readFileSync(path.join(dir, 'themes/dark.json'), 'utf8'));
 });

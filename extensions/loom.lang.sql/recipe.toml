@@ -1,0 +1,32 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "SQL"
+version = "1.0.0"
+description = "Syntax highlighting for SQL."
+
+[sources.sql]
+repository = "https://github.com/DerekStride/tree-sitter-sql"
+revision = "851e9cb257ba7c66cc8c14214a31c44d2f1e954e"
+sha256 = "b6fcc2d9295d5e1a9540d7e08b0f1fb9ef4eaf8d9110a2c7158e81083417fc64"
+licenses = [ "LICENSE" ]
+
+[grammars.sql]
+source = "sql"
+path = "."
+file-types = [ "sql" ]
+sample = "samples/sql.txt"
+injections = []
+
+[[grammars.sql.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.sql.capture-map]
+field = "property"
+spell = "_spell"
+float = "number"
+parameter = "variable.parameter"
+boolean = "constant.builtin.boolean"
+storageclass = "keyword.storage"
+conditional = "keyword.control.conditional"

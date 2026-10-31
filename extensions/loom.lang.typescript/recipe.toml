@@ -1,0 +1,51 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "TypeScript"
+version = "1.0.0"
+description = "Syntax highlighting for TypeScript."
+
+[sources.javascript-base]
+repository = "https://github.com/tree-sitter/tree-sitter-javascript"
+revision = "3a837b6f3658ca3618f2022f8707e29739c91364"
+sha256 = "b64cb91d64da59bac4946f5aea1d7977940808f601bb81b90e6db3738b1e5b2a"
+licenses = [ "LICENSE" ]
+
+[sources.typescript]
+repository = "https://github.com/tree-sitter/tree-sitter-typescript"
+revision = "f975a621f4e7f532fe322e13c4f79495e0a7b2e7"
+sha256 = "4de2e82e557810eecb93cb3b31fbb3bd28ba4c91ba9a6c6164bcaa074125b7b5"
+licenses = [ "LICENSE" ]
+
+[grammars.typescript]
+source = "typescript"
+path = "typescript"
+file-types = [ "ts", "mts", "cts" ]
+sample = "samples/typescript.txt"
+injections = []
+
+[[grammars.typescript.highlights]]
+source = "javascript-base"
+path = "queries/highlights.scm"
+
+[[grammars.typescript.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.tsx]
+source = "typescript"
+path = "tsx"
+file-types = [ "tsx" ]
+sample = "samples/tsx.txt"
+injections = []
+
+[[grammars.tsx.highlights]]
+source = "javascript-base"
+path = "queries/highlights.scm"
+
+[[grammars.tsx.highlights]]
+source = "javascript-base"
+path = "queries/highlights-jsx.scm"
+
+[[grammars.tsx.highlights]]
+path = "queries/highlights.scm"

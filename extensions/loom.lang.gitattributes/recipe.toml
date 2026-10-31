@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Git Attributes"
+version = "1.0.0"
+description = "Syntax highlighting for Git Attributes."
+
+[sources.gitattributes]
+repository = "https://github.com/mtoohey31/tree-sitter-gitattributes"
+revision = "3dd50808e3096f93dccd5e9dc7dc3dba2eb12dc4"
+sha256 = "b921b734d779931fdcb57c5201bf5ef11323b7d056c1588c06a8131e05b80d86"
+licenses = [ "LICENSE" ]
+
+[grammars.gitattributes]
+source = "gitattributes"
+path = "."
+file-types = [ "gitattributes", ".gitattributes" ]
+sample = "samples/gitattributes.txt"
+injections = []
+
+[[grammars.gitattributes.highlights]]
+path = "queries/highlights.scm"

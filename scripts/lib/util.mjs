@@ -42,8 +42,10 @@ export function relative(value, label = 'path') {
 
 /** `value` resolved under `root`, after links, and required to stay there. */
 export function inside(root, value) {
+  const base = fs.realpathSync(root);
+  if (value === '.') return base;
   const target = path.resolve(root, relative(value));
-  const actual = fs.realpathSync(target), base = fs.realpathSync(root);
+  const actual = fs.realpathSync(target);
   assert(actual === base || actual.startsWith(base + path.sep), `Path escapes its folder: ${value}`);
   return actual;
 }

@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "JSON5"
+version = "1.0.0"
+description = "Syntax highlighting for JSON5."
+
+[sources.json5]
+repository = "https://github.com/Joakker/tree-sitter-json5"
+revision = "248b8564567087d7866be76569b182f6dd7e14e9"
+sha256 = "1f7da6fb6352740980ca02453b471e54af5fc9a300add57f86c169ec2051bafc"
+licenses = [ "LICENSE" ]
+
+[grammars.json5]
+source = "json5"
+path = "."
+file-types = [ "json5" ]
+sample = "samples/json5.txt"
+injections = []
+
+[[grammars.json5.highlights]]
+path = "queries/highlights.scm"

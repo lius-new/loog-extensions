@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "CSS"
+version = "1.0.0"
+description = "Syntax highlighting for CSS."
+
+[sources.css]
+repository = "https://github.com/tree-sitter/tree-sitter-css"
+revision = "dda5cfc5722c429eaba1c910ca32c2c0c5bb1a3f"
+sha256 = "c47392e483feb9137d8f0acf9ca6e916b820122c260324454a9980c75c98c3c5"
+licenses = [ "LICENSE" ]
+
+[grammars.css]
+source = "css"
+path = "."
+file-types = [ "css" ]
+sample = "samples/css.txt"
+injections = []
+
+[[grammars.css.highlights]]
+path = "queries/highlights.scm"

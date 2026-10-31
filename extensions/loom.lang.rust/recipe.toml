@@ -1,0 +1,25 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Rust"
+version = "1.0.0"
+description = "Syntax highlighting for Rust."
+
+[sources.rust]
+repository = "https://github.com/tree-sitter/tree-sitter-rust"
+revision = "77a3747266f4d621d0757825e6b11edcbf991ca5"
+sha256 = "dee82ddfd01bfc3a8ed201cc03b56448107d3217a4b3a7a8fc7fa6bc32b2405b"
+licenses = [ "LICENSE" ]
+
+[grammars.rust]
+source = "rust"
+path = "."
+file-types = [ "rs" ]
+sample = "samples/rust.txt"
+
+[[grammars.rust.highlights]]
+path = "queries/highlights.scm"
+
+[[grammars.rust.injections]]
+path = "queries/injections.scm"

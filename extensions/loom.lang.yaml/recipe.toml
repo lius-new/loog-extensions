@@ -1,0 +1,26 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "YAML"
+version = "1.0.0"
+description = "Syntax highlighting for YAML."
+
+[sources.yaml]
+repository = "https://github.com/tree-sitter-grammars/tree-sitter-yaml"
+revision = "a1c4812a73ec5e089de8e441fdea3a921e8d5079"
+sha256 = "6548cd059983e8073dfa39f102641f71d045b37f3a05b7ebd799ad17df8471d1"
+licenses = [ "LICENSE" ]
+
+[grammars.yaml]
+source = "yaml"
+path = "."
+file-types = [ "yaml", "yml" ]
+sample = "samples/yaml.txt"
+injections = []
+
+[[grammars.yaml.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.yaml.capture-map]
+boolean = "constant.builtin.boolean"

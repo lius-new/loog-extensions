@@ -1,0 +1,33 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Lua"
+version = "1.0.0"
+description = "Syntax highlighting for Lua."
+
+[sources.lua]
+repository = "https://github.com/tree-sitter-grammars/tree-sitter-lua"
+revision = "10fe0054734eec83049514ea2e718b2a56acd0c9"
+sha256 = "82c3ca5808de02addd9c7fb5275d89260c6557019aa6e40ca52c0595bf1d33cd"
+licenses = [ "LICENSE.md" ]
+
+[grammars.lua]
+source = "lua"
+path = "."
+file-types = [ "lua" ]
+sample = "samples/lua.txt"
+injections = []
+
+[[grammars.lua.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.lua.capture-map]
+repeat = "keyword.control.repeat"
+conditional = "keyword.control.conditional"
+boolean = "constant.builtin.boolean"
+field = "property"
+parameter = "variable.parameter"
+method = "function.method"
+"method.call" = "function.method"
+preproc = "keyword.directive"

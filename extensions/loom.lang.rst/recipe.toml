@@ -1,0 +1,39 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "reStructuredText"
+version = "1.0.0"
+description = "Syntax highlighting for reStructuredText."
+
+[sources.helix]
+repository = "https://github.com/helix-editor/helix"
+revision = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+sha256 = "c5e35c68897a0f3793937095d8d9c13340fa18e727a3696ae16fa0edd1d08d23"
+licenses = [ "LICENSE" ]
+
+[sources.rst]
+repository = "https://github.com/stsewd/tree-sitter-rst"
+revision = "6322f2629f29d8b442f4ca897904d407672ebb78"
+sha256 = "f47f6dd6af3bca00870eae16f3c4ba602773feefbe11c93fe848714e110a7739"
+licenses = [ "LICENSE" ]
+
+[grammars.rst]
+source = "rst"
+path = "."
+file-types = [ "rst" ]
+sample = "samples/rst.txt"
+injections = []
+
+[[grammars.rst.highlights]]
+source = "helix"
+path = "runtime/queries/rst/highlights.scm"
+
+[grammars.rst.capture-map]
+"markup.heading.1" = "string"
+"markup.heading.marker" = "string"
+"markup.link.url" = "string"
+"markup.list.unnumbered" = "string"
+"markup.bold" = "string"
+"markup.italic" = "string"
+"markup.raw.inline" = "string"

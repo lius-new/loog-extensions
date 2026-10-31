@@ -1,0 +1,26 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Dockerfile"
+version = "1.0.0"
+description = "Syntax highlighting for Dockerfile."
+
+[sources.dockerfile]
+repository = "https://github.com/camdencheek/tree-sitter-dockerfile"
+revision = "971acdd908568b4531b0ba28a445bf0bb720aba5"
+sha256 = "0263fd719ce93ea663847a49b501052c2b93853e33ffc5e8ddca3a739d7db246"
+licenses = [ "LICENSE" ]
+
+[grammars.dockerfile]
+source = "dockerfile"
+path = "."
+file-types = [ "dockerfile", "containerfile" ]
+sample = "samples/dockerfile.txt"
+injections = []
+
+[[grammars.dockerfile.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.dockerfile.capture-map]
+none = "_none"

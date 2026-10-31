@@ -1,0 +1,38 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Svelte"
+version = "1.0.0"
+description = "Syntax highlighting for Svelte."
+
+[sources.svelte]
+repository = "https://github.com/themixednuts/tree-sitter-htmlx"
+revision = "c9b9cc35709fff494a3a9e41cd9471b633649e45"
+sha256 = "b25be31831576daa944a3c89374995afc46020eceb6475cb01646d21ba653577"
+licenses = [ "LICENSE.md" ]
+
+[grammars.svelte]
+source = "svelte"
+path = "crates/tree-sitter-svelte"
+file-types = [ "svelte" ]
+sample = "samples/svelte.txt"
+
+[[grammars.svelte.highlights]]
+path = "crates/tree-sitter-svelte/queries/htmlx/html/highlights.scm"
+
+[[grammars.svelte.highlights]]
+path = "crates/tree-sitter-svelte/queries/htmlx/highlights.scm"
+
+[[grammars.svelte.highlights]]
+path = "crates/tree-sitter-svelte/queries/highlights.scm"
+
+[[grammars.svelte.injections]]
+path = "crates/tree-sitter-svelte/queries/htmlx/injections.scm"
+
+[[grammars.svelte.injections]]
+path = "crates/tree-sitter-svelte/queries/injections.scm"
+
+[grammars.svelte.capture-map]
+text = "string"
+"text.literal" = "string"

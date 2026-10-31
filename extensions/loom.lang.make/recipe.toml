@@ -1,0 +1,34 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Make"
+version = "1.0.0"
+description = "Syntax highlighting for Make."
+
+[sources.make]
+repository = "https://github.com/alemuller/tree-sitter-make"
+revision = "a4b9187417d6be349ee5fd4b6e77b4172c6827dd"
+sha256 = "a1e078443fc36bfe562b40304c49e044d9230964dc82aba9e09b8cd7079ee3e0"
+licenses = [ "LICENSE" ]
+
+[grammars.make]
+source = "make"
+path = "."
+file-types = [ "makefile", "mk" ]
+sample = "samples/make.txt"
+injections = []
+
+[[grammars.make.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.make.capture-map]
+error = "_error"
+conditional = "keyword.control.conditional"
+repeat = "keyword.control.repeat"
+include = "keyword"
+exception = "keyword"
+clean = "_clean"
+"text.danger" = "string"
+"text.warning" = "string"
+"text.note" = "string"

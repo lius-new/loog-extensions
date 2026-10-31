@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Go"
+version = "1.0.0"
+description = "Syntax highlighting for Go."
+
+[sources.go]
+repository = "https://github.com/tree-sitter/tree-sitter-go"
+revision = "2346a3ab1bb3857b48b29d779a1ef9799a248cd7"
+sha256 = "94d08fc0f727a8dbe03203e2aaf1c5dc33a57e496b583049324eddc79769797b"
+licenses = [ "LICENSE" ]
+
+[grammars.go]
+source = "go"
+path = "."
+file-types = [ "go" ]
+sample = "samples/go.txt"
+injections = []
+
+[[grammars.go.highlights]]
+path = "queries/highlights.scm"

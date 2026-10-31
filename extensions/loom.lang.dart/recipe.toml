@@ -1,0 +1,29 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Dart"
+version = "1.0.0"
+description = "Syntax highlighting for Dart."
+
+[sources.dart]
+repository = "https://github.com/UserNobody14/tree-sitter-dart"
+revision = "a9bdfa3db2fbc9b9f12c93450d04a671f33a5102"
+sha256 = "3040f8293bdb344877cef63ab36aea2325d66ae691122591c7b52621c8b638fb"
+licenses = [ "LICENSE" ]
+
+[grammars.dart]
+source = "dart"
+path = "."
+file-types = [ "dart" ]
+sample = "samples/dart.txt"
+injections = []
+
+[[grammars.dart.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.dart.capture-map]
+none = "_none"
+"identifier.constant" = "constant"
+"identifier.parameter" = "variable.parameter"
+boolean = "constant.builtin.boolean"

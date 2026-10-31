@@ -1,0 +1,33 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Julia"
+version = "1.0.0"
+description = "Syntax highlighting for Julia."
+
+[sources.helix]
+repository = "https://github.com/helix-editor/helix"
+revision = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+sha256 = "c5e35c68897a0f3793937095d8d9c13340fa18e727a3696ae16fa0edd1d08d23"
+licenses = [ "LICENSE" ]
+
+[sources.julia]
+repository = "https://github.com/tree-sitter/tree-sitter-julia"
+revision = "e0f9dcd180fdcfcfa8d79a3531e11d99e79321d3"
+sha256 = "13e604be147d4d42e3640857752acf57b99ab5df84f73a026a43558da7bc4e40"
+licenses = [ "LICENSE" ]
+
+[grammars.julia]
+source = "julia"
+path = "."
+file-types = [ "jl" ]
+sample = "samples/julia.txt"
+injections = []
+
+[[grammars.julia.highlights]]
+source = "helix"
+path = "runtime/queries/julia/highlights.scm"
+
+[grammars.julia.capture-map]
+namespace = "module"

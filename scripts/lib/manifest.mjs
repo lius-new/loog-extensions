@@ -9,6 +9,10 @@ import {validRange, validVersion} from './semver.mjs';
 // Keep in step with `CAPABILITIES` and `EVENTS` in Loom's src/features/extensions/manifest.rs.
 export const CAPABILITIES = ['documents.read', 'workspace.edit', 'workspace.files.read', 'workspace.files.write',
   'events', 'settings', 'languages', 'storage', 'network', 'tasks', 'process.execute-local'];
+// The categories an extension may list, at most three; and the size limits for its documents.
+export const CATEGORIES = ['Themes', 'Languages', 'Snippets', 'Linters', 'Formatters', 'Editing', 'Source control', 'Productivity', 'Other'];
+export const MAX_ICON_BYTES = 256 * 1024;
+export const MAX_DOCUMENT_BYTES = 512 * 1024;
 export const EVENTS = ['document.open', 'document.change', 'document.close', 'document.save',
   'selection.change', 'focus.change', 'root.change'];
 
@@ -100,17 +104,41 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   if (!validVersion(manifest.version)) add(`invalid version ${JSON.stringify(manifest.version)}`);
   if (manifest.engines?.loom !== undefined && !validRange(manifest.engines.loom)) add(`invalid engines.loom range ${JSON.stringify(manifest.engines.loom)}`);
   else if (publishing && manifest.engines?.loom === undefined) add('engines.loom is required');
-  if (publishing) {
-    for (const field of ['name', 'publisher', 'description', 'license']) {
-      if (typeof manifest[field] !== 'string' || !manifest[field].trim()) add(`${field} is required`);
-    }
-    if (!Array.isArray(manifest.categories) || !manifest.categories.length) add('categories is required');
+  // What people see. Loom checks these when it loads a package; publishing also needs them all.
+  for (const [field, max] of [['name', 60], ['publisher', 60], ['description', 200], ['license', 100]]) {
+    const value = manifest[field];
+    if (value === undefined) continue;
+    if (typeof value !== 'string' || !value.trim() || [...value].length > max) add(`${field} must be 1 to ${max} characters`);
+    else if (/[\n\r\0]/.test(value)) add(`${field} must be a single line`);
   }
-  for (const field of ['icon', 'readme', 'changelog']) {
-    if (manifest[field] !== undefined) {
-      try { relative(manifest[field], field); if (!fs.existsSync(path.join(dir, ...manifest[field].split('/')))) add(`${field}: ${manifest[field]} does not exist`); }
-      catch (error) { add(error.message); }
+  const categories = manifest.categories ?? [];
+  if (!Array.isArray(categories) || categories.length > 3) add('categories lists more than three');
+  else for (const category of categories) if (!CATEGORIES.includes(category)) add(`${JSON.stringify(category)} is not a category; use one of ${CATEGORIES.join(', ')}`);
+  const keywords = manifest.keywords ?? [];
+  if (!Array.isArray(keywords) || keywords.length > 10 || keywords.some(word => typeof word !== 'string' || !word.trim() || [...word].length > 30)) {
+    add('keywords allows at most ten words of up to 30 characters');
+  }
+  for (const field of ['repository', 'homepage']) {
+    const url = manifest[field];
+    if (url !== undefined && (typeof url !== 'string' || !url.startsWith('https://') || url.length > 300 || /\s/.test(url))) add(`${field} must be an https:// address`);
+  }
+  const DOCUMENTS = {icon: {suffix: /\.(png|svg)$/i, limit: MAX_ICON_BYTES}, readme: {suffix: /\.md$/i, limit: MAX_DOCUMENT_BYTES}, changelog: {suffix: /\.md$/i, limit: MAX_DOCUMENT_BYTES}};
+  for (const [field, {suffix, limit}] of Object.entries(DOCUMENTS)) {
+    if (manifest[field] === undefined) continue;
+    try {
+      relative(manifest[field], field);
+      if (!suffix.test(manifest[field])) add(`${field} must be ${field === 'icon' ? 'a PNG or SVG file' : 'a Markdown file'}`);
+      const target = path.join(dir, ...manifest[field].split('/'));
+      if (!fs.existsSync(target)) add(`${field}: ${manifest[field]} does not exist`);
+      else if (!fs.statSync(target).size) add(`${field}: ${manifest[field]} is empty`);
+      else if (fs.statSync(target).size > limit) add(`${field}: ${manifest[field]} is larger than ${limit / 1024} KiB`);
+    } catch (error) { add(error.message); }
+  }
+  if (publishing) {
+    for (const field of ['name', 'publisher', 'description', 'license', 'repository', 'icon', 'readme', 'changelog']) {
+      if (manifest[field] === undefined) add(`${field} is required`);
     }
+    if (!categories.length) add('categories is required');
   }
   for (const capability of manifest.capabilities ?? []) if (!CAPABILITIES.includes(capability)) add(`unknown capability ${capability}`);
   if ((manifest.api === undefined) !== (manifest.component === undefined)) add('api and component must be given together');

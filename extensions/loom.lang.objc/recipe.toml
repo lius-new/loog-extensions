@@ -1,0 +1,36 @@
+schema = 1
+kind = "language"
+patches = [ "patches/objc-highlights.patch" ]
+
+[extension]
+name = "Objective-C"
+version = "1.0.0"
+description = "Syntax highlighting for Objective-C."
+
+[sources.objc]
+repository = "https://github.com/tree-sitter-grammars/tree-sitter-objc"
+revision = "181a81b8f23a2d593e7ab4259981f50122909fda"
+sha256 = "97789350d6353520fd8569c12abd2e99b95bcb65d5f418dd797dbcfef1995cec"
+licenses = [ "LICENSE" ]
+
+[grammars.objc]
+source = "objc"
+path = "."
+file-types = [ "m", "mm" ]
+sample = "samples/objc.txt"
+injections = []
+
+[[grammars.objc.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.objc.capture-map]
+preproc = "keyword.directive"
+include = "keyword"
+namespace = "module"
+storageclass = "keyword.storage"
+exception = "keyword"
+method = "function.method"
+"method.call" = "function.method"
+parameter = "variable.parameter"
+"parameter.builtin" = "variable.parameter"
+"text.uri" = "string"

@@ -1,0 +1,28 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "PowerShell"
+version = "1.0.0"
+description = "Syntax highlighting for PowerShell."
+
+[sources.powershell]
+repository = "https://github.com/airbus-cert/tree-sitter-powershell"
+revision = "c9316be0faca5d5b9fd3b57350de650755f42dc0"
+sha256 = "aa8356bbfca12ee90f1c5fe7bf97aac996b2cd798e054c0636ad7beeb3c226f2"
+licenses = [ "LICENSE" ]
+
+[grammars.powershell]
+source = "powershell"
+path = "."
+file-types = [ "ps1", "psm1", "psd1" ]
+sample = "samples/powershell.txt"
+injections = []
+
+[[grammars.powershell.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.powershell.capture-map]
+delimiter = "punctuation.delimiter"
+array = "type"
+assignvalue = "string"

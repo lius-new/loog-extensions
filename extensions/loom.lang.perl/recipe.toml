@@ -1,0 +1,43 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Perl"
+version = "1.0.0"
+description = "Syntax highlighting for Perl."
+
+[sources.helix]
+repository = "https://github.com/helix-editor/helix"
+revision = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+sha256 = "c5e35c68897a0f3793937095d8d9c13340fa18e727a3696ae16fa0edd1d08d23"
+licenses = [ "LICENSE" ]
+
+[sources.perl]
+repository = "https://github.com/tree-sitter-perl/tree-sitter-perl"
+revision = "72a08a496a23212f23802490ef6f4700d68cfd0e"
+sha256 = "c1a6b232af05ec92c13e4dceb2517a67197bb23eeb011d282a14a6b5ae60b213"
+licenses = [ "LICENSE" ]
+
+[grammars.perl]
+source = "perl"
+path = "."
+file-types = [ "pl", "pm", "t" ]
+sample = "samples/perl.txt"
+injections = []
+
+[[grammars.perl.highlights]]
+source = "helix"
+path = "runtime/queries/perl/highlights.scm"
+
+[grammars.perl.capture-map]
+preproc = "keyword.directive"
+include = "keyword"
+conditional = "keyword.control.conditional"
+"conditional.ternary" = "keyword.control.conditional"
+repeat = "keyword.control.repeat"
+exception = "keyword"
+text = "string"
+"character.special" = "string"
+method = "function.method"
+"method.call" = "function.method"
+error = "_error"

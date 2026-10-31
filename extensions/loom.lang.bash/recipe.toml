@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Bash"
+version = "1.0.0"
+description = "Syntax highlighting for Bash."
+
+[sources.bash]
+repository = "https://github.com/tree-sitter/tree-sitter-bash"
+revision = "a06c2e4415e9bc0346c6b86d401879ffb44058f7"
+sha256 = "879e8951ea2cc82455407e3eda0293319657ec53e83191e0fb5a67430d10d804"
+licenses = [ "LICENSE" ]
+
+[grammars.bash]
+source = "bash"
+path = "."
+file-types = [ "sh", "bash", ".bashrc", ".bash_profile" ]
+sample = "samples/bash.txt"
+injections = []
+
+[[grammars.bash.highlights]]
+path = "queries/highlights.scm"

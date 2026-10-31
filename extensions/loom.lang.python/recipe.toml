@@ -1,0 +1,23 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "Python"
+version = "1.0.0"
+description = "Syntax highlighting for Python."
+
+[sources.python]
+repository = "https://github.com/tree-sitter/tree-sitter-python"
+revision = "293fdc02038ee2bf0e2e206711b69c90ac0d413f"
+sha256 = "b74d8ba6730535354175436208fe1452fd464f235263959ca40b8bf32cb23dc6"
+licenses = [ "LICENSE" ]
+
+[grammars.python]
+source = "python"
+path = "."
+file-types = [ "py", "pyi", "pyw" ]
+sample = "samples/python.txt"
+injections = []
+
+[[grammars.python.highlights]]
+path = "queries/highlights.scm"

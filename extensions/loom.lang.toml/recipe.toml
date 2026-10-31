@@ -1,0 +1,26 @@
+schema = 1
+kind = "language"
+
+[extension]
+name = "TOML"
+version = "1.0.0"
+description = "Syntax highlighting for TOML."
+
+[sources.toml]
+repository = "https://github.com/tree-sitter-grammars/tree-sitter-toml"
+revision = "64b56832c2cffe41758f28e05c756a3a98d16f41"
+sha256 = "feeb2e1cf531588cdcfb9c57292620151a08597f18a98dad26cc17fd4b544dcb"
+licenses = [ "LICENSE" ]
+
+[grammars.toml]
+source = "toml"
+path = "."
+file-types = [ "toml" ]
+sample = "samples/toml.txt"
+injections = []
+
+[[grammars.toml.highlights]]
+path = "queries/highlights.scm"
+
+[grammars.toml.capture-map]
+boolean = "constant.builtin.boolean"
