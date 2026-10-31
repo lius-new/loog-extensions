@@ -1,0 +1,14 @@
+# Settings for the loom-ext tools. See docs/tools.md.
+schema = 1
+
+# Where releases are published and downloaded from.
+repository = "lius-new/loom-extensions"
+
+# The extensions Loom ships inside its installer. `lock` pins exactly these.
+bundled = ["loom.theme.aura", "loom.lang.json", "loom.lang.markdown"]
+
+[index]
+# Names the public key the application uses to check the index signature.
+key-id = "index-2026-1"
+# How long a signed index stays valid, in days.
+validity-days = 30

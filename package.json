@@ -1,0 +1,16 @@
+{
+  "name": "loom-extensions",
+  "private": true,
+  "type": "module",
+  "description": "The official extensions for Loom: their sources, recipes and the tools that build, sign and publish them.",
+  "engines": { "node": ">=22" },
+  "bin": { "loom-ext": "scripts/loom-ext.mjs" },
+  "scripts": {
+    "test": "node --test \"scripts/test/*.test.mjs\"",
+    "check": "node scripts/loom-ext.mjs check"
+  },
+  "dependencies": {
+    "smol-toml": "1.6.0",
+    "tar": "7.5.22"
+  }
+}

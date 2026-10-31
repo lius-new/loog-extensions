@@ -1,0 +1,8 @@
+node_modules/
+# Everything the tools produce.
+dist/
+.work/
+# Downloaded validator, see tools/validator.lock.
+tools/bin/
+*.tmp
+*.partial
