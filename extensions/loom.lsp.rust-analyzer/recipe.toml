@@ -1,0 +1,70 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "rust-analyzer"
+version = "2026.10.19"
+description = "The rust-analyzer language server."
+license = "MIT OR Apache-2.0"
+
+[pack]
+kind = "archive"
+version = "2026-10-19"
+
+[pack.upstream]
+source = "github"
+repository = "rust-lang/rust-analyzer"
+tag = "2026-10-19"
+
+[[pack.licenses]]
+name = "LICENSE-MIT"
+url = "https://raw.githubusercontent.com/rust-lang/rust-analyzer/2026-10-19/LICENSE-MIT"
+
+[[pack.licenses]]
+name = "LICENSE-APACHE"
+url = "https://raw.githubusercontent.com/rust-lang/rust-analyzer/2026-10-19/LICENSE-APACHE"
+
+[pack.platforms.windows-x86_64]
+asset = "rust-analyzer-x86_64-pc-windows-msvc.zip"
+format = "zip"
+executables = [ "rust-analyzer.exe" ]
+include = [ "rust-analyzer.exe" ]
+
+[pack.platforms.windows-aarch64]
+asset = "rust-analyzer-aarch64-pc-windows-msvc.zip"
+format = "zip"
+executables = [ "rust-analyzer.exe" ]
+include = [ "rust-analyzer.exe" ]
+
+[pack.platforms.macos-x86_64]
+asset = "rust-analyzer-x86_64-apple-darwin.gz"
+format = "gz"
+executables = [ "rust-analyzer" ]
+
+[pack.platforms.macos-aarch64]
+asset = "rust-analyzer-aarch64-apple-darwin.gz"
+format = "gz"
+executables = [ "rust-analyzer" ]
+
+[pack.platforms.linux-x86_64]
+asset = "rust-analyzer-x86_64-unknown-linux-gnu.gz"
+format = "gz"
+executables = [ "rust-analyzer" ]
+
+[pack.platforms.linux-aarch64]
+asset = "rust-analyzer-aarch64-unknown-linux-gnu.gz"
+format = "gz"
+executables = [ "rust-analyzer" ]
+
+[servers.rust-analyzer]
+name = "rust-analyzer"
+command = "${extension}/rust-analyzer"
+
+[servers.rust-analyzer.root]
+markers = [ "Cargo.toml", "rust-project.json" ]
+strategy = "outermost"
+fallback = "file_directory"
+
+[[servers.rust-analyzer.languages]]
+language = "rust"
+language_id = "rust"

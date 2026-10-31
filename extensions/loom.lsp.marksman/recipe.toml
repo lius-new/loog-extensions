@@ -1,0 +1,60 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "Marksman"
+version = "2026.2.8"
+description = "The Marksman language server."
+license = "MIT"
+
+[pack]
+kind = "archive"
+version = "2026-02-08"
+
+[pack.upstream]
+source = "github"
+repository = "artempyanykh/marksman"
+tag = "2026-02-08"
+
+[[pack.licenses]]
+name = "LICENSE"
+url = "https://raw.githubusercontent.com/artempyanykh/marksman/2026-02-08/LICENSE"
+
+[pack.platforms.windows-x86_64]
+asset = "marksman.exe"
+format = "raw"
+executables = [ "marksman.exe" ]
+
+[pack.platforms.macos-x86_64]
+asset = "marksman-macos"
+format = "raw"
+executables = [ "marksman" ]
+
+[pack.platforms.macos-aarch64]
+asset = "marksman-macos"
+format = "raw"
+executables = [ "marksman" ]
+
+[pack.platforms.linux-x86_64]
+asset = "marksman-linux-x64"
+format = "raw"
+executables = [ "marksman" ]
+
+[pack.platforms.linux-aarch64]
+asset = "marksman-linux-arm64"
+format = "raw"
+executables = [ "marksman" ]
+
+[servers.marksman]
+name = "Marksman"
+command = "${extension}/marksman"
+args = [ "server" ]
+
+[servers.marksman.root]
+markers = [ ".marksman.toml", ".git" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.marksman.languages]]
+language = "markdown"
+language_id = "markdown"

@@ -1,0 +1,65 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "Ruff"
+version = "0.17.1"
+description = "The Ruff language server."
+license = "MIT"
+
+[pack]
+kind = "archive"
+version = "0.17.1"
+
+[pack.upstream]
+source = "github"
+repository = "astral-sh/ruff"
+tag = "0.17.1"
+
+[[pack.licenses]]
+name = "LICENSE"
+url = "https://raw.githubusercontent.com/astral-sh/ruff/0.17.1/LICENSE"
+
+[pack.platforms.windows-x86_64]
+asset = "ruff-x86_64-pc-windows-msvc.zip"
+format = "zip"
+executables = [ "ruff.exe" ]
+
+[pack.platforms.windows-aarch64]
+asset = "ruff-aarch64-pc-windows-msvc.zip"
+format = "zip"
+executables = [ "ruff.exe" ]
+
+[pack.platforms.macos-x86_64]
+asset = "ruff-x86_64-apple-darwin.tar.gz"
+format = "tar.gz"
+executables = [ "ruff" ]
+
+[pack.platforms.macos-aarch64]
+asset = "ruff-aarch64-apple-darwin.tar.gz"
+format = "tar.gz"
+executables = [ "ruff" ]
+
+[pack.platforms.linux-x86_64]
+asset = "ruff-x86_64-unknown-linux-musl.tar.gz"
+format = "tar.gz"
+executables = [ "ruff" ]
+
+[pack.platforms.linux-aarch64]
+asset = "ruff-aarch64-unknown-linux-musl.tar.gz"
+format = "tar.gz"
+executables = [ "ruff" ]
+
+[servers.ruff]
+name = "Ruff"
+command = "${extension}/ruff"
+args = [ "server" ]
+
+[servers.ruff.root]
+markers = [ "ruff.toml", ".ruff.toml", "pyproject.toml" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.ruff.languages]]
+language = "python"
+language_id = "python"

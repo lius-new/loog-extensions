@@ -1,0 +1,66 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "gopls"
+version = "0.24.0"
+description = "The gopls language server."
+license = "BSD-3-Clause"
+
+[pack]
+kind = "go"
+version = "0.24.0"
+go = "1.27.0"
+module = "golang.org/x/tools/gopls"
+module-version = "v0.24.0"
+
+[[pack.licenses]]
+name = "LICENSE"
+url = "https://raw.githubusercontent.com/golang/tools/gopls/v0.24.0/LICENSE"
+
+[[pack.licenses]]
+name = "PATENTS"
+url = "https://raw.githubusercontent.com/golang/tools/gopls/v0.24.0/PATENTS"
+
+[pack.platforms.windows-x86_64]
+goos = "windows"
+goarch = "amd64"
+executables = [ "gopls.exe" ]
+
+[pack.platforms.windows-aarch64]
+goos = "windows"
+goarch = "arm64"
+executables = [ "gopls.exe" ]
+
+[pack.platforms.macos-x86_64]
+goos = "darwin"
+goarch = "amd64"
+executables = [ "gopls" ]
+
+[pack.platforms.macos-aarch64]
+goos = "darwin"
+goarch = "arm64"
+executables = [ "gopls" ]
+
+[pack.platforms.linux-x86_64]
+goos = "linux"
+goarch = "amd64"
+executables = [ "gopls" ]
+
+[pack.platforms.linux-aarch64]
+goos = "linux"
+goarch = "arm64"
+executables = [ "gopls" ]
+
+[servers.gopls]
+name = "gopls"
+command = "${extension}/gopls"
+
+[servers.gopls.root]
+markers = [ "go.work", "go.mod" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.gopls.languages]]
+language = "go"
+language_id = "go"

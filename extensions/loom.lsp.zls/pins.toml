@@ -1,0 +1,37 @@
+# Written by loom-ext pin. Do not edit by hand.
+schema = 1
+
+[platforms.windows-x86_64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-x86_64-windows.zip"
+sha256 = "b0e557b13032322f530a818ea4eb899a51a2e738808397a8cf3868fd56b73972"
+size = 4872862
+
+[platforms.windows-aarch64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-aarch64-windows.zip"
+sha256 = "98869d1d2e9532044a3bbb25be16a932041bdc2f422fe074cc499fd20d1b6f53"
+size = 4590139
+
+[platforms.macos-x86_64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-x86_64-macos.tar.xz"
+sha256 = "0801481ebf0027620db6729968c069401c7b80f376d35f9f91f480d72c393523"
+size = 1214848
+
+[platforms.macos-aarch64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-aarch64-macos.tar.xz"
+sha256 = "2e451358b4f7e2d4b1fccb65db177dbb321c5a98e95f67e09aa72d6ecfb39d20"
+size = 1045676
+
+[platforms.linux-x86_64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-x86_64-linux.tar.xz"
+sha256 = "dfa4514e1868803fdf2ae56832c88b9d400094d70ea6bb136b57bcc91af10258"
+size = 4070752
+
+[platforms.linux-aarch64]
+url = "https://github.com/zigtools/zls/releases/download/0.17.0/zls-aarch64-linux.tar.xz"
+sha256 = "0d314f3cab30da770328e1b8c84ab89bb308e56dbc26a85ac82429ff02b44873"
+size = 3832280
+
+[licenses.LICENSE]
+url = "https://raw.githubusercontent.com/zigtools/zls/0.17.0/LICENSE"
+sha256 = "e0ef11f84a052c6a36c838a920dd0d852222b78e34c95bfc45ac7867de1a13ee"
+size = 1068

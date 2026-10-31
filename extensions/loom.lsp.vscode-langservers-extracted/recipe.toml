@@ -1,0 +1,85 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "Vscode Langservers Extracted"
+version = "4.10.0"
+description = "The Vscode Langservers Extracted language server."
+license = "MIT"
+requires = [ "loom.runtime.node@^22" ]
+
+[pack]
+kind = "npm"
+version = "4.10.0"
+packages = [ "vscode-langservers-extracted@4.10.0" ]
+
+[servers.vscode-html-language-server]
+name = "HTML Language Server"
+command = "${runtime.node}/node"
+args = [ "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-html-language-server", "--stdio" ]
+
+[servers.vscode-html-language-server.root]
+markers = [ "package.json" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.vscode-html-language-server.languages]]
+language = "html"
+language_id = "html"
+
+[servers.vscode-css-language-server]
+name = "CSS Language Server"
+command = "${runtime.node}/node"
+args = [ "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-css-language-server", "--stdio" ]
+
+[servers.vscode-css-language-server.root]
+markers = [ "package.json" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.vscode-css-language-server.languages]]
+language = "css"
+language_id = "css"
+
+[[servers.vscode-css-language-server.languages]]
+language = "scss"
+language_id = "scss"
+
+[servers.vscode-json-language-server]
+name = "JSON Language Server"
+command = "${runtime.node}/node"
+args = [ "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-json-language-server", "--stdio" ]
+
+[servers.vscode-json-language-server.root]
+markers = [ "package.json" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.vscode-json-language-server.languages]]
+language = "json"
+language_id = "json"
+
+[servers.vscode-eslint-language-server]
+name = "ESLint Language Server"
+command = "${runtime.node}/node"
+args = [ "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-eslint-language-server", "--stdio" ]
+priority = -10
+
+[servers.vscode-eslint-language-server.root]
+markers = [ "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", ".eslintrc.json", ".eslintrc.js" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.vscode-eslint-language-server.languages]]
+language = "javascript"
+language_id = "javascript"
+
+[[servers.vscode-eslint-language-server.languages]]
+language = "typescript"
+variant = "typescript"
+language_id = "typescript"
+
+[[servers.vscode-eslint-language-server.languages]]
+language = "typescript"
+variant = "tsx"
+language_id = "typescriptreact"

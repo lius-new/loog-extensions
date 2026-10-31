@@ -1,0 +1,42 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "TypeScript Language Server"
+version = "6.0.2"
+description = "The TypeScript Language Server language server."
+license = "Apache-2.0"
+requires = [ "loom.runtime.node@^22" ]
+
+[pack]
+kind = "npm"
+version = "6.0.2"
+packages = [ "typescript-language-server@6.0.2", "typescript@5.9.3" ]
+
+[servers.typescript-language-server]
+name = "TypeScript Language Server"
+command = "${runtime.node}/node"
+args = [ "${extension}/node_modules/typescript-language-server/lib/cli.mjs", "--stdio" ]
+priority = 10
+
+[servers.typescript-language-server.initialization_options.tsserver]
+path = "${extension}/node_modules/typescript/lib/tsserver.js"
+
+[servers.typescript-language-server.root]
+markers = [ "tsconfig.json", "jsconfig.json", "package.json" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.typescript-language-server.languages]]
+language = "javascript"
+language_id = "javascript"
+
+[[servers.typescript-language-server.languages]]
+language = "typescript"
+variant = "typescript"
+language_id = "typescript"
+
+[[servers.typescript-language-server.languages]]
+language = "typescript"
+variant = "tsx"
+language_id = "typescriptreact"

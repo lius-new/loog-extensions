@@ -12,6 +12,32 @@ export function iconSvg(id, text) {
     `<text x="32" y="${size === 22 ? 40 : 42}" font-family="sans-serif" font-size="${size}" font-weight="700" text-anchor="middle" fill="hsl(${h} 80% 72%)">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text></svg>\n`;
 }
 
+/** README.md, CHANGELOG.md and icon.svg for a server or runtime extension built for `platform`. */
+export function serverDocuments(id, recipe, platform) {
+  const {name, version, description} = recipe.extension;
+  const runtime = recipe.kind === 'runtime';
+  const servers = Object.entries(recipe.servers ?? {});
+  const lines = [`# ${name}${runtime ? ' Runtime' : ' Language Server'}`, '', description, ''];
+  if (servers.length) {
+    lines.push('## Serves', '');
+    for (const [, server] of servers) {
+      const languages = [...new Set(server.languages.map(binding => binding.language))].map(language => `\`${language}\``).join(', ');
+      lines.push(`- **${server.name}**: ${languages}`);
+    }
+    lines.push('');
+  }
+  if (recipe.extension.requires?.length) lines.push(`Requires: ${recipe.extension.requires.map(item => `\`${item}\``).join(', ')}.`, '');
+  lines.push(`License: ${recipe.extension.license}. Platform: ${platform}.`, '',
+    runtime ? 'Other extensions use this runtime; it has nothing to configure.' : 'Loom starts the server when you open a file it serves, and asks before running it the first time.',
+    '`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.', '');
+  const text = recipe.extension.name.replace(/[^A-Za-z0-9+#]/g, '').slice(0, 3) || 'LS';
+  return {
+    'README.md': lines.join('\n'),
+    'CHANGELOG.md': `# Changelog\n\n## ${version}\n\n- Repackaged from the pinned upstream release listed in PROVENANCE.md.\n`,
+    'icon.svg': iconSvg(id, text),
+  };
+}
+
 /** README.md, CHANGELOG.md and icon.svg for the recipe-built extension `id`. */
 export function documentFiles(id, recipe, {license, badge}) {
   const {name, version} = recipe.extension;

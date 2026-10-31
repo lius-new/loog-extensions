@@ -178,8 +178,27 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
     resource(query, 'query');
     if (!GRAMMAR.test(query.grammar ?? '') || !QUERY_FILES.includes(query.file)) add(`query ${query.id}: needs a grammar name and highlights.scm or injections.scm`);
   }
+  // Files that must be runnable: the application sets the execute bit on exactly these.
+  if (manifest.executables !== undefined) {
+    if (!Array.isArray(manifest.executables)) add('executables must be a list of paths');
+    else for (const executable of manifest.executables) {
+      try {
+        relative(executable, 'executable');
+        const target = path.join(dir, ...executable.split('/'));
+        if (built && !fs.existsSync(target) && !fs.existsSync(`${target}.exe`)) add(`executable ${executable} is not in the package`);
+      } catch (error) { add(error.message); }
+    }
+  }
   for (const server of contributes.language_servers ?? []) {
     namespaced(server.id, 'language server');
+    if (server.root_strategy !== undefined && !['nearest', 'outermost'].includes(server.root_strategy)) add(`language server ${server.id}: invalid root_strategy`);
+    if (server.root_fallback !== undefined && !['workspace', 'file_directory', 'none'].includes(server.root_fallback)) add(`language server ${server.id}: invalid root_fallback`);
+    if (server.priority !== undefined && !Number.isSafeInteger(server.priority)) add(`language server ${server.id}: invalid priority`);
+    for (const binding of server.bindings ?? []) {
+      if (!GRAMMAR.test(binding.language ?? '') || (binding.variant !== undefined && !GRAMMAR.test(binding.variant)) || typeof binding.language_id !== 'string' || !binding.language_id) {
+        add(`language server ${server.id}: invalid language binding`);
+      }
+    }
     if (!Array.isArray(server.languages) || !server.languages.length || !server.languages.every(name => GRAMMAR.test(name))) add(`language server ${server.id}: languages must be canonical names`);
     if (!Array.isArray(server.root_markers) || !server.root_markers.length) add(`language server ${server.id}: root_markers is required`);
     if (!(manifest.capabilities ?? []).includes('process.execute-local')) add(`language server ${server.id}: declare process.execute-local`);

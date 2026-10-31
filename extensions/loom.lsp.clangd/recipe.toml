@@ -1,0 +1,62 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "clangd"
+version = "23.1.0"
+description = "The clangd language server."
+license = "Apache-2.0 WITH LLVM-exception"
+
+[pack]
+kind = "archive"
+version = "23.1.0"
+
+[pack.upstream]
+source = "github"
+repository = "clangd/clangd"
+tag = "23.1.0"
+
+[[pack.licenses]]
+name = "LICENSE.TXT"
+url = "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.0/clang-tools-extra/LICENSE.TXT"
+
+[pack.platforms.windows-x86_64]
+asset = "clangd-windows-23.1.0.zip"
+format = "zip"
+executables = [ "bin/clangd.exe" ]
+
+[pack.platforms.macos-x86_64]
+asset = "clangd-mac-23.1.0.zip"
+format = "zip"
+executables = [ "bin/clangd" ]
+
+[pack.platforms.macos-aarch64]
+asset = "clangd-mac-23.1.0.zip"
+format = "zip"
+executables = [ "bin/clangd" ]
+
+[pack.platforms.linux-x86_64]
+asset = "clangd-linux-23.1.0.zip"
+format = "zip"
+executables = [ "bin/clangd" ]
+
+[servers.clangd]
+name = "clangd"
+command = "${extension}/bin/clangd"
+
+[servers.clangd.root]
+markers = [ "compile_commands.json", "compile_flags.txt", ".clangd" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.clangd.languages]]
+language = "c"
+language_id = "c"
+
+[[servers.clangd.languages]]
+language = "cpp"
+language_id = "cpp"
+
+[[servers.clangd.languages]]
+language = "objc"
+language_id = "objective-c"

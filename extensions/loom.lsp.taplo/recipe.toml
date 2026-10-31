@@ -1,0 +1,65 @@
+schema = 1
+kind = "server"
+
+[extension]
+name = "Taplo"
+version = "0.10.0"
+description = "The Taplo language server."
+license = "MIT"
+
+[pack]
+kind = "archive"
+version = "0.10.0"
+
+[pack.upstream]
+source = "github"
+repository = "tamasfe/taplo"
+tag = "0.10.0"
+
+[[pack.licenses]]
+name = "LICENSE"
+url = "https://raw.githubusercontent.com/tamasfe/taplo/0.10.0/LICENSE"
+
+[pack.platforms.windows-x86_64]
+asset = "taplo-windows-x86_64.gz"
+format = "gz"
+executables = [ "taplo.exe" ]
+
+[pack.platforms.windows-aarch64]
+asset = "taplo-windows-aarch64.gz"
+format = "gz"
+executables = [ "taplo.exe" ]
+
+[pack.platforms.macos-x86_64]
+asset = "taplo-darwin-x86_64.gz"
+format = "gz"
+executables = [ "taplo" ]
+
+[pack.platforms.macos-aarch64]
+asset = "taplo-darwin-aarch64.gz"
+format = "gz"
+executables = [ "taplo" ]
+
+[pack.platforms.linux-x86_64]
+asset = "taplo-linux-x86_64.gz"
+format = "gz"
+executables = [ "taplo" ]
+
+[pack.platforms.linux-aarch64]
+asset = "taplo-linux-aarch64.gz"
+format = "gz"
+executables = [ "taplo" ]
+
+[servers.taplo]
+name = "Taplo"
+command = "${extension}/taplo"
+args = [ "lsp", "stdio" ]
+
+[servers.taplo.root]
+markers = [ ".taplo.toml", "taplo.toml" ]
+strategy = "nearest"
+fallback = "workspace"
+
+[[servers.taplo.languages]]
+language = "toml"
+language_id = "toml"
