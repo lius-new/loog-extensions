@@ -4,7 +4,7 @@ patches = [ "patches/objc-highlights.patch" ]
 
 [extension]
 name = "Objective-C"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for Objective-C."
 
 [sources.objc]

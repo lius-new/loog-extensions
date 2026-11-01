@@ -11,7 +11,7 @@ kind = "language"
 
 [extension]
 name = "Rust"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for Rust."
 # recommends = ["loom.lsp.rust-analyzer"]
 
@@ -58,7 +58,7 @@ name = "rust-analyzer"
 version = "2026.10.19"
 description = "The rust-analyzer language server."
 license = "MIT OR Apache-2.0"
-# requires = ["loom.runtime.node@^22"]
+# requires = ["loom.runtime.node@^0.1.0"]
 
 [pack]
 kind = "archive"                  # archive | npm | go

@@ -3,7 +3,7 @@ kind = "runtime"
 
 [extension]
 name = "Node.js"
-version = "22.23.3"
+version = "0.1.0"
 description = "The Node.js runtime that JavaScript language servers run on."
 license = "MIT"
 

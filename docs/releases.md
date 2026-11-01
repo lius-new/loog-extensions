@@ -8,6 +8,13 @@ There is no release form to fill in for normal publication.
 
 ## Version policy
 
+All current extension packages start at **0.1.0**. Package versions are independent
+of both Loom and the bundled upstream program. Use patch releases for fixes and
+minor releases for additions or incompatible pre-1.0 changes. Each extension moves
+to 1.0.0 when its behavior and integration are stable; there is no shared release
+number. Runtime requirements refer to the extension package, for example
+`loom.runtime.node@^0.1.0`, not Node's upstream major version.
+
 - A new id or a version newer than all its published versions is pending.
 - Published versions are immutable and are not rebuilt. Changes to an extension's
   packaging inputs require a new extension version. PR and main checks compare
@@ -15,7 +22,7 @@ There is no release form to fill in for normal publication.
 - Markdown documentation alone does not request a new package. Shared builder or
   toolchain changes apply to future versions and do not republish existing ones.
 - Server/runtime `pack.version` pins the upstream program. `extension.version`
-  names the extension package and may advance independently for a packaging fix;
+  names the extension package and advances independently of that program;
   changing it alone does not change the downloaded program or its pins.
 - Removed definitions do not remove previously published versions from the index.
 
@@ -97,7 +104,25 @@ the immutable commit SHA. Do not replace it with an arbitrary moving branch or
 silently bypass validation. Once validator
 binaries are published, update `tools/validator.lock`; the binary takes precedence.
 
-The first automatic run picks up all 46 currently pending definitions. This is a
-preview count, not a claim that all recipes have already built successfully.
 The workflow emits the lock as an artifact; refreshing the copy in Loom's repository
 for an application release remains a separate task.
+
+## Early-stage clean reset
+
+The initial mixed package versions have been reset to 0.1.0. Upstream versions,
+source commits and download pins are unchanged. To apply this to the public
+repository, run Release on main with **preview=false** and **reset=true** once.
+This deliberately publishes an empty signed index, deletes every extension
+release and its tag in this repository, and then rebuilds and publishes all
+current definitions. The registry sequence still increases so frozen snapshots
+and caches accept the new index. The registry release and signed generation
+receipts remain available. No version-migration or downgrade exceptions are added.
+
+The reset shares the publication concurrency slot, so an older delivery finishes
+before it begins. The signing key and all package baselines are checked before
+any remote mutation. The empty index is verified before old releases are removed.
+Once reset has run, retry ordinary delivery with **reset=false**; rerunning with
+reset=true deliberately starts over and deletes any newly published packages too.
+Existing development installations must reinstall extensions after this reset,
+and Loom's frozen lock/snapshot must be refreshed from the new signed index.
+Normal pushes and previews never reset anything.

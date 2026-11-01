@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "Lua Language Server"
-version = "3.19.2"
+version = "0.1.0"
 description = "The Lua Language Server language server."
 license = "MIT"
 

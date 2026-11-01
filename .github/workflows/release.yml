@@ -10,6 +10,10 @@ on:
         description: Only show pending versions (do not build or publish)
         type: boolean
         default: true
+      reset:
+        description: Reset the index and DELETE all extension releases and tags before publishing
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -41,6 +45,12 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: node scripts/loom-ext.mjs check
+      - name: Reset early-stage extension releases and the signed registry
+        if: github.event_name == 'workflow_dispatch' && inputs.reset && !inputs.preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/reset-registry.mjs --confirm
       - name: Plan pending versions and enforce explicit version changes
         id: plan
         env:

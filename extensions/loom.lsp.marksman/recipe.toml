@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "Marksman"
-version = "2026.2.8"
+version = "0.1.0"
 description = "The Marksman language server."
 license = "MIT"
 

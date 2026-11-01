@@ -3,7 +3,7 @@ kind = "language"
 
 [extension]
 name = "Go"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for Go."
 
 [sources.go]

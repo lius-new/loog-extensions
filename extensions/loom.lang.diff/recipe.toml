@@ -4,7 +4,7 @@ patches = [ "patches/diff-highlights.patch" ]
 
 [extension]
 name = "Diff"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for Diff."
 
 [sources.diff]

@@ -23,7 +23,7 @@ platform. It is published as an asset of the `registry` release, next to
       "languages": [{ "name": "rust", "fileTypes": ["rs"] }],
       "versions": [
         {
-          "version": "1.0.0",
+          "version": "0.1.0",
           "engines": { "loom": ">=0.1.8 <0.3" },
           "capabilities": [],
           "requires": [],

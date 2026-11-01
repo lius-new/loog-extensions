@@ -3,10 +3,10 @@ kind = "server"
 
 [extension]
 name = "Bash Language Server"
-version = "5.8.1"
+version = "0.1.0"
 description = "The Bash Language Server language server."
 license = "MIT"
-requires = [ "loom.runtime.node@^22" ]
+requires = [ "loom.runtime.node@^0.1.0" ]
 
 [pack]
 kind = "npm"

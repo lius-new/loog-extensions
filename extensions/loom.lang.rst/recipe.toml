@@ -3,7 +3,7 @@ kind = "language"
 
 [extension]
 name = "reStructuredText"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for reStructuredText."
 
 [sources.helix]

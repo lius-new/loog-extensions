@@ -17,7 +17,7 @@ export function serverDocuments(id, recipe, platform) {
   const {name, version, description} = recipe.extension;
   const runtime = recipe.kind === 'runtime';
   const servers = Object.entries(recipe.servers ?? {});
-  const lines = [`# ${name}${runtime ? ' Runtime' : ' Language Server'}`, '', description, ''];
+  const lines = [`# ${name}${runtime ? ' Runtime' : ' Language Server'}`, '', description, '', `Extension package: ${version}. Upstream program: ${recipe.pack.version}.`, ''];
   if (servers.length) {
     lines.push('## Serves', '');
     for (const [, server] of servers) {

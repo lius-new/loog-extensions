@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "Biome"
-version = "2.5.15"
+version = "0.1.0"
 description = "The Biome language server."
 license = "MIT OR Apache-2.0"
 

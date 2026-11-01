@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "gopls"
-version = "0.24.0"
+version = "0.1.0"
 description = "The gopls language server."
 license = "BSD-3-Clause"
 

@@ -18,6 +18,15 @@ export class GitHubReleases {
     this.run = run;
   }
 
+  /** Full release inventory for an explicitly requested early-stage reset. */
+  list() {
+    return JSON.parse(this.run(['api', 'repos/' + this.repository + '/releases', '--paginate', '--slurp'])).flat();
+  }
+
+  delete(tag) {
+    this.run(['release', 'delete', tag, '--repo', this.repository, '--cleanup-tag', '--yes']);
+  }
+
   /** The release for `tag` (drafts included), or null. */
   view(tag) {
     try {

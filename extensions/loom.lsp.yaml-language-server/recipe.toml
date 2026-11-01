@@ -3,10 +3,10 @@ kind = "server"
 
 [extension]
 name = "YAML Language Server"
-version = "2.0.0"
+version = "0.1.0"
 description = "The YAML Language Server language server."
 license = "MIT"
-requires = [ "loom.runtime.node@^22" ]
+requires = [ "loom.runtime.node@^0.1.0" ]
 
 [pack]
 kind = "npm"

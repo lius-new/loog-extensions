@@ -267,3 +267,48 @@ test('new indexes advance beyond the reserved sequence of an incomplete generati
   const report = await finishRelease(planRelease([item], empty, new Set(), commit), [prepared], {...ctx, privateKey: ctx.keys.privatePem});
   assert.equal(report.sequence, 8);
 });
+
+import {resetRegistry} from '../lib/reset-registry.mjs';
+
+test('a clean early-stage reset verifies a higher signed empty index before deleting extension releases and tags', async t => {
+  const ctx = publication(t);
+  (await ctx.registry()).maxSequence = 7;
+  ctx.releases.list = () => ['loom.theme.demo-1.0.0', 'loom.runtime.node-22.23.3', 'registry', 'v0.1.9', 'another-release'].map(tag_name => ({tag_name}));
+  const deleted = [];
+  ctx.releases.delete = tag => {
+    assert.equal((ctx.calls.at(-1)), deleted.length ? 'delete' : 'index');
+    deleted.push(tag); ctx.calls.push('delete');
+  };
+  const options = {...ctx, privateKey: ctx.keys.privatePem, items: [definition('loom.theme.demo', '0.1.0')]};
+  await assert.rejects(resetRegistry(options), /requires --confirm/);
+  await assert.rejects(resetRegistry({...options, confirmed: true, privateKey: null}), /LOOM_INDEX_KEY/);
+  await assert.rejects(resetRegistry({...options, confirmed: true, items: [definition()]}), /every extension/);
+  assert.deepEqual(ctx.calls, []);
+  const report = await resetRegistry({...options, confirmed: true});
+  assert.equal(report.sequence, 8);
+  assert.deepEqual(report.deleted, ['loom.theme.demo-1.0.0', 'loom.runtime.node-22.23.3']);
+  assert.deepEqual(ctx.calls, ['generation', 'index', 'delete', 'delete']);
+  const current = await ctx.registry();
+  assert.deepEqual(current.index.extensions, []);
+  assert.equal(current.recovered, false);
+  assert.equal(verifyIndex(current.bytes, current.signature, ctx.config.index.keys).ok, true);
+});
+
+test('reset never deletes releases when the empty current index cannot be verified', async t => {
+  const ctx = publication(t);
+  ctx.releases.list = () => [{tag_name: 'loom.theme.demo-1.0.0'}];
+  ctx.releases.delete = () => assert.fail('Unverified reset deleted an extension');
+  const registry = ctx.registry;
+  let reads = 0;
+  ctx.registry = async () => {if (++reads === 3) throw Error('current pair unreadable'); return registry();};
+  await assert.rejects(resetRegistry({...ctx, confirmed: true, privateKey: ctx.keys.privatePem,
+    items: [definition('loom.theme.demo', '0.1.0')]}), /unreadable/);
+  assert.deepEqual(ctx.calls, ['generation', 'index']);
+});
+
+test('the destructive reset is available only through a manual non-preview workflow input', () => {
+  const text = fs.readFileSync(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8');
+  assert.match(text, /if: github.event_name == 'workflow_dispatch' && inputs.reset && !inputs.preview/);
+  assert.match(text, /run: node scripts\/reset-registry.mjs --confirm/);
+  assert.ok(text.indexOf('reset-registry.mjs --confirm') < text.indexOf('id: plan'));
+});

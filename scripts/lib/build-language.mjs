@@ -25,7 +25,7 @@ export function checkRecipe(id, recipe, {root = EXTENSIONS} = {}) {
   if (!id.startsWith('loom.lang.') || !validId(id)) bad('a language extension is named loom.lang.<name>');
   const extension = recipe.extension ?? {};
   if (typeof extension.name !== 'string' || !extension.name.trim() || extension.name.length > 50) bad('extension.name is required (up to 50 characters)');
-  if (!validVersion(extension.version ?? '')) bad('extension.version must be a version such as 1.0.0');
+  if (!validVersion(extension.version ?? '')) bad('extension.version must be a version such as 0.1.0');
   if (typeof extension.description !== 'string' || !extension.description.trim() || extension.description.length > 200) bad('extension.description is required (up to 200 characters)');
   for (const item of extension.recommends ?? []) if (!validId(item) || !item.startsWith('loom.lsp.')) bad(`extension.recommends: ${item} is not a language server extension`);
   const sources = recipe.sources ?? {};

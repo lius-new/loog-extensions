@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "rust-analyzer"
-version = "2026.10.19"
+version = "0.1.0"
 description = "The rust-analyzer language server."
 license = "MIT OR Apache-2.0"
 

@@ -3,7 +3,7 @@ kind = "server"
 
 [extension]
 name = "Taplo"
-version = "0.10.0"
+version = "0.1.0"
 description = "The Taplo language server."
 license = "MIT"
 

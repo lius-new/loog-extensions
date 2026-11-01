@@ -4,7 +4,7 @@ patches = [ "patches/scss-highlights.patch" ]
 
 [extension]
 name = "SCSS"
-version = "1.0.0"
+version = "0.1.0"
 description = "Syntax highlighting for SCSS."
 
 [sources.scss]

@@ -75,7 +75,7 @@ export function checkRecipe(id, recipe, {root = EXTENSIONS} = {}) {
   if (!id.startsWith(runtime ? 'loom.runtime.' : 'loom.lsp.') || !validId(id)) bad(`a ${recipe.kind} extension is named ${runtime ? 'loom.runtime.<name>' : 'loom.lsp.<name>'}`);
   const extension = recipe.extension ?? {};
   if (typeof extension.name !== 'string' || !extension.name.trim() || extension.name.length > 50) bad('extension.name is required (up to 50 characters)');
-  if (!validVersion(extension.version ?? '')) bad('extension.version must be a version such as 1.0.0');
+  if (!validVersion(extension.version ?? '')) bad('extension.version must be a version such as 0.1.0');
   if (typeof extension.description !== 'string' || !extension.description.trim() || extension.description.length > 200) bad('extension.description is required (up to 200 characters)');
   if (typeof extension.license !== 'string' || !extension.license.trim() || extension.license.length > 100) bad('extension.license is required (an SPDX expression)');
   for (const item of extension.requires ?? []) if (!parseRequirement(item)) bad(`extension.requires: ${JSON.stringify(item)} is not id@range`);

@@ -3,10 +3,10 @@ kind = "server"
 
 [extension]
 name = "Pyright"
-version = "1.1.414"
+version = "0.1.0"
 description = "The Pyright language server."
 license = "MIT"
-requires = [ "loom.runtime.node@^22" ]
+requires = [ "loom.runtime.node@^0.1.0" ]
 
 [pack]
 kind = "npm"

@@ -27,7 +27,7 @@ published one must have (`loom-ext check` reports each problem):
 | `repository` | An `https://` address |
 | `icon`, `readme`, `changelog` | A PNG or SVG (up to 256 KiB), and two Markdown files (up to 512 KiB) |
 | `engines.loom` | A version range, such as `>=0.1.8 <0.3` |
-| `requires` | `["loom.runtime.node@^22"]`: extensions that must be installed with this one |
+| `requires` | `["loom.runtime.node@^0.1.0"]`: extensions that must be installed with this one |
 | `recommends` | Extension ids to suggest; a language recommends only language servers |
 | `capabilities` | A language server declares `process.execute-local` |
 | `executables` | Paths the application marks executable after unpacking |

@@ -3,10 +3,10 @@ kind = "server"
 
 [extension]
 name = "TypeScript Language Server"
-version = "6.0.2"
+version = "0.1.0"
 description = "The TypeScript Language Server language server."
 license = "Apache-2.0"
-requires = [ "loom.runtime.node@^22" ]
+requires = [ "loom.runtime.node@^0.1.0" ]
 
 [pack]
 kind = "npm"
