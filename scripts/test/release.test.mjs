@@ -8,7 +8,7 @@ import {checkout, populate, cli, write} from './cli.mjs';
 import {generateKeyPair, signIndex, verifyIndex} from '../lib/sign.mjs';
 import {buildIndex} from '../lib/index.mjs';
 import {planRelease, definitions, fingerprint, changedExtensions, readRegistry, readRelease, validateStaged,
-  checkAssets, checkRecords, prepareRelease, finishRelease, readyToIndex} from '../lib/release.mjs';
+  checkAssets, checkRecords, prepareRelease, finishRelease, readyToIndex, verifyRelease} from '../lib/release.mjs';
 
 const commit = 'a'.repeat(40);
 const empty = {schema: 1, sequence: 3, keyId: 'test-1', generated: '2026-11-01T00:00:00Z',
@@ -104,7 +104,7 @@ function publication(t) {
   let registry = {index: empty, bytes: Buffer.from(JSON.stringify(empty)), signature: signIndex(Buffer.from(JSON.stringify(empty)), keys.privatePem, 'test-1')};
   const releases = {
     listTags: () => [],
-    createDraft(tag, title, notes, options) {assert.equal(options.target, commit); calls.push('create'); remote.set(tag, {draft: true, assets: []});},
+    createDraft(tag, title, notes, options) {assert.equal(options.target, commit); calls.push('create'); const release = {id: remote.size + 1, tag_name: tag, draft: true, assets: []}; remote.set(tag, release); return release;},
     upload(tag, files) {
       calls.push(tag === 'registry' ? (path.basename(files[0]) === 'index.json' ? 'index' : 'generation') : 'packages');
       if (tag === 'registry') {
@@ -118,7 +118,7 @@ function publication(t) {
     },
     publish(tag) {calls.push('publish'); remote.get(tag).draft = false;},
   };
-  return {...repo, keys, config, remote, calls, releases, lookup: async (repository, tag) => remote.get(tag) ?? null, registry: async () => registry};
+  return {...repo, keys, config, remote, calls, releases, wait: async () => {}, lookup: async (repository, tag) => remote.get(tag) ?? null, registry: async () => registry};
 }
 import {createHash} from 'node:crypto';
 import {clearStage} from '../lib/stage.mjs';
@@ -360,4 +360,56 @@ test('registry pair reads bypass old CDN aliases without weakening signature ver
     return new Response(parsed.pathname.endsWith('.sig') ? signature : bytes);
   };
   assert.equal((await readRegistry(config, fetcher)).recovered, false);
+});
+
+
+test('release metadata lookup by ID never depends on draft tag or list visibility', async () => {
+  const draft = {id: 123, tag_name: 'loom.lang.json-0.1.0', draft: true, assets: []};
+  const requests = [];
+  const fetcher = async url => {
+    requests.push(url);
+    assert.equal(new URL(url).pathname, '/repos/acme/extensions/releases/123');
+    return new Response(JSON.stringify(draft));
+  };
+  assert.deepEqual(await readRelease('acme/extensions', draft.tag_name, fetcher, {id: 123}), draft);
+  assert.equal(requests.length, 1);
+  assert.equal(await readRelease('acme/extensions', draft.tag_name, async () => new Response('', {status: 404}), {id: 123}), null);
+  await assert.rejects(readRelease('acme/extensions', 'another-tag', fetcher, {id: 123}), /does not match/);
+  await assert.rejects(readRelease('acme/extensions', draft.tag_name, async () => new Response('', {status: 403}), {id: 123}), /HTTP 403/);
+});
+
+test('new drafts publish by their creation ID even when tag and list discovery never see them', async t => {
+  const ctx = publication(t), item = definitions(ctx.root)[0];
+  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+  let discovery = 0, readbacks = 0;
+  const lookup = async (repo, tag, fetcher, {id} = {}) => {
+    if (id === undefined) {discovery++; return null;}
+    readbacks++; const remote = ctx.remote.get(tag);
+    assert.equal(remote.id, id); return remote;
+  };
+  const report = await finishRelease(planRelease([item], empty, new Set(), commit), [prepared],
+    {...ctx, lookup, privateKey: ctx.keys.privatePem});
+  assert.deepEqual(report.failures, []);
+  assert.deepEqual(report.indexed, [item.id]);
+  assert.equal(discovery, 1); assert.equal(readbacks, 2);
+  assert.deepEqual(ctx.calls, ['create', 'packages', 'publish', 'generation', 'index']);
+});
+
+test('post-write readback retries only verification and always requires complete matching bytes', async () => {
+  const records = [{file:'package.loomext',size:1,sha256:'a'.repeat(64)}];
+  const draft = {id:123,tag_name:'demo',draft:true,assets:[{name:'package.loomext',size:1,digest:'sha256:'+'a'.repeat(64)}]};
+  const waits = []; let reads = 0;
+  const lookup = async (repo, tag, fetcher, options) => {
+    assert.deepEqual(options, {id:123});
+    reads++; return reads===1 ? null : reads===2 ? {...draft,assets:[]} : draft;
+  };
+  assert.deepEqual(await verifyRelease('acme/extensions','demo',123,records,{lookup,wait:async ms=>waits.push(ms)}),draft);
+  assert.equal(reads,3); assert.deepEqual(waits,[500,1500]);
+  let checks=0;
+  const published=await verifyRelease('acme/extensions','demo',123,records,{published:true,wait:async()=>{},lookup:async()=>({...draft,draft:++checks===1})});
+  assert.equal(published.draft,false); assert.equal(checks,2);
+  reads=0;
+  await assert.rejects(verifyRelease('acme/extensions','demo',123,records,{wait:async()=>{},lookup:async()=>{reads++;return {...draft,assets:[{...draft.assets[0],digest:'sha256:'+'b'.repeat(64)}]};}}),/release 123.*SHA-256/);
+  assert.equal(reads,3);
+  await assert.rejects(verifyRelease('acme/extensions','demo',123,records,{lookup:async()=>{throw Error('HTTP 403');},wait:async()=>assert.fail('Permission errors must not be polled')}),/HTTP 403/);
 });

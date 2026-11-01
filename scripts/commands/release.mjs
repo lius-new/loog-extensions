@@ -66,6 +66,6 @@ export async function run(argv) {
   assert(!execFileSync('git', ['status', '--porcelain', '--untracked-files=normal'], {cwd: ROOT, encoding: 'utf8'}).trim(), 'Commit the working tree before publishing; release tags must describe the tested source');
   const report = await finishRelease(plan, readJson(outcomesFile), {config, privateKey: process.env.LOOM_INDEX_KEY, sourceRevision: revision()});
   summary(`Indexed: ${report.indexed.length}; failures: ${report.failures.length}; sequence: ${report.sequence}.\n\n` + report.failures.map(e => `- ${e.id}: ${e.error}`).join('\n'));
-  await lock([]);
   assert(!report.failures.length, 'Some extensions were not delivered; see the release report. Rerun to complete them.');
+  await lock([]);
 }

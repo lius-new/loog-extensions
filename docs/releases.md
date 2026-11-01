@@ -43,8 +43,11 @@ of the same extension if every intermediate version needs to be released.
    upstream archives are removed after each extension to bound runner disk use.
 4. Publish complete extension releases in dependency order. Draft assets can be
    repaired; public assets are never overwritten. Every asset's size and GitHub
-   SHA-256 are checked before and after publication. Tags point to the tested
-   checkout commit.
+   SHA-256 are checked before and after publication. Creation returns the stable
+   release ID; upload verification, publication and final verification use that
+   ID instead of rediscovering the draft through tags or lists. Just-written
+   metadata has bounded verification retries; uploads are not repeated by those
+   retries. Tags point to the tested checkout commit.
 5. Fetch the latest verified registry again, preserve its existing versions and
    add successful versions whose dependencies are available. Upload a signed,
    immutable `index-<sequence>.json` generation first and verify it; then replace

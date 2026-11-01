@@ -56,7 +56,14 @@ export class GitHubReleases {
   }
 
   createDraft(tag, title, notes, {target} = {}) {
-    this.run(['release', 'create', tag, '--repo', this.repository, '--draft', '--latest=false', '--title', title, '--notes', notes, ...(target ? ['--target', target] : [])]);
+    // Keep the creation response's stable ID; tag/list discovery can lag behind
+    // draft creation even after an upload succeeds.
+    const release = JSON.parse(this.run(['api', '--method', 'POST', 'repos/' + this.repository + '/releases',
+      '-f', 'tag_name=' + tag, '-f', 'name=' + title, '-f', 'body=' + notes,
+      '-F', 'draft=true', '-f', 'make_latest=false', ...(target ? ['-f', 'target_commitish=' + target] : [])]));
+    assert(Number.isSafeInteger(release.id) && release.id > 0 && release.tag_name === tag && release.draft,
+      'GitHub did not return the created draft release identity');
+    return release;
   }
 
   /** Create the registry release if it is missing: the one mutable release, holding the index. */
@@ -69,8 +76,11 @@ export class GitHubReleases {
     this.run(['release', 'upload', tag, ...files, '--repo', this.repository, ...(clobber ? ['--clobber'] : [])]);
   }
 
-  publish(tag) {
-    this.run(['release', 'edit', tag, '--repo', this.repository, '--draft=false']);
+  publish(tag, {id} = {}) {
+    if (id !== undefined) {
+      assert(Number.isSafeInteger(id) && id > 0, 'Invalid release ID');
+      this.run(['api', '--method', 'PATCH', 'repos/' + this.repository + '/releases/' + id, '-F', 'draft=false']);
+    } else this.run(['release', 'edit', tag, '--repo', this.repository, '--draft=false']);
   }
 
   /** Whether the release's assets are exactly `expected` ({name: {sha256, size}}). Returns the differences. */

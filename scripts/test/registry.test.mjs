@@ -158,6 +158,11 @@ function fakeGh(initial = {}) {
   const run = args => {
     calls.push(args.slice(0, 2).join(' ') + ' ' + (args[2] ?? ''));
     const [, command, tag] = [args[0], args[1], args[2]];
+    if (args[0] === 'api' && args.includes('POST')) {
+      const tag = args.find(arg => arg.startsWith('tag_name=')).slice('tag_name='.length);
+      releases[tag] = {id: Object.keys(releases).length + 1, tag_name: tag, draft: true, assets: []};
+      return JSON.stringify(releases[tag]);
+    }
     if (args[0] === 'release' && command === 'view') {
       if (!releases[tag]) { const error = new Error('release not found'); error.stderr = 'release not found'; throw error; }
       return JSON.stringify({tagName: tag, isDraft: releases[tag].draft, assets: releases[tag].assets});
@@ -293,4 +298,24 @@ test('tag inventory includes every page so reset can resume after a release was 
     return JSON.stringify([[{name:'loom.lang.demo-1.0.0'}], [{name:'loom.lsp.demo-0.1.0'}]]);
   });
   assert.deepEqual(github.listTags(), ['loom.lang.demo-1.0.0', 'loom.lsp.demo-0.1.0']);
+});
+
+
+test('draft creation keeps its returned ID and ID publication does not rediscover a tag', () => {
+  const calls = []; const draft = {id:123,tag_name:'loom.lang.demo-0.1.0',draft:true,assets:[]};
+  const github = new GitHubReleases('acme/extensions',args=>{
+    calls.push(args);
+    if(args.includes('POST')) {
+      assert.ok(args.includes('tag_name='+draft.tag_name));
+      assert.ok(args.includes('draft=true')); assert.ok(args.includes('make_latest=false'));
+      assert.ok(args.includes('target_commitish='+'a'.repeat(40)));
+      return JSON.stringify(draft);
+    }
+    assert.deepEqual(args,['api','--method','PATCH','repos/acme/extensions/releases/123','-F','draft=false']);
+    return '{}';
+  });
+  assert.deepEqual(github.createDraft(draft.tag_name,'Demo','Notes',{target:'a'.repeat(40)}),draft);
+  github.publish(draft.tag_name,{id:draft.id});
+  assert.equal(calls.length,2);
+  assert.throws(()=>github.publish(draft.tag_name,{id:'bad'}),/Invalid release ID/);
 });

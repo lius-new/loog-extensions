@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {setTimeout as pause} from 'node:timers/promises';
 import {ROOT, DIST, WORK, assert, files, fileHash, hash, readJson, removeUnder, writeAtomic} from './util.mjs';
 import {hasRecipe, clearStage, stageDirectory, stagedPlatforms} from './stage.mjs';
 import {buildExtension, readRecipe} from './builders.mjs';
@@ -115,12 +116,21 @@ export async function readRegistry(config, fetcher = fetch) {
   return {...selected, recovered, maxSequence: Math.max(selected.index.sequence, ...generations)};
 }
 
-export async function readRelease(repository, tag, fetcher = fetch) {
+export async function readRelease(repository, tag, fetcher = fetch, {id} = {}) {
   const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
   const headers = {Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache', ...(token ? {Authorization: 'Bearer ' + token} : {})};
   const base = 'https://api.github.com/repos/' + repository + '/releases';
   const read = url => fetcher(url + (url.includes('?') ? '&' : '?') + '_check=' + Date.now() + '-' + Math.random().toString(16).slice(2),
     {headers, signal: AbortSignal.timeout(120000)});
+  if (id !== undefined) {
+    assert(Number.isSafeInteger(id) && id > 0, 'Invalid release ID');
+    const response = await read(base + '/' + id);
+    if (response.status === 404) return null;
+    assert(response.ok, 'Reading release ' + id + ': HTTP ' + response.status);
+    const release = await response.json();
+    assert(release.id === id && release.tag_name === tag, 'Release ID or tag does not match the expected release');
+    return release;
+  }
   const response = await read(base + '/tags/' + encodeURIComponent(tag));
   if (response.status !== 404) {
     assert(response.ok, 'Reading ' + tag + ': HTTP ' + response.status);
@@ -147,6 +157,25 @@ export function checkAssets(release, records) {
   for (const record of records) {
     const asset = assets.get(record.file);
     assert(asset && asset.size === record.size && asset.digest === `sha256:${record.sha256}`, `${record.file}: remote size or SHA-256 does not match`);
+  }
+}
+
+/** Read a known release after writes without depending on tag/list visibility.
+ * Retry only verification of the just-written resource; do not repeat uploads. */
+export async function verifyRelease(repository, tag, id, records, {lookup = readRelease, published = false, wait = pause} = {}) {
+  assert(Number.isSafeInteger(id) && id > 0, 'Publication requires a stable release ID');
+  for (let attempt = 0; ; attempt++) {
+    const remote = await lookup(repository, tag, undefined, {id});
+    try {
+      assert(remote, 'Release metadata is not visible yet');
+      assert(remote.id === id && remote.tag_name === tag, 'Release ID or tag does not match the expected release');
+      checkAssets(remote, records);
+      if (published) assert(!remote.draft, 'Release is still a draft');
+      return remote;
+    } catch (error) {
+      if (attempt === 2) throw new Error(tag + ' (release ' + id + '): ' + error.message);
+      await wait([500, 1500][attempt]);
+    }
   }
 }
 
@@ -252,7 +281,7 @@ export function checkSigningKey(config, privateKey) {
 
 export async function finishRelease(plan, outcomes, {config, privateKey, root = ROOT, dist = DIST, work = WORK,
   releases = new GitHubReleases(config.repository), registry = readRegistry, lookup = readRelease,
-  now = new Date(), sourceRevision = plan.revision} = {}) {
+  now = new Date(), sourceRevision = plan.revision, wait = pause} = {}) {
   checkSigningKey(config, privateKey);
   assert(sourceRevision === plan.revision, 'Publisher is not on the planned commit');
   const expected = new Map(plan.pending.map(item => [item.id, item]));
@@ -283,14 +312,13 @@ export async function finishRelease(plan, outcomes, {config, privateKey, root = 
       let remote = await lookup(config.repository, tag);
       if (remote && !remote.draft) checkAssets(remote, item.records);
       else {
-        if (!remote) releases.createDraft(tag, `${item.id} ${item.version}`, `Release of ${item.id} ${item.version}.`, {target: plan.revision});
+        if (!remote) remote = releases.createDraft(tag, `${item.id} ${item.version}`, `Release of ${item.id} ${item.version}.`, {target: plan.revision});
+        assert(Number.isSafeInteger(remote.id) && remote.id > 0, 'Draft has no stable release ID');
+        const id = remote.id;
         releases.upload(tag, item.records.map(r => path.join(dist, 'packages', r.file)), {clobber: true});
-        remote = await lookup(config.repository, tag);
-        checkAssets(remote, item.records);
-        releases.publish(tag);
-        remote = await lookup(config.repository, tag);
-        assert(remote && !remote.draft, `${tag}: still a draft`);
-        checkAssets(remote, item.records);
+        await verifyRelease(config.repository, tag, id, item.records, {lookup, wait});
+        releases.publish(tag, {id});
+        await verifyRelease(config.repository, tag, id, item.records, {lookup, wait, published: true});
       }
       published.push(item);
     } catch (error) { failures.push({id: item.id, error: error.message}); }
