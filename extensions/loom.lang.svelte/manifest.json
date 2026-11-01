@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.svelte",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Svelte Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Svelte.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "svelte",

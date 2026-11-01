@@ -20,7 +20,7 @@ export const WASM = Buffer.from([0, 0x61, 0x73, 0x6d, 1, 0, 0, 0, 0, 0]);
 
 const base = (id, extra = {}) => ({
   schema: 1, id, version: '1.0.0', name: 'Test', publisher: 'Loom', description: 'A test.',
-  categories: ['Languages'], license: 'MIT', repository: 'https://github.com/acme/extensions',
+  categories: ['Syntax Highlighting'], license: 'MIT', repository: 'https://github.com/acme/extensions',
   icon: 'icon.svg', readme: 'README.md', changelog: 'CHANGELOG.md',
   engines: {loom: '>=0.1.8 <0.3'}, ...extra,
 });
@@ -56,6 +56,7 @@ export function language(root, id = 'loom.lang.demo', name = 'demo') {
 export function server(root, id = 'loom.lsp.demo') {
   const dir = path.join(root, id);
   write(dir, 'manifest.json', base(id, {
+    categories: ['Language Services'],
     capabilities: ['process.execute-local'],
     contributes: {language_service: {servers: [{id: `${id}.server`, languages: ['demo'], command: '${extension}/bin/demo-ls', root_markers: ['demo.toml']}]}},
   }));

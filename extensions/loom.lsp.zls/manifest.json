@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.zls",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "zls Language Server",
   "publisher": "Loom",
   "description": "The zls language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "zls",

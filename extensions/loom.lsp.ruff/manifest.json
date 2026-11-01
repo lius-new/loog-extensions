@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.ruff",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Ruff Language Server",
   "publisher": "Loom",
   "description": "The Ruff language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "ruff",

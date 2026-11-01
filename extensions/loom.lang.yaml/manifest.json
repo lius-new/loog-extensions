@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.yaml",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "YAML Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for YAML.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "yaml",

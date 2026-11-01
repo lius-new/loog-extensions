@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.ini",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "INI Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for INI.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "ini",

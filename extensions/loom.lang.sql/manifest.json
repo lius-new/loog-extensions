@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.sql",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "SQL Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for SQL.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "sql",

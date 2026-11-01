@@ -10,7 +10,7 @@ import {validRange, validVersion} from './semver.mjs';
 export const CAPABILITIES = ['documents.read', 'workspace.edit', 'workspace.files.read', 'workspace.files.write',
   'events', 'settings', 'languages', 'storage', 'network', 'tasks', 'process.execute-local'];
 // The categories an extension may list, at most three; and the size limits for its documents.
-export const CATEGORIES = ['Themes', 'Languages', 'Snippets', 'Linters', 'Formatters', 'Editing', 'Source control', 'Productivity', 'Other'];
+export const CATEGORIES = ['Themes', 'Syntax Highlighting', 'Language Services', 'Snippets', 'Linters', 'Formatters', 'Editing', 'Source control', 'Productivity', 'Other'];
 export const MAX_ICON_BYTES = 256 * 1024;
 export const MAX_DOCUMENT_BYTES = 512 * 1024;
 export const EVENTS = ['document.open', 'document.change', 'document.close', 'document.save',

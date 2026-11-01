@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.swift",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Swift Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Swift.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "swift",

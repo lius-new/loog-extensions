@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.biome",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Biome Language Server",
   "publisher": "Loom",
   "description": "The Biome language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "biome",

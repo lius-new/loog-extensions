@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.graphql",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "GraphQL Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for GraphQL.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "graphql",

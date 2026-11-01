@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.gitignore",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Git Ignore Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Git Ignore.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "git ignore",

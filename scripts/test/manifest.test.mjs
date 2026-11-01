@@ -24,6 +24,18 @@ test('valid theme, language and server extensions have no problems', t => {
   assert.deepEqual(problems(server(root), {built: true}), []);
 });
 
+test('language categories describe a specific function and reject Languages', t => {
+  const root = workspace(t);
+  for (const [dir, category] of [[language(root), 'Syntax Highlighting'], [server(root), 'Language Services']]) {
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+    assert.deepEqual(manifest.categories, [category]);
+    assert.deepEqual(problems(dir, {built: true}), []);
+    manifest.categories = ['Languages'];
+    write(dir, 'manifest.json', manifest);
+    assert.match(problems(dir).join('\n'), /"Languages" is not a category/);
+  }
+});
+
 test('the id must match the folder and use the naming scheme', t => {
   const root = workspace(t);
   const dir = theme(root);

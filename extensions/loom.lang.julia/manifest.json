@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.julia",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Julia Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Julia.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "julia",

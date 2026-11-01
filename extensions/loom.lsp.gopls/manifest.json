@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.gopls",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "gopls Language Server",
   "publisher": "Loom",
   "description": "The gopls language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "gopls",

@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.cpp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "C++ Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for C++.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "c++",

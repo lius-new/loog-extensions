@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.go",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Go Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Go.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "go",

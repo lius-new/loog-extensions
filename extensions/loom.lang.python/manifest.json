@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.python",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Python Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Python.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "python",

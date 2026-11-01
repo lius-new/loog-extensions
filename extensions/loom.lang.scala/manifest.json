@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.scala",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Scala Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Scala.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "scala",

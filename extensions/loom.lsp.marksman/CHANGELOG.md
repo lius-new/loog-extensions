@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Changed the extension category from Languages to Language Services.
+
 ## 0.1.2
 
 - The manifest names what the extension is for: `contributes.language_service.servers` replaces `contributes.language_servers`. The server is unchanged; this needs a Loom that reads the new name.

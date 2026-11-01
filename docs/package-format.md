@@ -23,7 +23,7 @@ published one must have (`loom-ext check` reports each problem):
 | `id` | `vendor.name…`, lowercase; the folder is named after it |
 | `version` | `major.minor.patch` |
 | `name`, `publisher`, `description`, `license` | One line each (60, 60, 200, 100 characters); `license` is an SPDX expression |
-| `categories` | At most three of Themes, Languages, Snippets, Linters, Formatters, Editing, Source control, Productivity, Other |
+| `categories` | At most three of Themes, Syntax Highlighting, Language Services, Snippets, Linters, Formatters, Editing, Source control, Productivity, Other |
 | `repository` | An `https://` address |
 | `icon`, `readme`, `changelog` | A PNG or SVG (up to 256 KiB), and two Markdown files (up to 512 KiB) |
 | `engines.loom` | A version range, such as `>=0.1.8 <0.3` |
@@ -32,6 +32,12 @@ published one must have (`loom-ext check` reports each problem):
 | `capabilities` | A language service server declares `process.execute-local` |
 | `executables` | Paths the application marks executable after unpacking |
 | `contributes` | `highlight`, `highlight_queries`, `language_service`, `themes`, `snippets`, `commands`, `settings` |
+
+Categories describe a specific function. Use `Syntax Highlighting` for grammar
+packs and highlight queries, and `Language Services` for completion, hover,
+navigation and language server integrations. Use `Linters`, `Formatters` and
+`Snippets` for those functions. An extension can list multiple categories when
+it provides multiple functions. `Languages` is no longer accepted.
 
 Each contribution point is named by what it is for, and Loom refuses a manifest with
 any other name (`languages` and `language_servers` are not accepted):

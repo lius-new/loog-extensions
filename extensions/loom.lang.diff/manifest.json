@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.diff",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Diff Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Diff.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "diff",

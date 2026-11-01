@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.make",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Make Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Make.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "make",

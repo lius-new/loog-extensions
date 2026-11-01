@@ -17,7 +17,7 @@ platform. It is published as an asset of the `registry` release, next to
       "name": "Rust Language",
       "publisher": "Loom",
       "description": "Syntax highlighting for Rust.",
-      "categories": ["Languages"],
+      "categories": ["Syntax Highlighting"],
       "keywords": ["rust", "syntax", "tree-sitter"],
       "license": "MIT",
       "highlight": [{ "name": "rust", "fileTypes": ["rs"] }],

@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.json5",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "JSON5 Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for JSON5.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "json5",

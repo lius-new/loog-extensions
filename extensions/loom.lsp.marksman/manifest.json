@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.marksman",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Marksman Language Server",
   "publisher": "Loom",
   "description": "The Marksman language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "marksman",

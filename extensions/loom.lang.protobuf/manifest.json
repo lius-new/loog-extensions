@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.protobuf",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Protocol Buffers Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Protocol Buffers.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "protocol buffers",

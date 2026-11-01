@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.taplo",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Taplo Language Server",
   "publisher": "Loom",
   "description": "The Taplo language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "taplo",

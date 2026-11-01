@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.rst",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "reStructuredText Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for reStructuredText.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "restructuredtext",

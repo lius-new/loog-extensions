@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lsp.typescript-language-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "TypeScript Language Server Language Server",
   "publisher": "Loom",
   "description": "The TypeScript Language Server language server.",
   "categories": [
-    "Languages"
+    "Language Services"
   ],
   "keywords": [
     "typescript language server",

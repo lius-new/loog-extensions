@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.java",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "Java Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Java.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "java",

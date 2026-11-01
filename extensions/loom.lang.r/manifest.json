@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "id": "loom.lang.r",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "R Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for R.",
   "categories": [
-    "Languages"
+    "Syntax Highlighting"
   ],
   "keywords": [
     "r",
