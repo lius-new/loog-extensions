@@ -15,6 +15,31 @@ export const SCHEMA = 1;
 export const downloadUrl = (repository, tag, file) => `https://github.com/${repository}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(file)}`;
 export const releaseTag = (id, version) => `${id}-${version}`;
 
+/** Largest icon, README and changelog the index carries; the index as a whole is limited too. */
+export const MAX_ICON = 32 * 1024;
+export const MAX_DOCUMENT = 64 * 1024;
+
+/**
+ * What the list shows before anything is installed: the icon (SVG as text, PNG as
+ * base64), the README and the changelog, read from the staged package.
+ */
+function preview(id, directory, manifest) {
+  const read = (relative, limit, what) => {
+    const bytes = fs.readFileSync(path.join(directory, ...relative.split('/')));
+    assert(bytes.length <= limit, `${id}: the ${what} is ${bytes.length} bytes; the index carries at most ${limit}`);
+    return bytes;
+  };
+  const result = {};
+  if (manifest.icon) {
+    const svg = manifest.icon.toLowerCase().endsWith('.svg');
+    const bytes = read(manifest.icon, MAX_ICON, 'icon');
+    result.icon = {format: svg ? 'svg' : 'png', data: svg ? bytes.toString('utf8') : bytes.toString('base64')};
+  }
+  if (manifest.readme) result.readme = read(manifest.readme, MAX_DOCUMENT, 'README').toString('utf8');
+  if (manifest.changelog) result.changelog = read(manifest.changelog, MAX_DOCUMENT, 'changelog').toString('utf8');
+  return result;
+}
+
 /** What the index says about an extension, taken from a staged copy of it. */
 export function describe(id, dist = DIST) {
   const platform = stagedPlatforms(id, dist)[0];
@@ -32,6 +57,7 @@ export function describe(id, dist = DIST) {
     for (const grammar of readJson(pack).grammars ?? []) languages.push({name: grammar.name, fileTypes: grammar['file-types'] ?? []});
   }
   if (languages.length) entry.languages = languages;
+  Object.assign(entry, preview(id, directory, manifest));
   const servers = (manifest.contributes?.language_servers ?? []).flatMap(server => server.languages);
   if (servers.length) entry.serves = [...new Set(servers)].sort();
   return {entry, manifest};
@@ -88,6 +114,10 @@ export function validateIndex(index) {
     if (!validId(extension.id)) { bad(`invalid extension id ${JSON.stringify(extension.id)}`); continue; }
     if (seen.has(extension.id)) here('listed twice');
     seen.add(extension.id);
+    if (extension.icon !== undefined && (!['svg', 'png'].includes(extension.icon?.format) || typeof extension.icon.data !== 'string' || extension.icon.data.length > MAX_ICON * 2)) here('invalid icon');
+    for (const field of ['readme', 'changelog']) {
+      if (extension[field] !== undefined && (typeof extension[field] !== 'string' || Buffer.byteLength(extension[field]) > MAX_DOCUMENT)) here(`invalid ${field}`);
+    }
     if (!extension.versions?.length) here('has no versions');
     const versions = new Set();
     for (const version of extension.versions ?? []) {

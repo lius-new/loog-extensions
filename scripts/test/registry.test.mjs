@@ -80,6 +80,11 @@ test('the index lists each extension with its packages and what Loom needs to ch
   assert.deepEqual(index.extensions.map(extension => extension.id), ['loom.lang.demo', 'loom.theme.demo']);
   const language = index.extensions[0];
   assert.deepEqual(language.languages, [{name: 'demo', fileTypes: ['demo']}]);
+  // What the list shows before installing comes along: icon, README, changelog.
+  assert.equal(language.icon.format, 'svg');
+  assert.match(language.icon.data, /^<svg /);
+  assert.equal(language.readme, '# Test\n');
+  assert.equal(typeof language.changelog, 'string');
   const version = language.versions[0];
   assert.equal(version.version, '1.0.0');
   assert.deepEqual(version.engines, {loom: '>=0.1.8 <0.3'});

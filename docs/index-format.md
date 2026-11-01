@@ -40,6 +40,11 @@ platform. It is published as an asset of the `registry` release, next to
 
 - `languages[].fileTypes` (and `serves` for servers) let Loom decide which extension a
   file needs without downloading anything.
+- `icon`, `readme` and `changelog` are optional and let Loom show an extension's
+  details before it is installed. `icon` is `{ "format": "svg" | "png", "data": … }`
+  (SVG as text, PNG as base64) of at most 32 KiB; `readme` and `changelog` are the
+  Markdown text, at most 64 KiB each. They are taken from the newest staged package
+  and refreshed with every publication; building fails when one is over its limit.
 - Versions are newest first. A published version never changes; to fix one, release
   a new version. `index` refuses to rebuild a version with other contents.
 - A version is for `any` platform or for named ones. Loom installs the package for its
