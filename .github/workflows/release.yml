@@ -1,0 +1,77 @@
+name: Release
+
+# Builds the named extensions (all of them when none is named), publishes each as a
+# GitHub release, then replaces the signed index. Run it by hand.
+on:
+  workflow_dispatch:
+    inputs:
+      extensions:
+        description: Extension ids separated by spaces (empty for all)
+        required: false
+        default: ''
+      require-validator:
+        description: Fail when loom-ext-validate is not available
+        type: boolean
+        default: false
+      publish:
+        description: Publish (otherwise only build, pack and index)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/loom-ext.mjs check
+      - name: Build
+        run: node scripts/loom-ext.mjs build ${{ inputs.extensions }}
+      - name: Validate
+        run: node scripts/loom-ext.mjs validate ${{ inputs.extensions }} ${{ inputs.require-validator && '--require-validator' || '' }}
+      - name: Pack
+        run: node scripts/loom-ext.mjs pack ${{ inputs.extensions }}
+      - name: The index published so far
+        run: |
+          mkdir -p .work/previous
+          gh release download registry --pattern index.json --dir .work/previous || echo "No index yet."
+      - name: Index
+        run: |
+          previous=""
+          if [ -f .work/previous/index.json ]; then previous="--previous .work/previous/index.json"; fi
+          if [ -n "$LOOM_INDEX_KEY" ]; then
+            node scripts/loom-ext.mjs index $previous
+          else
+            echo "LOOM_INDEX_KEY is not set: the index is built unsigned and not published."
+            node scripts/loom-ext.mjs index --unsigned $previous
+          fi
+      - name: Publish
+        if: inputs.publish && env.LOOM_INDEX_KEY != ''
+        run: node scripts/loom-ext.mjs publish ${{ inputs.extensions }} --yes
+      - name: Lock for Loom
+        if: env.LOOM_INDEX_KEY != ''
+        run: node scripts/loom-ext.mjs lock
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-and-index
+          path: |
+            dist/packages
+            dist/index
+            dist/lock
+          if-no-files-found: warn
