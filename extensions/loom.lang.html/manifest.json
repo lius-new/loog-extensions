@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.html",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "HTML Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for HTML.",
@@ -22,7 +22,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.html.grammar",
         "path": "tree-sitter.json"

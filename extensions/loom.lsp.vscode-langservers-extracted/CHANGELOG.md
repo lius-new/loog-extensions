@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- The manifest names what the extension is for: `contributes.language_service.servers` replaces `contributes.language_servers`. The servers are unchanged; this needs a Loom that reads the new name.
+
 ## 0.1.1
 
 - The extension builds itself; nothing in what it contains changed.

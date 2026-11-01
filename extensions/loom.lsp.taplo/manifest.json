@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.taplo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Taplo Language Server",
   "publisher": "Loom",
   "description": "The Taplo language server.",
@@ -25,31 +25,33 @@
     "process.execute-local"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.taplo.taplo",
-        "name": "Taplo",
-        "languages": [
-          "toml"
-        ],
-        "command": "${extension}/taplo",
-        "args": [
-          "lsp",
-          "stdio"
-        ],
-        "root_markers": [
-          ".taplo.toml",
-          "taplo.toml"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "workspace",
-        "bindings": [
-          {
-            "language": "toml",
-            "language_id": "toml"
-          }
-        ]
-      }
-    ]
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.taplo.taplo",
+          "name": "Taplo",
+          "languages": [
+            "toml"
+          ],
+          "command": "${extension}/taplo",
+          "args": [
+            "lsp",
+            "stdio"
+          ],
+          "root_markers": [
+            ".taplo.toml",
+            "taplo.toml"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "toml",
+              "language_id": "toml"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

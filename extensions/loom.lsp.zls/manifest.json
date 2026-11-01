@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.zls",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "zls Language Server",
   "publisher": "Loom",
   "description": "The zls language server.",
@@ -25,27 +25,29 @@
     "process.execute-local"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.zls.zls",
-        "name": "zls",
-        "languages": [
-          "zig"
-        ],
-        "command": "${extension}/zls",
-        "root_markers": [
-          "build.zig",
-          "build.zig.zon"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "file_directory",
-        "bindings": [
-          {
-            "language": "zig",
-            "language_id": "zig"
-          }
-        ]
-      }
-    ]
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.zls.zls",
+          "name": "zls",
+          "languages": [
+            "zig"
+          ],
+          "command": "${extension}/zls",
+          "root_markers": [
+            "build.zig",
+            "build.zig.zon"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "file_directory",
+          "bindings": [
+            {
+              "language": "zig",
+              "language_id": "zig"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

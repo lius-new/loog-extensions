@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.clangd",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "clangd Language Server",
   "publisher": "Loom",
   "description": "The clangd language server.",
@@ -25,38 +25,40 @@
     "process.execute-local"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.clangd.clangd",
-        "name": "clangd",
-        "languages": [
-          "c",
-          "cpp",
-          "objc"
-        ],
-        "command": "${extension}/bin/clangd",
-        "root_markers": [
-          "compile_commands.json",
-          "compile_flags.txt",
-          ".clangd"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "workspace",
-        "bindings": [
-          {
-            "language": "c",
-            "language_id": "c"
-          },
-          {
-            "language": "cpp",
-            "language_id": "cpp"
-          },
-          {
-            "language": "objc",
-            "language_id": "objective-c"
-          }
-        ]
-      }
-    ]
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.clangd.clangd",
+          "name": "clangd",
+          "languages": [
+            "c",
+            "cpp",
+            "objc"
+          ],
+          "command": "${extension}/bin/clangd",
+          "root_markers": [
+            "compile_commands.json",
+            "compile_flags.txt",
+            ".clangd"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "c",
+              "language_id": "c"
+            },
+            {
+              "language": "cpp",
+              "language_id": "cpp"
+            },
+            {
+              "language": "objc",
+              "language_id": "objective-c"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

@@ -44,7 +44,7 @@ export function theme(root, id = 'loom.theme.demo') {
 /** A valid language extension with one grammar. */
 export function language(root, id = 'loom.lang.demo', name = 'demo') {
   const dir = path.join(root, id);
-  write(dir, 'manifest.json', base(id, {contributes: {languages: [{id: `${id}.grammar`, path: 'tree-sitter.json'}]}}));
+  write(dir, 'manifest.json', base(id, {contributes: {highlight: [{id: `${id}.grammar`, path: 'tree-sitter.json'}]}}));
   write(dir, 'tree-sitter.json', {grammars: [{name, 'file-types': [name]}]});
   write(dir, `tree-sitter-${name}.wasm`, WASM);
   write(dir, 'queries/highlights.scm', '(identifier) @variable');
@@ -57,7 +57,7 @@ export function server(root, id = 'loom.lsp.demo') {
   const dir = path.join(root, id);
   write(dir, 'manifest.json', base(id, {
     capabilities: ['process.execute-local'],
-    contributes: {language_servers: [{id: `${id}.server`, languages: ['demo'], command: '${extension}/bin/demo-ls', root_markers: ['demo.toml']}]},
+    contributes: {language_service: {servers: [{id: `${id}.server`, languages: ['demo'], command: '${extension}/bin/demo-ls', root_markers: ['demo.toml']}]}},
   }));
   write(dir, 'bin/demo-ls', 'binary');
   documents(dir);

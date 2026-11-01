@@ -31,7 +31,7 @@ test('the id must match the folder and use the naming scheme', t => {
   assert.match(problems(dir).join('\n'), /folder is named loom\.theme\.demo but the id is loom\.theme\.other/);
   const lang = language(root);
   write(lang, 'manifest.json', {schema: 1, id: 'loom.lang.demo', version: '1.0.0', name: 'x', publisher: 'x', description: 'x', categories: ['x'], license: 'MIT', engines: {loom: '*'}});
-  assert.match(problems(lang).join('\n'), /must contribute a language/);
+  assert.match(problems(lang).join('\n'), /must contribute highlight/);
 });
 
 test('publishing needs what people see; development does not', t => {
@@ -67,7 +67,25 @@ test('a grammar must come with a real WebAssembly module and its queries', t => 
   assert.match(problems(other).join('\n'), /missing queries\/highlights\.scm/);
 });
 
-test('native libraries are refused in languages and themes but allowed in servers', t => {
+test('contribution points are named by what they are for, and an old or unknown name is refused', t => {
+  const root = workspace(t);
+  const dir = language(root);
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  // `languages` said nothing about what it was for; Loom no longer reads it.
+  manifest.contributes = {languages: manifest.contributes.highlight};
+  write(dir, 'manifest.json', manifest);
+  const text = problems(dir).join('\n');
+  assert.match(text, /contributes\.languages is not a contribution point/);
+  assert.match(text, /must contribute highlight/);
+  manifest.contributes = {highlight: [{id: 'loom.lang.demo.grammar', path: 'tree-sitter.json'}], language_service: {servers: []}, themes: []};
+  write(dir, 'manifest.json', manifest);
+  assert.deepEqual(problems(dir), []);
+  manifest.contributes.language_service = {language_servers: []};
+  write(dir, 'manifest.json', manifest);
+  assert.match(problems(dir).join('\n'), /contributes\.language_service\.language_servers is not part of the language service/);
+});
+
+test('native libraries are refused in highlight and theme extensions but allowed in language servers', t => {
   const root = workspace(t);
   const dir = language(root);
   write(dir, 'rust.dll', 'native');
@@ -82,16 +100,16 @@ test('a language server declares execution, a placeholder command and root marke
   const dir = server(root);
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   manifest.capabilities = [];
-  manifest.contributes.language_servers[0].command = 'demo-ls';
-  manifest.contributes.language_servers[0].root_markers = [];
+  manifest.contributes.language_service.servers[0].command = 'demo-ls';
+  manifest.contributes.language_service.servers[0].root_markers = [];
   write(dir, 'manifest.json', manifest);
   const text = problems(dir, {built: true}).join('\n');
   assert.match(text, /declare process\.execute-local/);
   assert.match(text, /command must start with/);
   assert.match(text, /root_markers is required/);
   manifest.capabilities = ['process.execute-local'];
-  manifest.contributes.language_servers[0].command = '${extension}/bin/absent';
-  manifest.contributes.language_servers[0].root_markers = ['x'];
+  manifest.contributes.language_service.servers[0].command = '${extension}/bin/absent';
+  manifest.contributes.language_service.servers[0].root_markers = ['x'];
   write(dir, 'manifest.json', manifest);
   assert.match(problems(dir, {built: true}).join('\n'), /bin\/absent is not in the package/);
   assert.deepEqual(problems(dir, {built: false}), []);
@@ -105,6 +123,6 @@ test('requires, recommends and capabilities are checked', t => {
   write(dir, 'manifest.json', manifest);
   const text = problems(dir).join('\n');
   assert.match(text, /invalid requirement/);
-  assert.match(text, /recommends only language servers/);
+  assert.match(text, /recommends only language service extensions/);
   assert.match(text, /unknown capability teleport/);
 });

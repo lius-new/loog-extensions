@@ -7,15 +7,15 @@ a signed index from here and installs what a person asks for, and what a file ne
 
 | Kind | Id | What it is |
 | --- | --- | --- |
-| Language | `loom.lang.<name>` | A Tree-sitter grammar compiled to WebAssembly, its queries and file types |
-| Language server | `loom.lsp.<name>` | A language server program, per platform, with the languages it serves |
+| Highlight | `loom.lang.<name>` | Syntax highlighting: a Tree-sitter grammar compiled to WebAssembly, its queries and file types |
+| Language service | `loom.lsp.<name>` | What answers hints and diagnostics: a language server program, per platform, with the languages it serves |
 | Runtime | `loom.runtime.<name>` | An interpreter other extensions run on, such as Node.js |
 | Theme | `loom.theme.<name>` | Color themes |
 | Queries | `loom.queries.<name>` | Extra highlight rules for a grammar that another extension owns |
 
-Languages and language servers are separate extensions, so each can be chosen,
-updated and disabled on its own. A language names the servers it works well with in
-`recommends`.
+Highlighting and the language service are separate extensions, so each can be chosen,
+updated and disabled on its own. A highlight extension names the language service
+extensions it works well with in `recommends`.
 
 ## What an extension is here
 

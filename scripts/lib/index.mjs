@@ -63,15 +63,18 @@ export function describe(id, dist = DIST) {
     id, name: manifest.name, publisher: manifest.publisher, description: manifest.description,
     categories: manifest.categories, keywords: manifest.keywords ?? [], license: manifest.license,
   };
-  const languages = [];
-  for (const resource of manifest.contributes?.languages ?? []) {
+  // What the extension is for is said by the field it has: `highlight` for syntax
+  // colouring (with the file types it recognizes), `language_service` for hints and
+  // diagnostics (with the languages it serves). Loom decides nothing from ids.
+  const highlight = [];
+  for (const resource of manifest.contributes?.highlight ?? []) {
     const pack = path.join(directory, ...resource.path.split('/'));
-    for (const grammar of readJson(pack).grammars ?? []) languages.push({name: grammar.name, fileTypes: grammar['file-types'] ?? []});
+    for (const grammar of readJson(pack).grammars ?? []) highlight.push({name: grammar.name, fileTypes: grammar['file-types'] ?? []});
   }
-  if (languages.length) entry.languages = languages;
+  if (highlight.length) entry.highlight = highlight;
   Object.assign(entry, preview(id, directory, manifest));
-  const servers = (manifest.contributes?.language_servers ?? []).flatMap(server => server.languages);
-  if (servers.length) entry.serves = [...new Set(servers)].sort();
+  const served = (manifest.contributes?.language_service?.servers ?? []).flatMap(server => server.languages);
+  if (served.length) entry.language_service = {languages: [...new Set(served)].sort()};
   return {entry, manifest};
 }
 

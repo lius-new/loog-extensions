@@ -22,12 +22,21 @@ const GRAMMAR = /^[a-z][a-z0-9_]*$/;
 const NATIVE = /\.(dll|so|dylib)$/i;
 const QUERY_FILES = ['highlights.scm', 'injections.scm'];
 
+/**
+ * The contribution points of a manifest, each named by what it is for: highlight
+ * and highlight_queries colour syntax, language_service answers hints and
+ * diagnostics, themes are colour themes. Keep in step with `Contributes` in Loom's
+ * src/features/extensions/manifest.rs, which refuses any other name.
+ */
+export const CONTRIBUTIONS = ['commands', 'themes', 'snippets', 'highlight', 'highlight_queries', 'language_service', 'settings'];
+export const LANGUAGE_SERVICE = ['servers', 'providers'];
+
 /** What a package of this id must contribute, by the naming scheme. */
 export const KINDS = [
-  {prefix: 'loom.lang.', name: 'language', need: c => c.languages?.length, message: 'contribute a language'},
-  {prefix: 'loom.lsp.', name: 'language server', need: c => c.language_servers?.length, message: 'declare a language server'},
+  {prefix: 'loom.lang.', name: 'highlight', need: c => c.highlight?.length, message: 'contribute highlight'},
+  {prefix: 'loom.lsp.', name: 'language service', need: c => c.language_service?.servers?.length, message: 'declare a language service server'},
   {prefix: 'loom.theme.', name: 'theme', need: c => c.themes?.length, message: 'contribute a theme'},
-  {prefix: 'loom.queries.', name: 'queries', need: c => c.queries?.length, message: 'contribute queries'},
+  {prefix: 'loom.queries.', name: 'highlight queries', need: c => c.highlight_queries?.length, message: 'contribute highlight queries'},
   {prefix: 'loom.runtime.', name: 'runtime', need: () => true, message: ''},
 ];
 export const kindOf = id => KINDS.find(kind => id.startsWith(kind.prefix));
@@ -46,7 +55,7 @@ function checkLanguagePack(dir, packPath, problems) {
   const at = path.join(dir, ...packPath.split('/'));
   if (!fs.existsSync(at)) return;
   if (path.posix.basename(packPath) !== 'tree-sitter.json') {
-    problems.push(`${packPath}: a language resource must be a tree-sitter.json`);
+    problems.push(`${packPath}: a highlight resource must be a tree-sitter.json`);
     return;
   }
   const folder = path.dirname(at);
@@ -153,6 +162,14 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   for (const text of manifest.recommends ?? []) if (!validId(text)) add(`invalid recommendation ${JSON.stringify(text)}`);
 
   const contributes = manifest.contributes ?? {};
+  // Loom refuses a manifest with a contribution point it does not know, so a package
+  // written with an old or misspelled name is caught before it is published.
+  for (const key of Object.keys(contributes)) {
+    if (!CONTRIBUTIONS.includes(key)) add(`contributes.${key} is not a contribution point; use one of ${CONTRIBUTIONS.join(', ')}`);
+  }
+  for (const key of Object.keys(contributes.language_service ?? {})) {
+    if (!LANGUAGE_SERVICE.includes(key)) add(`contributes.language_service.${key} is not part of the language service; use ${LANGUAGE_SERVICE.join(' or ')}`);
+  }
   const ids = new Set();
   const namespaced = (item, what) => {
     if (typeof item !== 'string' || !validId(id) || !item.startsWith(`${id}.`)) add(`${what} ${JSON.stringify(item)} must start with ${id}.`);
@@ -166,17 +183,19 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
       if (!fs.existsSync(path.join(dir, ...entry.path.split('/')))) add(`${what} ${entry.id}: ${entry.path} does not exist`);
     } catch (error) { add(error.message); }
   };
-  for (const kind of ['themes', 'languages', 'snippets']) for (const entry of contributes[kind] ?? []) resource(entry, kind.slice(0, -1));
+  for (const [kind, what] of [['themes', 'theme'], ['highlight', 'highlight'], ['snippets', 'snippet']]) {
+    for (const entry of contributes[kind] ?? []) resource(entry, what);
+  }
   for (const entry of contributes.themes ?? []) {
     const target = path.join(dir, ...String(entry.path).split('/'));
     if (fs.existsSync(target)) {
       try { JSON.parse(fs.readFileSync(target, 'utf8')); } catch (error) { add(`theme ${entry.id}: ${error.message}`); }
     }
   }
-  for (const entry of contributes.languages ?? []) checkLanguagePack(dir, entry.path, problems);
-  for (const query of contributes.queries ?? []) {
-    resource(query, 'query');
-    if (!GRAMMAR.test(query.grammar ?? '') || !QUERY_FILES.includes(query.file)) add(`query ${query.id}: needs a grammar name and highlights.scm or injections.scm`);
+  for (const entry of contributes.highlight ?? []) checkLanguagePack(dir, entry.path, problems);
+  for (const query of contributes.highlight_queries ?? []) {
+    resource(query, 'highlight query');
+    if (!GRAMMAR.test(query.grammar ?? '') || !QUERY_FILES.includes(query.file)) add(`highlight query ${query.id}: needs a grammar name and highlights.scm or injections.scm`);
   }
   // Files that must be runnable: the application sets the execute bit on exactly these.
   if (manifest.executables !== undefined) {
@@ -189,7 +208,7 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
       } catch (error) { add(error.message); }
     }
   }
-  for (const server of contributes.language_servers ?? []) {
+  for (const server of contributes.language_service?.servers ?? []) {
     namespaced(server.id, 'language server');
     if (server.root_strategy !== undefined && !['nearest', 'outermost'].includes(server.root_strategy)) add(`language server ${server.id}: invalid root_strategy`);
     if (server.root_fallback !== undefined && !['workspace', 'file_directory', 'none'].includes(server.root_fallback)) add(`language server ${server.id}: invalid root_fallback`);
@@ -215,10 +234,10 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   }
   const kind = validId(id) ? kindOf(id) : null;
   if (kind && !kind.need(contributes)) add(`an extension named ${kind.prefix}* must ${kind.message}`);
-  if (kind?.name === 'language' && !(manifest.recommends ?? []).every(item => item.startsWith('loom.lsp.'))) add('a language extension recommends only language servers (loom.lsp.*)');
+  if (kind?.name === 'highlight' && !(manifest.recommends ?? []).every(item => item.startsWith('loom.lsp.'))) add('a highlight extension recommends only language service extensions (loom.lsp.*)');
 
   // Grammars run in a sandbox; a native library would not.
-  try { for (const name of files(dir)) if (NATIVE.test(name) && kind?.name !== 'language server' && kind?.name !== 'runtime') add(`${name}: native libraries are not allowed in this kind of extension`); }
+  try { for (const name of files(dir)) if (NATIVE.test(name) && kind?.name !== 'language service' && kind?.name !== 'runtime') add(`${name}: native libraries are not allowed in this kind of extension`); }
   catch (error) { add(error.message); }
   return {manifest, problems};
 }

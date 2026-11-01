@@ -79,7 +79,8 @@ test('the index lists each extension with its packages and what Loom needs to ch
   assert.equal(index.keyId, 'test-1');
   assert.deepEqual(index.extensions.map(extension => extension.id), ['loom.lang.demo', 'loom.theme.demo']);
   const language = index.extensions[0];
-  assert.deepEqual(language.languages, [{name: 'demo', fileTypes: ['demo']}]);
+  assert.deepEqual(language.highlight, [{name: 'demo', fileTypes: ['demo']}]);
+  assert.equal(language.languages, undefined, 'the index does not carry the old name');
   // What the list shows before installing comes along: icon, README, changelog.
   assert.equal(language.icon.format, 'svg');
   assert.match(language.icon.data, /^<svg /);

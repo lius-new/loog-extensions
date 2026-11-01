@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.typescript-language-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "TypeScript Language Server Language Server",
   "publisher": "Loom",
   "description": "The TypeScript Language Server language server.",
@@ -28,49 +28,51 @@
     "loom.runtime.node@^0.1.0"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.typescript-language-server.typescript-language-server",
-        "name": "TypeScript Language Server",
-        "languages": [
-          "javascript",
-          "typescript"
-        ],
-        "command": "${runtime.node}/node",
-        "args": [
-          "${extension}/node_modules/typescript-language-server/lib/cli.mjs",
-          "--stdio"
-        ],
-        "root_markers": [
-          "tsconfig.json",
-          "jsconfig.json",
-          "package.json"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "workspace",
-        "priority": 10,
-        "bindings": [
-          {
-            "language": "javascript",
-            "language_id": "javascript"
-          },
-          {
-            "language": "typescript",
-            "variant": "typescript",
-            "language_id": "typescript"
-          },
-          {
-            "language": "typescript",
-            "variant": "tsx",
-            "language_id": "typescriptreact"
-          }
-        ],
-        "initialization_options": {
-          "tsserver": {
-            "path": "${extension}/node_modules/typescript/lib/tsserver.js"
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.typescript-language-server.typescript-language-server",
+          "name": "TypeScript Language Server",
+          "languages": [
+            "javascript",
+            "typescript"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/typescript-language-server/lib/cli.mjs",
+            "--stdio"
+          ],
+          "root_markers": [
+            "tsconfig.json",
+            "jsconfig.json",
+            "package.json"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "priority": 10,
+          "bindings": [
+            {
+              "language": "javascript",
+              "language_id": "javascript"
+            },
+            {
+              "language": "typescript",
+              "variant": "typescript",
+              "language_id": "typescript"
+            },
+            {
+              "language": "typescript",
+              "variant": "tsx",
+              "language_id": "typescriptreact"
+            }
+          ],
+          "initialization_options": {
+            "tsserver": {
+              "path": "${extension}/node_modules/typescript/lib/tsserver.js"
+            }
           }
         }
-      }
-    ]
+      ]
+    }
   }
 }

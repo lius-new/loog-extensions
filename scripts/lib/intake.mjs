@@ -79,7 +79,7 @@ export async function intake(files, {root = ROOT, dist = DIST, work = WORK, vali
       }
       const versions = index?.extensions.find(e => e.id === id)?.versions ?? [];
       assert(versions.every(v => compare(version, v.version) > 0), `${id}: a new version must be newer than the published versions`);
-      for (const item of group.items) if (validator && item.manifest.contributes?.languages?.length) {
+      for (const item of group.items) if (validator && item.manifest.contributes?.highlight?.length) {
         // Loom's own loaders must accept it; a sample is optional and not required.
         validate(validator, item.directory, null);
       }

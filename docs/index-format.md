@@ -20,7 +20,7 @@ platform. It is published as an asset of the `registry` release, next to
       "categories": ["Languages"],
       "keywords": ["rust", "syntax", "tree-sitter"],
       "license": "MIT",
-      "languages": [{ "name": "rust", "fileTypes": ["rs"] }],
+      "highlight": [{ "name": "rust", "fileTypes": ["rs"] }],
       "versions": [
         {
           "version": "0.1.0",
@@ -38,8 +38,11 @@ platform. It is published as an asset of the `registry` release, next to
 }
 ```
 
-- `languages[].fileTypes` (and `serves` for servers) let Loom decide which extension a
-  file needs without downloading anything.
+- `highlight[].fileTypes` lets Loom decide which extension a file needs without
+  downloading anything. An entry has `highlight` exactly when the extension contributes
+  `highlight`; that field, not the id, is how Loom knows an extension is for
+  highlighting. A language service extension has `language_service`
+  (`{ "languages": ["rust"] }`) instead, and a theme extension has neither.
 - `icon`, `readme` and `changelog` are optional and let Loom show an extension's
   details before it is installed. `icon` is `{ "format": "svg" | "png", "data": … }`
   (SVG as text, PNG as base64) of at most 32 KiB; `readme` and `changelog` are the

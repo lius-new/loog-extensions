@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.marksman",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Marksman Language Server",
   "publisher": "Loom",
   "description": "The Marksman language server.",
@@ -25,30 +25,32 @@
     "process.execute-local"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.marksman.marksman",
-        "name": "Marksman",
-        "languages": [
-          "markdown"
-        ],
-        "command": "${extension}/marksman",
-        "args": [
-          "server"
-        ],
-        "root_markers": [
-          ".marksman.toml",
-          ".git"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "workspace",
-        "bindings": [
-          {
-            "language": "markdown",
-            "language_id": "markdown"
-          }
-        ]
-      }
-    ]
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.marksman.marksman",
+          "name": "Marksman",
+          "languages": [
+            "markdown"
+          ],
+          "command": "${extension}/marksman",
+          "args": [
+            "server"
+          ],
+          "root_markers": [
+            ".marksman.toml",
+            ".git"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "markdown",
+              "language_id": "markdown"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

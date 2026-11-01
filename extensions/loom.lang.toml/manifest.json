@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.toml",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "TOML Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for TOML.",
@@ -22,7 +22,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.toml.grammar",
         "path": "tree-sitter.json"

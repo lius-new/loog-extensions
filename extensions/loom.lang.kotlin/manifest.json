@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.kotlin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Kotlin Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Kotlin.",
@@ -22,7 +22,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.kotlin.grammar",
         "path": "tree-sitter.json"

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.gitignore",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Git Ignore Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Git Ignore.",
@@ -23,7 +23,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.gitignore.grammar",
         "path": "tree-sitter.json"

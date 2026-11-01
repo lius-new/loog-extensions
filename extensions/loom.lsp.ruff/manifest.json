@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.ruff",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Ruff Language Server",
   "publisher": "Loom",
   "description": "The Ruff language server.",
@@ -25,31 +25,33 @@
     "process.execute-local"
   ],
   "contributes": {
-    "language_servers": [
-      {
-        "id": "loom.lsp.ruff.ruff",
-        "name": "Ruff",
-        "languages": [
-          "python"
-        ],
-        "command": "${extension}/ruff",
-        "args": [
-          "server"
-        ],
-        "root_markers": [
-          "ruff.toml",
-          ".ruff.toml",
-          "pyproject.toml"
-        ],
-        "root_strategy": "nearest",
-        "root_fallback": "workspace",
-        "bindings": [
-          {
-            "language": "python",
-            "language_id": "python"
-          }
-        ]
-      }
-    ]
+    "language_service": {
+      "servers": [
+        {
+          "id": "loom.lsp.ruff.ruff",
+          "name": "Ruff",
+          "languages": [
+            "python"
+          ],
+          "command": "${extension}/ruff",
+          "args": [
+            "server"
+          ],
+          "root_markers": [
+            "ruff.toml",
+            ".ruff.toml",
+            "pyproject.toml"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "python",
+              "language_id": "python"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

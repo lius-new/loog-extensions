@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.lua",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Lua Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Lua.",
@@ -22,7 +22,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.lua.grammar",
         "path": "tree-sitter.json"

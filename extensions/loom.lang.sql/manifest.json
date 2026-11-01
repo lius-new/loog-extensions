@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.sql",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "SQL Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for SQL.",
@@ -22,7 +22,7 @@
     "loom": ">=0.1.8 <0.3"
   },
   "contributes": {
-    "languages": [
+    "highlight": [
       {
         "id": "loom.lang.sql.grammar",
         "path": "tree-sitter.json"

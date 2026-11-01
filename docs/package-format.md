@@ -28,22 +28,35 @@ published one must have (`loom-ext check` reports each problem):
 | `icon`, `readme`, `changelog` | A PNG or SVG (up to 256 KiB), and two Markdown files (up to 512 KiB) |
 | `engines.loom` | A version range, such as `>=0.1.8 <0.3` |
 | `requires` | `["loom.runtime.node@^0.1.0"]`: extensions that must be installed with this one |
-| `recommends` | Extension ids to suggest; a language recommends only language servers |
-| `capabilities` | A language server declares `process.execute-local` |
+| `recommends` | Extension ids to suggest; a highlight extension recommends only language service extensions |
+| `capabilities` | A language service server declares `process.execute-local` |
 | `executables` | Paths the application marks executable after unpacking |
-| `contributes` | `themes`, `languages`, `snippets`, `queries`, `language_servers` |
+| `contributes` | `highlight`, `highlight_queries`, `language_service`, `themes`, `snippets`, `commands`, `settings` |
 
-Names must follow the scheme: `loom.lang.*` contributes a language, `loom.lsp.*`
-declares a language server, `loom.theme.*` a theme, `loom.queries.*` queries,
-`loom.runtime.*` a runtime.
+Each contribution point is named by what it is for, and Loom refuses a manifest with
+any other name (`languages` and `language_servers` are not accepted):
 
-### Languages
+| Point | What it is for |
+| --- | --- |
+| `highlight` | Syntax colouring: grammar packs |
+| `highlight_queries` | Extra colouring rules for a grammar |
+| `language_service` | What answers hints and diagnostics: `servers` (programs Loom runs) and `providers` (answers the extension's own code gives) |
+| `themes` | Colour themes |
 
-`contributes.languages` points at a `tree-sitter.json`: the standard Tree-sitter
+Names must follow the scheme: `loom.lang.*` contributes highlight, `loom.lsp.*`
+declares a language service server, `loom.theme.*` a theme, `loom.queries.*` highlight
+queries, `loom.runtime.*` a runtime. The index says what an extension is for by the
+field it has (`highlight`, `language_service`), never by its id.
+
+### Highlight
+
+`contributes.highlight` points at a `tree-sitter.json`: the standard Tree-sitter
 description, with each grammar's WebAssembly module (`tree-sitter-<name>.wasm`) and its
 `highlights` and `injections` queries inside the package.
 
-### Language servers
+### Language service servers
+
+`contributes.language_service.servers` lists them:
 
 ```json
 {
@@ -70,6 +83,6 @@ what Loom reads today; they are part of the contract Loom is being extended to.
 
 ## Platforms
 
-A package for a server or runtime holds that platform's program. Languages, themes and
-queries are the same everywhere and are built once, as `any`. A version is either `any`
+A package for a server or runtime holds that platform's program. Highlight, themes and
+highlight queries are the same everywhere and are built once, as `any`. A version is either `any`
 or a set of named platforms, never both.
