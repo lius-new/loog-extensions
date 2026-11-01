@@ -1,7 +1,7 @@
 name: Validate
 
-# The tools and their tests. Each extension is built and checked by its own workflow
-# (ext-<id>.yml), which also runs on pull requests that touch it.
+# The tools and their tests. extensions.yml builds the affected extensions in a
+# parallel matrix on pushes and pull requests.
 on:
   pull_request:
   push:

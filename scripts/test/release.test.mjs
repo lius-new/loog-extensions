@@ -141,30 +141,55 @@ test('a dependent version is withheld until a compatible runtime is available', 
   assert.deepEqual(readyToIndex([server], {extensions: [{id: runtime.id, versions: [{version: '22.1.0'}]}]}), [server]);
 });
 
-test('publication is one writer at a time, needs the signing secret, and runs intake before publish', () => {
+test('publication queues whole batches and reads artifacts only from its own run', () => {
   const text = fs.readFileSync(new URL('../../.github/workflows/publish.yml', import.meta.url), 'utf8');
   assert.match(text, /workflow_call:/);
-  assert.match(text, /group: extension-publication\s+cancel-in-progress: false/);
+  assert.match(text, /group: extension-publication\s+cancel-in-progress: false[\s\S]*?queue: max/);
   assert.ok(text.indexOf('release preflight') < text.indexOf('release intake') && text.indexOf('release intake') < text.indexOf('release publish'));
-  // GitHub cancels all but the newest waiting run of a concurrency group, so a run publishes
-  // every finished build of its commit, not only the one that called it.
-  assert.match(text, /actions: read/);
-  assert.match(text, /workflow_run\.head_sha == "\$\{\{ github\.sha \}\}"/);
+  assert.match(text, /uses: actions\/download-artifact@v4/);
+  assert.match(text, /pattern: packages-\*/);
+  assert.match(text, /path: \.work\/handed-over/);
+  assert.doesNotMatch(text, /gh api|gh run download|workflow_run|github-token:|run-id:|inputs\.artifact/);
   assert.match(text, /release intake \.work\/handed-over\/\*/);
   assert.doesNotMatch(text, /--unsigned|--dry-run/);
-  assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets.LOOM_INDEX_KEY \}\}/);
+  assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets\.LOOM_INDEX_KEY \}\}/);
   assert.match(text, /if: always\(\)/);
+  assert.match(text, /name: delivery-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/);
 });
 
-test('every extension builds in its own workflow and hands over to the shared publisher only on main', () => {
-  const workflows = new URL('../../.github/workflows/', import.meta.url), extensions = new URL('../../extensions/', import.meta.url);
-  for (const id of fs.readdirSync(extensions)) {
-    const text = fs.readFileSync(new URL(`ext-${id}.yml`, workflows), 'utf8');
-    assert.match(text, new RegExp(`extensions/${id.replaceAll('.', '\\.')}/\\*\\*`), id);
-    assert.match(text, /uses: \.\/\.github\/workflows\/publish\.yml/, id);
-    assert.match(text, /if: github\.ref == 'refs\/heads\/main'/, id);
-    assert.match(text, /secrets: inherit/, id);
-    assert.doesNotMatch(text, /LOOM_INDEX_KEY/, 'only the shared publisher sees the signing key');
+test('one batch waits for all independent builds and publishes only on main outside PRs', () => {
+  const workflows = new URL('../../.github/workflows/', import.meta.url);
+  assert.deepEqual(fs.readdirSync(workflows).filter(name => name.startsWith('ext-')), []);
+  const text = fs.readFileSync(new URL('extensions.yml', workflows), 'utf8');
+  const build = text.slice(text.indexOf('  build:'), text.indexOf('  publish:'));
+  const publish = text.slice(text.indexOf('  publish:'));
+  assert.match(text, /fetch-depth: 0/);
+  assert.match(text, /node scripts\/ci\/select-extensions\.mjs/);
+  assert.match(build, /needs: plan/);
+  assert.match(build, /if: needs\.plan\.outputs\.has-extensions == 'true'/);
+  assert.match(build, /fail-fast: false/);
+  assert.match(build, /fromJSON\(needs\.plan\.outputs\.matrix\)/);
+  assert.match(build, /working-directory: extensions\/\$\{\{ matrix\.extension \}\}/);
+  assert.match(build, /run: npm ci/);
+  assert.match(build, /run: node build\.mjs/);
+  assert.match(build, /if-no-files-found: error/);
+  assert.match(build, /overwrite: true/);
+  assert.match(build, /actions\/setup-go@v5[\s\S]*matrix\.extension == 'loom\.lsp\.gopls'/);
+  assert.doesNotMatch(build, /secrets:|LOOM_INDEX_KEY|contents: write|GH_TOKEN/);
+  assert.match(publish, /needs: \[plan, build\]/);
+  assert.match(publish, /!cancelled\(\)/);
+  assert.match(publish, /needs\.plan\.result == 'success'/);
+  assert.match(publish, /needs\.plan\.outputs\.has-extensions == 'true'/);
+  assert.match(publish, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(publish, /github\.event_name != 'pull_request'/);
+  assert.equal(text.match(/uses: \.\/\.github\/workflows\/publish\.yml/g)?.length, 1);
+  assert.match(publish, /LOOM_INDEX_KEY: \$\{\{ secrets\.LOOM_INDEX_KEY \}\}/);
+  assert.doesNotMatch(publish, /secrets: inherit/);
+  for (const entry of fs.readdirSync(new URL('../../extensions/', import.meta.url), {withFileTypes: true})) {
+    if (!entry.isDirectory()) continue;
+    for (const file of ['package.json', 'package-lock.json', 'build.mjs']) {
+      assert.ok(fs.existsSync(new URL('../../extensions/' + entry.name + '/' + file, import.meta.url)), entry.name + ': ' + file);
+    }
   }
 });
 

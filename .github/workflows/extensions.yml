@@ -1,0 +1,82 @@
+name: Extensions
+
+# One build batch per event, followed by one publication of this run's packages.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      extensions:
+        description: Comma-separated extension IDs (empty builds all extensions)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      has-extensions: ${{ steps.select.outputs.has-extensions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Select affected extensions
+        id: select
+        env:
+          REQUESTED_EXTENSIONS: ${{ inputs.extensions }}
+        run: node scripts/ci/select-extensions.mjs
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.has-extensions == 'true'
+    name: Build ${{ matrix.extension }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: extensions/${{ matrix.extension }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-go@v5
+        if: matrix.extension == 'loom.lsp.gopls'
+        with:
+          go-version: stable
+      - run: npm ci
+      - run: node build.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.extension }}
+          path: extensions/${{ matrix.extension }}/dist/*.loomext
+          if-no-files-found: error
+          overwrite: true
+
+  publish:
+    needs: [plan, build]
+    # Wait for the entire matrix. Successful builds can publish even if another fails;
+    # the failed build still makes the overall workflow fail. PRs never publish.
+    if: >-
+      ${{ !cancelled() && needs.plan.result == 'success' &&
+          needs.plan.outputs.has-extensions == 'true' &&
+          github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: write
+      actions: read
+    uses: ./.github/workflows/publish.yml
+    secrets:
+      LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}

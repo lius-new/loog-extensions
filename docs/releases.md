@@ -1,9 +1,22 @@
 # Automatic releases
 
-An extension is released when its own workflow, `.github/workflows/ext-<id>.yml`,
-runs on `main`: the workflow builds the extension's packages however the extension
-builds them, uploads them as an artifact, and calls the shared `publish.yml`. There is
-no release form to fill in for normal publication.
+`.github/workflows/extensions.yml` handles each push to `main` as one build batch:
+it selects the affected extensions, builds their packages in parallel, then calls
+the shared `publish.yml` once after every selected build has finished. Pull requests
+build the same way but never publish. Each extension still owns its build script
+and dependencies; there is no release form for normal publication.
+
+Selection uses the complete git diff: pushes compare the previous tip to the current
+commit, and pull requests compare their merge base to the tested commit. Changes
+under `extensions/<id>/` select that extension. Changes to workflows, scripts,
+validator tools, root package files or `loom-ext.toml` select all extensions. Other
+repository documentation does not start extension builds. An initial push or a
+force push whose previous tip is unavailable conservatively builds everything.
+
+For manual recovery, dispatch **Extensions** on `main`. Its optional `extensions`
+input accepts comma-separated IDs; leave it empty to build all extensions. Dispatches
+on other branches only build. Rerunning failed jobs reuses the successful build
+artifacts from the same run and retries the failed builds and publisher.
 
 ## Version policy
 
@@ -26,8 +39,13 @@ number. Runtime requirements refer to the extension package, for example
 
 ## Delivery
 
-1. The extension's workflow builds the packages and uploads them. It never sees the
-   signing key and cannot publish anything itself.
+1. Each selected extension builds its packages in an independent matrix job and
+   uploads a `packages-<id>` artifact. Builds never receive the signing key. A failed
+   build does not cancel the others; after the matrix finishes, the publisher can
+   deliver successful builds while the overall workflow remains failed.
+   The publisher downloads packages from this workflow run only, so commits and PR
+   artifacts cannot be mixed into another batch. If no build produced packages,
+   publication fails before any release or index is written.
 2. `publish.yml` checks that the signing key is the one Loom trusts, prepares the
    production validator (there is no structure-only fallback), and runs
    `release intake`.
@@ -47,14 +65,13 @@ number. Runtime requirements refer to the extension package, for example
    extensions finishes as failed even when independent ones succeeded.
 
 Publication is serialized (`concurrency: extension-publication`), so there is one
-writer of the index at a time whichever extensions are releasing. GitHub keeps only the
-newest waiting run of such a group and cancels the older waiting ones, even without
-`cancel-in-progress`; many extensions releasing together therefore show some publish
-jobs as canceled. Nothing is lost: each publish run first collects the packages of
-every extension build of the same commit that has finished, and publishes all of them
-(extensions already published are skipped). The last run waiting always sees every
-build that finished before it started, and a build that finishes later asks for
-another run.
+writer of the index at a time across all commits. `cancel-in-progress: false` keeps
+the active publisher running, and `queue: max` keeps up to 100 batches waiting
+instead of replacing the older waiting batch. The limit now counts batches, not
+extensions. If the queue fills, GitHub cancels additional batches; rerun those
+workflows when capacity is available. Each batch downloads and validates its packages
+once, including compatible runtimes and their dependents together. Already published
+versions are skipped; failed or deferred deliveries remain visible in the report.
 
 ## Recovery
 
@@ -66,7 +83,7 @@ sequence does not grow. If an index/signature upload was interrupted, the newest
 verified generation restores the current pair, and an incomplete generation is never
 overwritten.
 
-The run's artifact `delivery-<artifact>-<run-id>` contains the plan, results, final
+The run's artifact `delivery-<run-id>-<attempt>` contains the plan, results, final
 report, packages, signed index and bundle lock.
 
 The commands can also be run locally:
@@ -82,8 +99,8 @@ node scripts/loom-ext.mjs release publish      # requires gh authentication and 
 
 The repository must have its `LOOM_INDEX_KEY` Actions secret; its public key must match
 `loom-ext.toml`'s `index.keys`. The key stays separate from Loom's application signing
-key. Extension workflows pass it to `publish.yml` with `secrets: inherit` and never
-mention it themselves.
+key. Only the batch's publish job passes `LOOM_INDEX_KEY` explicitly to `publish.yml`;
+the selection and build jobs have read-only repository access and no signing secret.
 
 Prefer a published Linux x64 validator pinned by URL and SHA-256 in
 `tools/validator.lock`. Until one exists, CI builds the exact production source commit

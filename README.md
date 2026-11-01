@@ -42,16 +42,16 @@ LOOM_EXTENSIONS_DIR=~/loom-extensions-dev loom
 
 ## Automatic releases
 
-Every extension has its own workflow, `.github/workflows/ext-<id>.yml`. When its
-folder changes on `main` it builds its packages and hands them to the shared
-`publish.yml`, which checks them, publishes the releases and updates the signed
-index. See [Automatic releases](docs/releases.md).
+`.github/workflows/extensions.yml` selects the affected extensions and builds each
+project in parallel. Once the whole batch has finished on `main`, it calls
+`publish.yml` once to check the completed packages, publish the releases and update
+the signed index. See [Automatic releases](docs/releases.md).
 
 ## Layout
 
 ```text
 extensions/<id>/        one project per extension; builds its packages however it likes
-.github/workflows/      ext-<id>.yml for each extension, and the shared publish.yml
+.github/workflows/      batch extension builds, the shared publisher, and tool tests
 tools/validator.lock    where to download loom-ext-validate
 loom-ext.toml           the repository, the extensions Loom bundles, and index settings
 scripts/                the loom-ext command line (Node, no build step) and its tests

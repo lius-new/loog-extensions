@@ -1,16 +1,11 @@
 name: Publish
 
-# Takes in the packages an extension's own workflow built and publishes them: every
+# Takes in this workflow run's completed build batch and publishes it: every
 # package must be one Loom can import, a released version never changes, and the
 # signed index is updated by exactly one writer at a time. Only this workflow holds
 # the index signing key; the extensions' build jobs never see it.
 on:
   workflow_call:
-    inputs:
-      artifact:
-        description: Name of the uploaded artifact holding the extension's .loomext packages
-        type: string
-        required: true
     secrets:
       LOOM_INDEX_KEY:
         required: true
@@ -28,6 +23,8 @@ jobs:
     concurrency:
       group: extension-publication
       cancel-in-progress: false
+      # Keep complete commit batches waiting; never replace a pending publisher.
+      queue: max
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,21 +34,15 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Collect the packages of every build of this commit that has finished
-        # GitHub keeps one waiting run per concurrency group and cancels older waiting ones,
-        # so a run cannot count on being the one that publishes its own extension. Each
-        # run publishes whatever is finished; extensions already published are skipped, and
-        # the last run waiting always sees every build that completed before it started.
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p .work/handed-over
-          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
-            | jq -rs '[.[].artifacts[] | select((.name | startswith("packages-")) and (.expired | not) and .workflow_run.head_sha == "${{ github.sha }}")]
-                      | group_by(.name) | map(max_by(.created_at))[] | "\(.workflow_run.id) \(.name)"' \
-            | while read -r run name; do gh run download "$run" --name "$name" --dir ".work/handed-over/$name"; done
-          ls .work/handed-over
-      - name: Check the publication signing key before anything else
+      - name: Download this run's completed build packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: packages-*
+          path: .work/handed-over
+      - name: Require at least one completed package
+        shell: bash
+        run: find .work/handed-over -name '*.loomext' -print -quit | grep -q .
+      - name: Check the publication signing key
         env:
           LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
         run: node scripts/loom-ext.mjs release preflight
@@ -95,7 +86,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: delivery-${{ inputs.artifact }}-${{ github.run_id }}
+          name: delivery-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             .work/release
             dist/packages
