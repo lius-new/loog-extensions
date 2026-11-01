@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as tar from 'tar';
-import {assetUrl, checkRecipe, normalizeVersion, serverManifest} from '../lib/build-server.mjs';
+import {assetUrl, checkRecipe, normalizeVersion, serverManifest, goBuildEnvironment} from '../lib/build-server.mjs';
 import {hash} from '../lib/util.mjs';
 import {checkout, cli, write} from './cli.mjs';
 
@@ -93,10 +93,13 @@ test('a server needs the runtime it names in requires', async t => {
   assert.doesNotMatch(cli(repo.root, ['check']).err, /uses loom\.runtime/);
 });
 
-test('the extension version must be the pack version', async t => {
-  const { repo, dir } = await demo(t);
+test('the extension version can advance independently of the pinned upstream program', async t => {
+  const { repo, dir, work } = await demo(t);
   write(dir, 'recipe.toml', recipe().replace('version = "1.0.0"\ndescription', 'version = "2.0.0"\ndescription'));
-  assert.match(cli(repo.root, ['check']).err, /must be the pack version \(1\.0\.0\)/);
+  assert.equal(cli(repo.root, ['check']).status, 0);
+  assert.equal(cli(repo.root, ['build', '--offline', '--work', work]).status, 0);
+  const manifest = JSON.parse(fs.readFileSync(path.join(repo.root, 'dist/stage/linux-x86_64/loom.lsp.demo/manifest.json'), 'utf8'));
+  assert.equal(manifest.version, '2.0.0');
 });
 
 test('a server builds from a pinned archive, once per platform, with no network', async t => {
@@ -162,4 +165,15 @@ test('the language servers and runtime in this repository have valid recipes', (
     assert.ok(fs.existsSync(file), id);
   }
   assert.equal(checkRecipe('loom.runtime.node', {kind: 'runtime', extension: {}, pack: {kind: 'cobol'}}).some(problem => /pack\.kind/.test(problem)), true);
+});
+
+test('Go builds isolate a pinned toolchain from inherited compiler roots and share verified module caches', () => {
+  const parent = {GOROOT: 'old-go', GOTOOLDIR: 'old-compiler', GOBIN: 'global-bin', GOPROXY: 'https://proxy.golang.org', PATH: 'managed-go'};
+  const pack = {go: '1.27.0', platforms: {'linux-aarch64': {goos: 'linux', goarch: 'arm64'}}};
+  const env = goBuildEnvironment(pack, 'linux-aarch64', {work: path.resolve('work'), env: parent});
+  assert.equal(env.GOTOOLCHAIN, 'go1.27.0'); assert.equal(env.GOOS, 'linux'); assert.equal(env.GOARCH, 'arm64');
+  assert.equal(env.GOROOT, undefined); assert.equal(env.GOTOOLDIR, undefined); assert.equal(env.GOBIN, undefined);
+  assert.equal(env.GOENV, 'off'); assert.equal(env.GOPROXY, parent.GOPROXY); assert.equal(env.PATH, parent.PATH);
+  assert.equal(env.GOMODCACHE, path.resolve('work/go-cache/modules'));
+  assert.equal(parent.GOROOT, 'old-go', 'the host environment stays unchanged');
 });

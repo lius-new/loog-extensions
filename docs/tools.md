@@ -14,6 +14,7 @@ extensions when none is named. Nothing in `dist/` or `.work/` is committed.
 | `publish [id…] [--yes] [--no-index]` | Uploads each package as a GitHub release, checks the assets, publishes it, then replaces the index. A dry run without `--yes`. |
 | `dev [id…] [--to dir] [--offline]` | Builds and copies extensions into a folder Loom reads (`LOOM_EXTENSIONS_DIR`). |
 | `pin [id…] [--refresh]` | Resolves the hashes and lockfiles servers and runtimes need. Needs the network. |
+| `release plan/preflight/prepare/publish` | Automatic version planning, strict validation and recoverable publication; see [Automatic releases](releases.md). |
 | `keygen --out file` | Makes the index signing key; prints the public key for Loom. |
 
 ## Stages

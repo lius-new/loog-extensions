@@ -1,38 +1,37 @@
 name: Release
 
-# Builds the named extensions (all of them when none is named), publishes each as a
-# GitHub release, then replaces the signed index. Run it by hand.
+# Explicit extension versions merged to main are delivered automatically.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
-      extensions:
-        description: Extension ids separated by spaces (empty for all)
-        required: false
-        default: ''
-      require-validator:
-        description: Fail when loom-ext-validate is not available
+      preview:
+        description: Only show pending versions (do not build or publish)
         type: boolean
-        default: false
-      publish:
-        description: Publish (otherwise only build, pack and index)
-        type: boolean
-        default: false
+        default: true
 
 permissions:
-  contents: write
+  contents: read
 
+# One writer owns extension releases and the signed registry. Every run scans all
+# current pending versions, so a later push also picks up an interrupted batch.
 concurrency:
-  group: release
+  group: extension-publication
   cancel-in-progress: false
 
 jobs:
   release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+    timeout-minutes: 360
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -40,37 +39,74 @@ jobs:
         with:
           go-version: stable
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
       - run: node scripts/loom-ext.mjs check
-      - name: Build
-        run: node scripts/loom-ext.mjs build ${{ inputs.extensions }}
-      - name: Validate
-        run: node scripts/loom-ext.mjs validate ${{ inputs.extensions }} ${{ inputs.require-validator && '--require-validator' || '' }}
-      - name: Pack
-        run: node scripts/loom-ext.mjs pack ${{ inputs.extensions }}
-      - name: The index published so far
-        run: |
-          mkdir -p .work/previous
-          gh release download registry --pattern index.json --dir .work/previous || echo "No index yet."
-      - name: Index
-        run: |
-          previous=""
-          if [ -f .work/previous/index.json ]; then previous="--previous .work/previous/index.json"; fi
-          if [ -n "$LOOM_INDEX_KEY" ]; then
-            node scripts/loom-ext.mjs index $previous
-          else
-            echo "LOOM_INDEX_KEY is not set: the index is built unsigned and not published."
-            node scripts/loom-ext.mjs index --unsigned $previous
-          fi
-      - name: Publish
-        if: inputs.publish && env.LOOM_INDEX_KEY != ''
-        run: node scripts/loom-ext.mjs publish ${{ inputs.extensions }} --yes
-      - name: Lock for Loom
-        if: env.LOOM_INDEX_KEY != ''
-        run: node scripts/loom-ext.mjs lock
-      - uses: actions/upload-artifact@v4
+      - name: Plan pending versions and enforce explicit version changes
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/loom-ext.mjs release plan
+      - name: Check the publication signing key before building
+        if: (steps.plan.outputs.count != '0' || steps.plan.outputs.repair == 'true') && (github.event_name == 'push' || !inputs.preview)
+        env:
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/loom-ext.mjs release preflight
+      - name: Find the pinned production validator
+        id: validator
+        if: steps.plan.outputs.count != '0' && (github.event_name == 'push' || !inputs.preview)
+        run: node scripts/validator-source.mjs
+      - name: Check out the pinned validator source when no binary is published
+        if: steps.validator.outputs.source == 'true'
+        uses: actions/checkout@v4
         with:
-          name: packages-and-index
+          repository: ${{ steps.validator.outputs.repository }}
+          ref: ${{ steps.validator.outputs.revision }}
+          path: .work/validator-source
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.validator.outputs.source == 'true'
+        with:
+          toolchain: 1.97.1
+      - name: Cache the pinned validator build
+        if: steps.validator.outputs.source == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .work/validator-source/tools/ext-validate/target
+          key: validator-${{ runner.os }}-${{ hashFiles('tools/validator-source.toml', 'tools/validator.lock') }}
+      - name: Build the production validator
+        if: steps.validator.outputs.source == 'true'
+        run: |
+          cargo build --release --locked --manifest-path .work/validator-source/tools/ext-validate/Cargo.toml --bin loom-ext-validate
+          mkdir -p tools/bin
+          cp .work/validator-source/tools/ext-validate/target/release/loom-ext-validate tools/bin/loom-ext-validate
+      - name: Cache verified grammar build inputs
+        if: steps.plan.outputs.count != '0' && (github.event_name == 'push' || !inputs.preview)
+        uses: actions/cache@v4
+        with:
           path: |
+            .work/tools
+            .work/downloads
+            .work/modules
+          key: extension-inputs-${{ runner.os }}-${{ hashFiles('tools/toolchain.toml', 'extensions/**/recipe.toml', 'extensions/**/pins.toml') }}
+          restore-keys: extension-inputs-${{ runner.os }}-
+      - name: Build, validate and pack each pending extension
+        if: (steps.plan.outputs.count != '0' || steps.plan.outputs.repair == 'true') && (github.event_name == 'push' || !inputs.preview)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/loom-ext.mjs release prepare
+      - name: Publish verified releases and update the signed index
+        if: (steps.plan.outputs.count != '0' || steps.plan.outputs.repair == 'true') && (github.event_name == 'push' || !inputs.preview)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/loom-ext.mjs release publish
+      - name: Keep delivery results and recovery artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-delivery-${{ github.run_id }}
+          path: |
+            .work/release
             dist/packages
             dist/index
             dist/lock

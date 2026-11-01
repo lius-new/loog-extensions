@@ -32,6 +32,13 @@ node scripts/loom-ext.mjs dev loom.theme.aura --to ~/loom-extensions-dev
 LOOM_EXTENSIONS_DIR=~/loom-extensions-dev loom
 ```
 
+## Automatic releases
+
+Set the extension version in its recipe or manifest and merge to `main`. CI
+selects pending versions, requires the production validator, publishes complete
+packages and updates the signed registry. See [Automatic releases](docs/releases.md)
+for version rules, prerequisites, preview and recovery.
+
 ## Layout
 
 ```text

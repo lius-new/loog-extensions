@@ -66,3 +66,22 @@ Loom verifies it before parsing the index, with the public key it carries for th
 Loom stores the extensions Loom bundles in `extensions.lock` (written by `lock`) with
 a snapshot of the signed index it was locked against. The snapshot is the index used
 when the live one cannot be fetched.
+
+## Publication provenance
+
+Automatically published version entries include an optional `source` object with
+`revision` (the complete extension-repository commit SHA) and `fingerprint` (SHA-256
+of the extension's non-Markdown input file names and content hashes). This lets the
+publisher reject changed packaging inputs under an existing version. Consumers
+that do not use this publication receipt may ignore it. Historical versions need
+not have it; PR/main Git comparisons protect their subsequent changes.
+
+## Interrupted publication
+
+The automatic publisher first uploads and verifies immutable `index-<sequence>.json`
+and `index-<sequence>.json.sig` assets on the registry release, then replaces the
+current `index.json` and `index.json.sig` aliases. Loom continues to read the current
+aliases. If replacing them is interrupted, the publisher can verify the immutable
+generation and repair the pair without rebuilding packages or reusing a sequence.
+An incomplete generation reserves its sequence; the next new generation advances
+beyond it. These extra assets are publication recovery data, not a new client API.

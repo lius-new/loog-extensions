@@ -38,7 +38,7 @@ export function describe(id, dist = DIST) {
 }
 
 /** The index for the packages in `packages`, extending `previous` (the last published one). */
-export function buildIndex({packages, repository, keyId, validityDays, now = new Date(), previous = null, dist = DIST}) {
+export function buildIndex({packages, repository, keyId, validityDays, now = new Date(), previous = null, dist = DIST, descriptions = {}, sources = {}}) {
   const byExtension = new Map();
   for (const record of packages) {
     if (!byExtension.has(record.id)) byExtension.set(record.id, []);
@@ -46,7 +46,7 @@ export function buildIndex({packages, repository, keyId, validityDays, now = new
   }
   const extensions = new Map((previous?.extensions ?? []).map(extension => [extension.id, structuredClone(extension)]));
   for (const [id, records] of byExtension) {
-    const { entry, manifest } = describe(id, dist);
+    const { entry, manifest } = descriptions[id] ?? describe(id, dist);
     const published = extensions.get(id);
     const versions = new Map((published?.versions ?? []).map(version => [version.version, version]));
     const version = records[0].version;
@@ -61,6 +61,7 @@ export function buildIndex({packages, repository, keyId, validityDays, now = new
     versions.set(version, {
       version, engines: manifest.engines, capabilities: manifest.capabilities ?? [], requires: manifest.requires ?? [],
       recommends: manifest.recommends ?? [], artifacts,
+      ...((old?.source ?? sources[id]) ? {source: old?.source ?? sources[id]} : {}),
     });
     extensions.set(id, {...entry, versions: [...versions.values()].sort((a, b) => compare(b.version, a.version))});
   }

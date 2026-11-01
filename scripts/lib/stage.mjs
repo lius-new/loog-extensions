@@ -35,7 +35,13 @@ export function stagePlain(id, {root = EXTENSIONS, dist = DIST} = {}) {
 
 /** Clear everything staged for `id`, so a rebuild cannot leave stale platforms behind. */
 export function clearStage(id, dist = DIST) {
-  for (const platform of stagedPlatforms(id, dist)) removeUnder(stageRoot(dist), path.join(stageRoot(dist), platform, id));
+  const root = stageRoot(dist);
+  if (!fs.existsSync(root)) return;
+  for (const entry of fs.readdirSync(root, {withFileTypes: true})) {
+    if (!entry.isDirectory()) continue;
+    const target = path.join(root, entry.name, id);
+    if (fs.existsSync(target)) removeUnder(root, target);
+  }
 }
 
 export function stageDirectory(id, platform, dist = DIST) {

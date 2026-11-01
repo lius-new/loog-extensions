@@ -1,10 +1,11 @@
 // Unpacking the archives upstream projects publish: zip (read in-process, no links),
-// tar.gz, tar.xz (through the system `xz`) and plain gzip. Entries cannot escape the
+// tar.gz, tar.xz (system XZ or Windows libarchive tar) and plain gzip. Entries cannot escape the
 // destination and only files and folders are written.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import {spawn} from 'node:child_process';
+import {pipeline} from 'node:stream/promises';
 import * as tar from 'tar';
 import {assert, relative} from './util.mjs';
 
@@ -77,18 +78,21 @@ export async function extractInto(archive, format, destination) {
   if (format === 'zip') return extractZip(archive, destination);
   if (format === 'tar.gz') return tar.x({file: archive, cwd: destination, strict: true, filter: tarFilter});
   if (format === 'tar.xz') {
-    const child = spawn('xz', ['-dc', archive], {stdio: ['ignore', 'pipe', 'inherit']});
+    // Windows ships libarchive tar but not xz. Re-emit the archive as a tar
+    // stream, then apply the same checked parser used on other platforms.
+    const command = process.platform === 'win32' ? path.join(process.env.SystemRoot || 'C:/Windows', 'System32/tar.exe') : 'xz';
+    const args = process.platform === 'win32' ? ['-c', '--format=pax', '-f', '-', '@' + path.resolve(archive)] : ['-dc', archive];
+    const child = spawn(command, args, {windowsHide: true, stdio: ['ignore', 'pipe', 'inherit']});
     const finished = new Promise((resolve, reject) => {
       child.on('error', reject);
-      child.on('close', code => (code === 0 ? resolve() : reject(new Error(`xz failed (${code}) for ${archive}`))));
+      child.on('close', code => (code === 0 ? resolve() : reject(new Error(`XZ conversion failed (${code}) for ${archive}`))));
     });
-    const extracted = new Promise((resolve, reject) => {
-      const stream = tar.x({cwd: destination, strict: true, filter: tarFilter});
-      stream.on('error', reject);
-      stream.on('close', resolve);
-      child.stdout.pipe(stream);
-    });
-    await Promise.all([finished, extracted]);
+    try {
+      await Promise.all([finished, pipeline(child.stdout, tar.x({cwd: destination, strict: true, filter: tarFilter}))]);
+    } catch (error) {
+      child.kill();
+      throw error;
+    }
     return undefined;
   }
   throw new Error(`Cannot extract ${format}`);

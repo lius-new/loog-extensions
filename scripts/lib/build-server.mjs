@@ -82,7 +82,7 @@ export function checkRecipe(id, recipe, {root = EXTENSIONS} = {}) {
   const pack = recipe.pack ?? {};
   if (!['archive', 'npm', 'go'].includes(pack.kind)) { bad(`pack.kind must be archive, npm or go`); return problems; }
   if (typeof pack.version !== 'string' || !/^[\w.+-]+$/.test(pack.version)) bad('pack.version must be pinned');
-  else if (normalizeVersion(pack.version) !== extension.version) bad(`extension.version (${extension.version}) must be the pack version (${normalizeVersion(pack.version)})`);
+  // The extension version can advance for packaging fixes without changing the upstream program.
   const names = new Set();
   for (const license of pack.licenses ?? []) {
     let https = false;
@@ -220,12 +220,24 @@ function assembleNpm(id, directory, {work, root}) {
   return `Packages (${list.length}), locked by integrity:\n${list.join('\n')}\n`;
 }
 
+export function goBuildEnvironment(pack, platform, {work, env = process.env}) {
+  const spec = pack.platforms[platform];
+  const scoped = {...env, GOPATH: path.join(work, 'gopath', platform),
+    GOMODCACHE: env.GOMODCACHE || path.join(work, 'go-cache', 'modules'),
+    GOCACHE: env.GOCACHE || path.join(work, 'go-cache', 'build'),
+    GOOS: spec.goos, GOARCH: spec.goarch, CGO_ENABLED: '0', GOTOOLCHAIN: `go${pack.go}`,
+    GOENV: 'off', GOFLAGS: '-trimpath', GOWORK: 'off'};
+  // The selected Go executable must choose its own compiler and standard library.
+  // A host GOROOT can otherwise pair Go 1.27 with an older Go 1.26 compiler.
+  for (const name of ['GOROOT', 'GOTOOLDIR', 'GOBIN']) delete scoped[name];
+  return scoped;
+}
+
 function assembleGo(pack, platform, directory, {work}) {
   const spec = pack.platforms[platform];
   const gopath = path.join(work, 'gopath', platform), module = `${pack.module}@${pack['module-version']}`;
   fs.mkdirSync(work, {recursive: true});
-  const env = {...process.env, GOPATH: gopath, GOOS: spec.goos, GOARCH: spec.goarch, CGO_ENABLED: '0', GOTOOLCHAIN: `go${pack.go}`, GOFLAGS: '-trimpath', GOWORK: 'off'};
-  delete env.GOBIN;
+  const env = goBuildEnvironment(pack, platform, {work});
   run('go', ['install', module], {env, cwd: work});
   // A cross-compiled binary lands in a per-target folder.
   const found = spec.executables.map(name => [path.join(gopath, 'bin', `${spec.goos}_${spec.goarch}`, name), path.join(gopath, 'bin', name)].find(file => fs.existsSync(file)));

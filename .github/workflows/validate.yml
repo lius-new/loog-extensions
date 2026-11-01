@@ -14,12 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: node scripts/loom-ext.mjs check
+      - name: Check release versions against the signed index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/loom-ext.mjs release plan
 
   build-changed:
     name: Build what changed

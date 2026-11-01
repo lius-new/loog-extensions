@@ -29,8 +29,8 @@ export class GitHubReleases {
     }
   }
 
-  createDraft(tag, title, notes) {
-    this.run(['release', 'create', tag, '--repo', this.repository, '--draft', '--latest=false', '--title', title, '--notes', notes]);
+  createDraft(tag, title, notes, {target} = {}) {
+    this.run(['release', 'create', tag, '--repo', this.repository, '--draft', '--latest=false', '--title', title, '--notes', notes, ...(target ? ['--target', target] : [])]);
   }
 
   /** Create the registry release if it is missing: the one mutable release, holding the index. */

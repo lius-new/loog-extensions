@@ -12,3 +12,7 @@ bundled = ["loom.theme.aura", "loom.lang.json", "loom.lang.markdown"]
 key-id = "index-2026-1"
 # How long a signed index stays valid, in days.
 validity-days = 30
+
+# Trusted index public keys; private keys remain in Actions secrets.
+[index.keys]
+index-2026-1 = "rB3b9rxiXnaM5RDpE4QYDT5M3aJxWBByg7XePFL5ORo="

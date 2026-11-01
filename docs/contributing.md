@@ -22,8 +22,9 @@ Only official extensions live here; there is no third-party submission.
 
 ## Releasing
 
-The Release workflow builds the named extensions, publishes them as GitHub releases
-and replaces the signed index. It needs the `LOOM_INDEX_KEY` secret (make one with
-`loom-ext keygen`, and give Loom the printed public key). After a release, run
-`loom-ext lock` and copy `extensions.lock` and the index snapshot into Loom's
-repository so the next Loom build bundles and falls back to the same versions.
+Merge the explicitly versioned changes to `main`; the Release workflow automatically
+delivers pending versions after its checks pass. See [Automatic releases](releases.md)
+for immutable versions, production validation and interrupted-run recovery.
+
+The workflow produces the bundle lock and index snapshot as artifacts. Copy them
+into Loom's repository before its next application release.

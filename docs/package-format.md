@@ -4,7 +4,9 @@ A package is a `.loomext` file: a gzip-compressed tar archive with one root fold
 named after the extension id, holding `manifest.json` and the extension's files.
 File names are `<id>-<version>-<platform>.loomext`.
 
-- Only files and folders; no links, devices or duplicate paths; at most 4096 entries.
+- Only files and folders; no links, devices or duplicate paths; at most 16,384 entries.
+- At most 256 MiB compressed and 512 MiB of expanded file data. These limits
+  match the current Loom importer; large servers keep their required type stubs.
 - Entries are sorted and carry fixed times, so packing the same files gives the same
   bytes and the same SHA-256.
 - Grammars are WebAssembly only. A native library is refused in language, theme and
