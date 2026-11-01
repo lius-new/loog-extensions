@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "go",
+      "path": ".",
+      "file-types": [
+        "go"
+      ],
+      "highlights": "queries/go/highlights.scm"
+    }
+  ]
+}

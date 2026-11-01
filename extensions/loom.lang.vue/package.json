@@ -1,0 +1,10 @@
+{
+  "name": "build-loom-lang-vue",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loom.lang.vue package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22",
+    "tree-sitter-cli": "0.27.1"
+  }
+}

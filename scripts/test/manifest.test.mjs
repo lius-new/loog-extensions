@@ -108,11 +108,3 @@ test('requires, recommends and capabilities are checked', t => {
   assert.match(text, /recommends only language servers/);
   assert.match(text, /unknown capability teleport/);
 });
-
-test('the extensions in this repository pass', () => {
-  const root = path.resolve(import.meta.dirname, '../../extensions');
-  for (const id of fs.readdirSync(root)) {
-    if (fs.existsSync(path.join(root, id, 'recipe.toml'))) continue; // built ones are checked after a build
-    assert.deepEqual(problems(path.join(root, id)), [], id);
-  }
-});

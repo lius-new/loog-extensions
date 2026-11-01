@@ -1,0 +1,10 @@
+{
+  "name": "build-loom-lang-go",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loom.lang.go package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22",
+    "tree-sitter-cli": "0.27.1"
+  }
+}

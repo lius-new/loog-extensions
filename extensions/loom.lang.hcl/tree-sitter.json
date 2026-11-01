@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "hcl",
+      "path": ".",
+      "file-types": [
+        "hcl",
+        "tf",
+        "tfvars"
+      ],
+      "highlights": "queries/hcl/highlights.scm"
+    }
+  ]
+}

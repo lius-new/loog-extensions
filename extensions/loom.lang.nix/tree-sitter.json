@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "nix",
+      "path": ".",
+      "file-types": [
+        "nix"
+      ],
+      "highlights": "queries/nix/highlights.scm"
+    }
+  ]
+}

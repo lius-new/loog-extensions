@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "python",
+      "path": ".",
+      "file-types": [
+        "py",
+        "pyi",
+        "pyw"
+      ],
+      "highlights": "queries/python/highlights.scm"
+    }
+  ]
+}

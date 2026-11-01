@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.javascript",
+  "version": "0.1.1",
+  "name": "JavaScript Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for JavaScript.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "javascript",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.javascript.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

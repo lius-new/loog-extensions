@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "gitattributes",
+      "path": ".",
+      "file-types": [
+        "gitattributes",
+        ".gitattributes"
+      ],
+      "highlights": "queries/gitattributes/highlights.scm"
+    }
+  ]
+}

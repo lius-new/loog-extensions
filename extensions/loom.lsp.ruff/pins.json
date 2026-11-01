@@ -1,0 +1,66 @@
+{
+  "version": "0.17.1",
+  "platforms": {
+    "windows-x86_64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-x86_64-pc-windows-msvc.zip",
+      "sha256": "a841fb7e59680508b9394bfea32e369b3907cc6620a491c65d8d1f479498db82",
+      "size": 10039893,
+      "format": "zip",
+      "executables": [
+        "ruff.exe"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-aarch64-pc-windows-msvc.zip",
+      "sha256": "2f8ba07c7b2b8d1f011056968360e99e9ac7f0815e2d02eaab958255e110b1df",
+      "size": 9795671,
+      "format": "zip",
+      "executables": [
+        "ruff.exe"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-x86_64-apple-darwin.tar.gz",
+      "sha256": "88ee16f88dba9d440e06375f46898ec85baf578042ad086764d5a33558bb6e17",
+      "size": 10125667,
+      "format": "tar.gz",
+      "executables": [
+        "ruff"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-aarch64-apple-darwin.tar.gz",
+      "sha256": "1c8e6e36538eaa0b996378a20c226403c4ca6369ac24884751b024d3a9530b86",
+      "size": 9189931,
+      "format": "tar.gz",
+      "executables": [
+        "ruff"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "2d9878b5e6a3d0dedadbfc01a64bfe54e72f560adbfd235937cd29e1fc9238e3",
+      "size": 10375123,
+      "format": "tar.gz",
+      "executables": [
+        "ruff"
+      ]
+    },
+    "linux-aarch64": {
+      "url": "https://github.com/astral-sh/ruff/releases/download/0.17.1/ruff-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "255404ccf2f7950ff6aad8858321a6f416fe2a840ae4e37dfb4c21cb8774f325",
+      "size": 9557834,
+      "format": "tar.gz",
+      "executables": [
+        "ruff"
+      ]
+    }
+  },
+  "licenses": {
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/astral-sh/ruff/0.17.1/LICENSE",
+      "sha256": "2597d854122b77ddc71971564ca2350a37608575ce324adc5650a2b2051c8f18",
+      "size": 20731
+    }
+  }
+}

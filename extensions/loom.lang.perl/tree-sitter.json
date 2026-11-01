@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "perl",
+      "path": ".",
+      "file-types": [
+        "pl",
+        "pm",
+        "t"
+      ],
+      "highlights": "queries/perl/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "dockerfile",
+      "path": ".",
+      "file-types": [
+        "dockerfile",
+        "containerfile"
+      ],
+      "highlights": "queries/dockerfile/highlights.scm"
+    }
+  ]
+}

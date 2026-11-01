@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "swift",
+      "path": ".",
+      "file-types": [
+        "swift"
+      ],
+      "highlights": "queries/swift/highlights.scm"
+    }
+  ]
+}

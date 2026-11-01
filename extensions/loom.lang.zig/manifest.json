@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.zig",
+  "version": "0.1.1",
+  "name": "Zig Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for Zig.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "zig",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT AND MPL-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.zig.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

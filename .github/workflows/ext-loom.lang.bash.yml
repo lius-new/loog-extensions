@@ -1,0 +1,48 @@
+name: loom.lang.bash
+
+# This extension builds itself; the only thing it hands over is its .loomext package.
+on:
+  push:
+    branches: [main]
+    paths:
+      - extensions/loom.lang.bash/**
+      - .github/workflows/ext-loom.lang.bash.yml
+  pull_request:
+    paths:
+      - extensions/loom.lang.bash/**
+      - .github/workflows/ext-loom.lang.bash.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extensions/loom.lang.bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node build.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-loom.lang.bash
+          path: extensions/loom.lang.bash/dist/*.loomext
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      artifact: packages-loom.lang.bash
+    secrets: inherit

@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "objc",
+      "path": ".",
+      "file-types": [
+        "m",
+        "mm"
+      ],
+      "highlights": "queries/objc/highlights.scm"
+    }
+  ]
+}

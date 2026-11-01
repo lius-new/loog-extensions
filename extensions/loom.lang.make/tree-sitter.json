@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "make",
+      "path": ".",
+      "file-types": [
+        "makefile",
+        "mk"
+      ],
+      "highlights": "queries/make/highlights.scm"
+    }
+  ]
+}

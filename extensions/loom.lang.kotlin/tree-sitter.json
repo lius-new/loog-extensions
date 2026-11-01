@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "kotlin",
+      "path": ".",
+      "file-types": [
+        "kt",
+        "kts"
+      ],
+      "highlights": "queries/kotlin/highlights.scm"
+    }
+  ]
+}

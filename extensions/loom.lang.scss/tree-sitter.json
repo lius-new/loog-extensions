@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "scss",
+      "path": ".",
+      "file-types": [
+        "scss"
+      ],
+      "highlights": "queries/scss/highlights.scm"
+    }
+  ]
+}

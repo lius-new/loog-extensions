@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "proto",
+      "path": ".",
+      "file-types": [
+        "proto"
+      ],
+      "highlights": "queries/proto/highlights.scm"
+    }
+  ]
+}

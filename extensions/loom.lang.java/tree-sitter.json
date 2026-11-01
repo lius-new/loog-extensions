@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "java",
+      "path": ".",
+      "file-types": [
+        "java"
+      ],
+      "highlights": "queries/java/highlights.scm"
+    }
+  ]
+}

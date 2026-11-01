@@ -1,0 +1,93 @@
+name: Publish
+
+# Takes in the packages an extension's own workflow built and publishes them: every
+# package must be one Loom can import, a released version never changes, and the
+# signed index is updated by exactly one writer at a time. Only this workflow holds
+# the index signing key; the extensions' build jobs never see it.
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        description: Name of the uploaded artifact holding the extension's .loomext packages
+        type: string
+        required: true
+    secrets:
+      LOOM_INDEX_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    concurrency:
+      group: extension-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact }}
+          path: .work/handed-over
+      - name: Check the publication signing key before anything else
+        env:
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/loom-ext.mjs release preflight
+      - name: Find the pinned production validator
+        id: validator
+        run: node scripts/validator-source.mjs
+      - name: Check out the pinned validator source when no binary is published
+        if: steps.validator.outputs.source == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.validator.outputs.repository }}
+          ref: ${{ steps.validator.outputs.revision }}
+          path: .work/validator-source
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.validator.outputs.source == 'true'
+        with:
+          toolchain: 1.97.1
+      - name: Cache the pinned validator build
+        if: steps.validator.outputs.source == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .work/validator-source/tools/ext-validate/target
+          key: validator-${{ runner.os }}-${{ hashFiles('tools/validator-source.toml', 'tools/validator.lock') }}
+      - name: Build the production validator
+        if: steps.validator.outputs.source == 'true'
+        run: |
+          cargo build --release --locked --manifest-path .work/validator-source/tools/ext-validate/Cargo.toml --bin loom-ext-validate
+          mkdir -p tools/bin
+          cp .work/validator-source/tools/ext-validate/target/release/loom-ext-validate tools/bin/loom-ext-validate
+      - name: Take in the packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/loom-ext.mjs release intake .work/handed-over
+      - name: Publish the releases and update the signed index
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/loom-ext.mjs release publish
+      - name: Keep the delivery results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: delivery-${{ inputs.artifact }}-${{ github.run_id }}
+          path: |
+            .work/release
+            dist/packages
+            dist/index
+            dist/lock
+          if-no-files-found: warn

@@ -1,0 +1,9 @@
+{
+  "name": "build-loom-lsp-yaml-language-server",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loom.lsp.yaml-language-server package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

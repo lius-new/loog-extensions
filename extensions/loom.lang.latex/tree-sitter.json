@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "latex",
+      "path": ".",
+      "file-types": [
+        "tex",
+        "sty",
+        "cls"
+      ],
+      "highlights": "queries/latex/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.scala",
+  "version": "0.1.1",
+  "name": "Scala Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for Scala.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "scala",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.scala.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

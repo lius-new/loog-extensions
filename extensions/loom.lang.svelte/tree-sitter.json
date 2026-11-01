@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "svelte",
+      "path": ".",
+      "file-types": [
+        "svelte"
+      ],
+      "highlights": "queries/svelte/highlights.scm",
+      "injections": "queries/svelte/injections.scm"
+    }
+  ]
+}

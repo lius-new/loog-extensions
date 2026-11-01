@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "graphql",
+      "path": ".",
+      "file-types": [
+        "graphql",
+        "gql"
+      ],
+      "highlights": "queries/graphql/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.julia",
+  "version": "0.1.1",
+  "name": "Julia Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for Julia.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "julia",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT AND MPL-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.julia.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

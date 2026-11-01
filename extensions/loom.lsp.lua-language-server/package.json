@@ -1,0 +1,11 @@
+{
+  "name": "build-loom-lsp-lua-language-server",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loom.lsp.lua-language-server package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22",
+    "adm-zip": "0.6.1",
+    "xz-decompress": "0.2.3"
+  }
+}

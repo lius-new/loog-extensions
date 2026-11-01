@@ -1,0 +1,48 @@
+name: loom.runtime.node
+
+# This extension builds itself; the only thing it hands over is its .loomext packages.
+on:
+  push:
+    branches: [main]
+    paths:
+      - extensions/loom.runtime.node/**
+      - .github/workflows/ext-loom.runtime.node.yml
+  pull_request:
+    paths:
+      - extensions/loom.runtime.node/**
+      - .github/workflows/ext-loom.runtime.node.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extensions/loom.runtime.node
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node build.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-loom.runtime.node
+          path: extensions/loom.runtime.node/dist/*.loomext
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      artifact: packages-loom.runtime.node
+    secrets: inherit

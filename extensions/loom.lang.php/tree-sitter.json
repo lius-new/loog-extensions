@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "php",
+      "path": ".",
+      "file-types": [
+        "php",
+        "phtml"
+      ],
+      "highlights": "queries/php/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "id": "loom.lsp.gopls",
+  "version": "0.1.1",
+  "name": "gopls Language Server",
+  "publisher": "Loom",
+  "description": "The gopls language server.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "gopls",
+    "language server",
+    "lsp"
+  ],
+  "license": "BSD-3-Clause",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_servers": [
+      {
+        "id": "loom.lsp.gopls.gopls",
+        "name": "gopls",
+        "languages": [
+          "go"
+        ],
+        "command": "${extension}/gopls",
+        "root_markers": [
+          "go.work",
+          "go.mod"
+        ],
+        "root_strategy": "nearest",
+        "root_fallback": "workspace",
+        "bindings": [
+          {
+            "language": "go",
+            "language_id": "go"
+          }
+        ]
+      }
+    ]
+  }
+}

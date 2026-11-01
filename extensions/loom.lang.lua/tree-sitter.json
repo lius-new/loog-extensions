@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "lua",
+      "path": ".",
+      "file-types": [
+        "lua"
+      ],
+      "highlights": "queries/lua/highlights.scm"
+    }
+  ]
+}

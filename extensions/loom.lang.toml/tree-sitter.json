@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "toml",
+      "path": ".",
+      "file-types": [
+        "toml"
+      ],
+      "highlights": "queries/toml/highlights.scm"
+    }
+  ]
+}

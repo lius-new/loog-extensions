@@ -1,0 +1,9 @@
+{
+  "name": "build-loom-theme-aura",
+  "private": true,
+  "type": "module",
+  "description": "Packs the loom.theme.aura package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

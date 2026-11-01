@@ -1,0 +1,17 @@
+{
+  "grammars": [
+    {
+      "name": "cpp",
+      "path": ".",
+      "file-types": [
+        "cpp",
+        "cc",
+        "cxx",
+        "hpp",
+        "hh",
+        "hxx"
+      ],
+      "highlights": "queries/cpp/highlights.scm"
+    }
+  ]
+}

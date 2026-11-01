@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "rust",
+      "path": ".",
+      "file-types": [
+        "rs"
+      ],
+      "highlights": "queries/rust/highlights.scm",
+      "injections": "queries/rust/injections.scm"
+    }
+  ]
+}

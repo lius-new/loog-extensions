@@ -1,0 +1,15 @@
+{
+  "grammars": [
+    {
+      "name": "javascript",
+      "path": ".",
+      "file-types": [
+        "js",
+        "jsx",
+        "mjs",
+        "cjs"
+      ],
+      "highlights": "queries/javascript/highlights.scm"
+    }
+  ]
+}

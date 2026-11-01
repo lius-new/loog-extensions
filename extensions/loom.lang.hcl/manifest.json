@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.hcl",
+  "version": "0.1.1",
+  "name": "HCL Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for HCL.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "hcl",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "Apache-2.0 AND MPL-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.hcl.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

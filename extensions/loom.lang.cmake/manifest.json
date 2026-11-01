@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.cmake",
+  "version": "0.1.1",
+  "name": "CMake Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for CMake.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "cmake",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT AND MPL-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.cmake.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

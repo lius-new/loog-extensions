@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "loom.lsp.pyright",
+  "version": "0.1.1",
+  "name": "Pyright Language Server",
+  "publisher": "Loom",
+  "description": "The Pyright language server.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "pyright",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "requires": [
+    "loom.runtime.node@^0.1.0"
+  ],
+  "contributes": {
+    "language_servers": [
+      {
+        "id": "loom.lsp.pyright.pyright",
+        "name": "Pyright",
+        "languages": [
+          "python"
+        ],
+        "command": "${runtime.node}/node",
+        "args": [
+          "${extension}/node_modules/pyright/langserver.index.js",
+          "--stdio"
+        ],
+        "root_markers": [
+          "pyrightconfig.json",
+          "pyproject.toml",
+          "setup.py",
+          "setup.cfg",
+          "requirements.txt"
+        ],
+        "root_strategy": "nearest",
+        "root_fallback": "workspace",
+        "priority": 10,
+        "bindings": [
+          {
+            "language": "python",
+            "language_id": "python"
+          }
+        ]
+      }
+    ]
+  }
+}

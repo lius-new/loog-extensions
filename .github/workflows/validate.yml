@@ -1,5 +1,7 @@
 name: Validate
 
+# The tools and their tests. Each extension is built and checked by its own workflow
+# (ext-<id>.yml), which also runs on pull requests that touch it.
 on:
   pull_request:
   push:
@@ -10,7 +12,7 @@ permissions:
 
 jobs:
   tools:
-    name: Tools and manifests
+    name: Tools
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,40 +23,3 @@ jobs:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
-      - run: node scripts/loom-ext.mjs check
-      - name: Check release versions against the signed index
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/loom-ext.mjs release plan
-
-  build-changed:
-    name: Build what changed
-    runs-on: ubuntu-latest
-    needs: tools
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/setup-go@v5
-        with:
-          go-version: stable
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Find the changed extensions
-        id: changed
-        run: |
-          base="${{ github.event.pull_request.base.sha || github.event.before }}"
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
-            base="$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)"
-          fi
-          ids="$(git diff --name-only "$base" HEAD -- extensions | cut -d/ -f2 | sort -u | tr '\n' ' ')"
-          echo "ids=$ids" >> "$GITHUB_OUTPUT"
-          echo "Changed extensions: ${ids:-none}"
-      - name: Build, validate and pack
-        if: steps.changed.outputs.ids != ''
-        run: |
-          node scripts/loom-ext.mjs build ${{ steps.changed.outputs.ids }}
-          node scripts/loom-ext.mjs validate ${{ steps.changed.outputs.ids }}
-          node scripts/loom-ext.mjs pack ${{ steps.changed.outputs.ids }}

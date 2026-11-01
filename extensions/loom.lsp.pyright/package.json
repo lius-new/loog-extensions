@@ -1,0 +1,9 @@
+{
+  "name": "build-loom-lsp-pyright",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loom.lsp.pyright package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

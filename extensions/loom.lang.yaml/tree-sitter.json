@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "yaml",
+      "path": ".",
+      "file-types": [
+        "yaml",
+        "yml"
+      ],
+      "highlights": "queries/yaml/highlights.scm"
+    }
+  ]
+}

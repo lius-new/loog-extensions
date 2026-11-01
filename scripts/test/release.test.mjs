@@ -4,47 +4,48 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {checkout, populate, cli, write} from './cli.mjs';
+import {checkout, populate, write} from './cli.mjs';
 import {generateKeyPair, signIndex, verifyIndex} from '../lib/sign.mjs';
-import {buildIndex} from '../lib/index.mjs';
-import {planRelease, definitions, fingerprint, changedExtensions, readRegistry, readRelease, validateStaged,
-  checkAssets, checkRecords, prepareRelease, finishRelease, readyToIndex, verifyRelease} from '../lib/release.mjs';
+import {createPackage} from '../lib/archive.mjs';
+import {intake} from '../lib/intake.mjs';
+import {fingerprint, readRegistry, readRelease, checkAssets, checkRecords, finishRelease, readyToIndex, verifyRelease} from '../lib/release.mjs';
 
 const commit = 'a'.repeat(40);
 const empty = {schema: 1, sequence: 3, keyId: 'test-1', generated: '2026-11-01T00:00:00Z',
   expires: '2026-12-01T00:00:00Z', extensions: []};
 const definition = (id = 'loom.lang.demo', version = '1.0.0') => ({id, version, platforms: ['any'], fingerprint: 'b'.repeat(64)});
-const indexed = item => ({...empty, extensions: [{id: item.id, versions: [{version: item.version, source: {fingerprint: item.fingerprint}}]}]});
 
 function fixture(t) {
   const repo = checkout(t); populate(repo, ['theme']);
+  // Inputs are what git sees, so the fixture is a repository.
+  execFileSync('git', ['init', '-q'], {cwd: repo.root});
   return {...repo, dist: path.join(repo.root, 'dist'), work: path.join(repo.root, '.work')};
 }
 
-test('pending versions include first delivery and upgrades, while published versions cannot be changed or downgraded', () => {
-  const item = definition();
-  assert.deepEqual(planRelease([item], empty, new Set(), commit).pending, [item]);
-  const previous = indexed(item);
-  assert.deepEqual(planRelease([item], previous).skipped, [item.id]);
-  assert.throws(() => planRelease([{...item, fingerprint: 'c'.repeat(64)}], previous), /bump extension.version/);
-  assert.throws(() => planRelease([item], previous, new Set([item.id])), /bump extension.version/);
-  assert.equal(planRelease([definition(item.id, '1.0.1')], previous).pending.length, 1);
-  assert.throws(() => planRelease([definition(item.id, '0.9.0')], previous), /must be newer/);
-});
+/** The demo theme packaged "elsewhere", taken in, and the plan that goes with it. */
+async function delivery(repo, id = 'loom.theme.demo') {
+  const folder = path.join(repo.root, 'out', id);
+  fs.cpSync(path.join(repo.extensions, id), folder, {recursive: true});
+  const file = path.join(repo.root, 'handed-over', `${id}-1.0.0-any.loomext`);
+  await createPackage(folder, file, id);
+  const [prepared] = await intake([file], {...repo, validator: 'test-validator', validate: () => []});
+  assert.equal(prepared.error, undefined);
+  const item = {id, version: prepared.version, fingerprint: prepared.source.fingerprint, platforms: ['any']};
+  return {item, prepared, plan: {schema: 1, revision: commit, sequence: 3, pending: [item], skipped: []}};
+}
 
-test('Git comparison includes deleted packaging inputs and excludes Markdown documentation', t => {
+test('a fingerprint follows the files git sees, leaves out Markdown, and notices a deleted input', t => {
   const repo = fixture(t);
   const git = (...args) => execFileSync('git', args, {cwd: repo.root, encoding: 'utf8'}).trim();
-  git('init', '-b', 'main'); git('config', 'user.name', 'Release test'); git('config', 'user.email', 'release@example.invalid');
+  git('config', 'user.name', 'Release test'); git('config', 'user.email', 'release@example.invalid');
   git('add', '.'); git('commit', '-m', 'fixture'); const base = git('rev-parse', 'HEAD');
   const original = fingerprint(repo.root, 'loom.theme.demo');
   write(repo.extensions, 'loom.theme.demo/README.md', '# Updated documentation');
   assert.equal(fingerprint(repo.root, 'loom.theme.demo'), original);
-  git('add', '.'); git('commit', '-m', 'docs'); const docs = git('rev-parse', 'HEAD');
-  assert.equal(changedExtensions(repo.root, base, docs).size, 0);
+  write(repo.root, '.gitignore', 'node_modules/\n');
+  write(repo.extensions, 'loom.theme.demo/node_modules/dependency/index.js', 'ignored');
+  assert.equal(fingerprint(repo.root, 'loom.theme.demo'), original);
   fs.rmSync(path.join(repo.extensions, 'loom.theme.demo/icon.svg'));
-  git('add', '.'); git('commit', '-m', 'remove input'); const head = git('rev-parse', 'HEAD');
-  assert.deepEqual([...changedExtensions(repo.root, docs, head)], ['loom.theme.demo']);
   assert.equal(fingerprint(repo.root, 'loom.theme.demo', base), original);
   assert.notEqual(fingerprint(repo.root, 'loom.theme.demo'), original);
 });
@@ -62,39 +63,15 @@ test('registry failures and invalid signatures never become an empty index', asy
   await assert.rejects(readRegistry({...config, index: {keys: {}}}, fetcher), /unknown key/);
 });
 
-test('handwritten languages require the real validator and every declared platform must be staged', t => {
-  const repo = checkout(t); populate(repo, ['language']);
-  assert.equal(cli(repo.root, ['build']).status, 0);
-  const item = definitions(repo.root)[0]; let calls = 0;
-  const options = {root: repo.root, dist: path.join(repo.root, 'dist'), validator: 'test-validator', validate: () => {calls++; return [];}};
-  validateStaged(item, options); assert.equal(calls, 1);
-  assert.throws(() => validateStaged(item, {...options, validator: null}), /require loom-ext-validate/);
-  assert.throws(() => validateStaged({...item, platforms: ['any', 'linux-x86_64']}, options), /differ from the recipe/);
-  assert.throws(() => validateStaged(item, {...options, validate: () => {throw Error('bad query');}}), /bad query/);
-});
-
-test('preparation checks packaging inputs and local package bytes before publication', async t => {
-  const repo = fixture(t), item = definitions(repo.root)[0];
-  const prepared = await prepareRelease(item, {...repo, validator: 'test-validator', repository: 'acme/extensions', lookup: async () => null});
+test('the package bytes are checked against their records before and after publication', async t => {
+  const repo = fixture(t), {item, prepared} = await delivery(repo);
   checkRecords(item, prepared.records, path.join(repo.dist, 'packages'));
   assert.equal(prepared.description.manifest.id, item.id);
+  const remote = {draft: false, assets: prepared.records.map(r => ({name: r.file, size: r.size, digest: `sha256:${r.sha256}`}))};
+  checkAssets(remote, prepared.records);
+  assert.throws(() => checkAssets({...remote, assets: [{...remote.assets[0], digest: undefined}]}, prepared.records), /SHA-256/);
   fs.appendFileSync(path.join(repo.dist, 'packages', prepared.records[0].file), 'corrupt');
   assert.throws(() => checkRecords(item, prepared.records, path.join(repo.dist, 'packages')), /does not match/);
-  write(repo.extensions, 'loom.theme.demo/icon.svg', 'changed');
-  await assert.rejects(prepareRelease(item, {...repo}), /inputs changed/);
-});
-
-test('a public release missing from the index is restored from original bytes, not rebuilt', async t => {
-  const repo = fixture(t), item = definitions(repo.root)[0];
-  const first = await prepareRelease(item, {...repo, validator: 'test-validator', repository: 'acme/extensions', lookup: async () => null});
-  const original = fs.readFileSync(path.join(repo.dist, 'packages', first.records[0].file));
-  const remote = {draft: false, assets: first.records.map(r => ({name: r.file, size: r.size, digest: `sha256:${r.sha256}`, browser_download_url: 'https://example.invalid/package'}))};
-  const recovered = await prepareRelease(item, {...repo, validator: 'test-validator', repository: 'acme/extensions', lookup: async () => remote,
-    download: async (url, sha, target) => fs.writeFileSync(target, original)});
-  assert.equal(recovered.recovered, true); assert.deepEqual(recovered.records, first.records);
-  assert.deepEqual(fs.readFileSync(path.join(repo.dist, 'packages', first.records[0].file)), original);
-  checkAssets(remote, first.records);
-  assert.throws(() => checkAssets({...remote, assets: [{...remote.assets[0], digest: undefined}]}, first.records), /SHA-256/);
 });
 
 function publication(t) {
@@ -125,10 +102,8 @@ import {clearStage} from '../lib/stage.mjs';
 const hashForTest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 test('publication verifies complete assets before visibility, preserves previous entries and recovers after interruption', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+  const ctx = publication(t), {item, prepared, plan} = await delivery(ctx);
   clearStage(item.id, ctx.dist); // CI frees staging before the publisher starts.
-  const plan = planRelease([item], empty, new Set(), commit);
   const options = {...ctx, privateKey: ctx.keys.privatePem, sourceRevision: commit};
   await assert.rejects(finishRelease(plan, [prepared], {...options, privateKey: null}), /LOOM_INDEX_KEY/);
   assert.deepEqual(ctx.calls, []);
@@ -147,11 +122,10 @@ test('publication verifies complete assets before visibility, preserves previous
   assert.equal((await goodRegistry()).index.extensions[0].versions[0].source.revision, commit);
 });
 
-test('failed builds do not hide successful independent extensions, and missing results are failures', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+test('rejected packages do not hide successful independent extensions, and missing results are failures', async t => {
+  const ctx = publication(t), {item, prepared, plan: single} = await delivery(ctx);
   const missing = definition('loom.lang.missing'), failed = definition('loom.lang.failed');
-  const plan = planRelease([item, missing, failed], empty, new Set(), commit);
+  const plan = {...single, pending: [item, missing, failed]};
   const report = await finishRelease(plan, [prepared, {id: failed.id, error: 'build failed'}], {...ctx, privateKey: ctx.keys.privatePem});
   assert.deepEqual(report.indexed, [item.id]);
   assert.deepEqual(report.failures.map(e => e.id).sort(), [failed.id, missing.id]);
@@ -167,26 +141,36 @@ test('a dependent version is withheld until a compatible runtime is available', 
   assert.deepEqual(readyToIndex([server], {extensions: [{id: runtime.id, versions: [{version: '22.1.0'}]}]}), [server]);
 });
 
-test('automatic workflow gates publication on main, real validation and the signing secret', () => {
-  const text = fs.readFileSync(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8');
-  assert.match(text, /push:\s+branches: \[main\]/);
-  assert.match(text, /github.ref == 'refs\/heads\/main'/);
-  assert.match(text, /cancel-in-progress: false/);
-  assert.match(text, /release plan/); assert.match(text, /release prepare/); assert.match(text, /release publish/);
-  assert.doesNotMatch(text, /require-validator:|inputs.extensions|--unsigned/);
+test('publication is one writer at a time, needs the signing secret, and runs intake before publish', () => {
+  const text = fs.readFileSync(new URL('../../.github/workflows/publish.yml', import.meta.url), 'utf8');
+  assert.match(text, /workflow_call:/);
+  assert.match(text, /group: extension-publication\s+cancel-in-progress: false/);
+  assert.ok(text.indexOf('release preflight') < text.indexOf('release intake') && text.indexOf('release intake') < text.indexOf('release publish'));
+  assert.doesNotMatch(text, /--unsigned|--dry-run/);
   assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets.LOOM_INDEX_KEY \}\}/);
   assert.match(text, /if: always\(\)/);
 });
 
+test('every extension builds in its own workflow and hands over to the shared publisher only on main', () => {
+  const workflows = new URL('../../.github/workflows/', import.meta.url), extensions = new URL('../../extensions/', import.meta.url);
+  for (const id of fs.readdirSync(extensions)) {
+    const text = fs.readFileSync(new URL(`ext-${id}.yml`, workflows), 'utf8');
+    assert.match(text, new RegExp(`extensions/${id.replaceAll('.', '\\.')}/\\*\\*`), id);
+    assert.match(text, /uses: \.\/\.github\/workflows\/publish\.yml/, id);
+    assert.match(text, /if: github\.ref == 'refs\/heads\/main'/, id);
+    assert.match(text, /secrets: inherit/, id);
+    assert.doesNotMatch(text, /LOOM_INDEX_KEY/, 'only the shared publisher sees the signing key');
+  }
+});
+
 test('a mismatched remote upload stays a draft and never enters the index', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+  const ctx = publication(t), {prepared, plan} = await delivery(ctx);
   const upload = ctx.releases.upload;
   ctx.releases.upload = (tag, files, options) => {
     upload(tag, files, options);
     if (tag !== 'registry') ctx.remote.get(tag).assets[0].digest = 'sha256:' + '0'.repeat(64);
   };
-  const report = await finishRelease(planRelease([item], empty, new Set(), commit), [prepared], {...ctx, privateKey: ctx.keys.privatePem});
+  const report = await finishRelease(plan, [prepared], {...ctx, privateKey: ctx.keys.privatePem});
   assert.equal(report.failures.length, 1);
   assert.equal(ctx.remote.get('loom.theme.demo-1.0.0').draft, true);
   assert.ok(!ctx.calls.includes('publish') && !ctx.calls.includes('index'));
@@ -231,9 +215,7 @@ test('a mismatched current index/signature pair recovers the newest verified imm
 });
 
 test('an interruption before switching the current pair repairs from its generation without a new release or sequence', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
-  const plan = planRelease([item], empty, new Set(), commit);
+  const ctx = publication(t), {prepared, plan} = await delivery(ctx);
   const options = {...ctx, privateKey: ctx.keys.privatePem};
   const upload = ctx.releases.upload;
   ctx.releases.upload = (tag, files, options) => {
@@ -262,16 +244,15 @@ test('release cleanup removes unfinished platform stages and preserves other ext
 });
 
 test('new indexes advance beyond the reserved sequence of an incomplete generation', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+  const ctx = publication(t), {prepared, plan} = await delivery(ctx);
   (await ctx.registry()).maxSequence = 7;
-  const report = await finishRelease(planRelease([item], empty, new Set(), commit), [prepared], {...ctx, privateKey: ctx.keys.privatePem});
+  const report = await finishRelease(plan, [prepared], {...ctx, privateKey: ctx.keys.privatePem});
   assert.equal(report.sequence, 8);
 });
 
 test('no workflow input or script can delete published extension releases', () => {
-  const text = fs.readFileSync(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8');
-  assert.doesNotMatch(text, /reset/i);
+  const workflows = new URL('../../.github/workflows/', import.meta.url);
+  for (const name of fs.readdirSync(workflows)) assert.doesNotMatch(fs.readFileSync(new URL(name, workflows), 'utf8'), /reset|release delete|--cleanup-tag/i, name);
 });
 
 
@@ -338,16 +319,14 @@ test('release metadata lookup by ID never depends on draft tag or list visibilit
 });
 
 test('new drafts publish by their creation ID even when tag and list discovery never see them', async t => {
-  const ctx = publication(t), item = definitions(ctx.root)[0];
-  const prepared = await prepareRelease(item, {...ctx, validator: 'test-validator'});
+  const ctx = publication(t), {item, prepared, plan} = await delivery(ctx);
   let discovery = 0, readbacks = 0;
   const lookup = async (repo, tag, fetcher, {id} = {}) => {
     if (id === undefined) {discovery++; return null;}
     readbacks++; const remote = ctx.remote.get(tag);
     assert.equal(remote.id, id); return remote;
   };
-  const report = await finishRelease(planRelease([item], empty, new Set(), commit), [prepared],
-    {...ctx, lookup, privateKey: ctx.keys.privatePem});
+  const report = await finishRelease(plan, [prepared], {...ctx, lookup, privateKey: ctx.keys.privatePem});
   assert.deepEqual(report.failures, []);
   assert.deepEqual(report.indexed, [item.id]);
   assert.equal(discovery, 1); assert.equal(readbacks, 2);

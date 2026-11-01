@@ -1,0 +1,11 @@
+{
+  "grammars": [
+    {
+      "name": "bash",
+      "scope": "source.bash",
+      "path": ".",
+      "file-types": ["sh", "bash", ".bashrc", ".bash_profile"],
+      "highlights": "queries/highlights.scm"
+    }
+  ]
+}

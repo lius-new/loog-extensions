@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "r",
+      "path": ".",
+      "file-types": [
+        "r",
+        "rprofile"
+      ],
+      "highlights": "queries/r/highlights.scm"
+    }
+  ]
+}

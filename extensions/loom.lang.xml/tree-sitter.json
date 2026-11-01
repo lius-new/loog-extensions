@@ -1,0 +1,16 @@
+{
+  "grammars": [
+    {
+      "name": "xml",
+      "path": ".",
+      "file-types": [
+        "xml",
+        "svg",
+        "xsd",
+        "xsl",
+        "xslt"
+      ],
+      "highlights": "queries/xml/highlights.scm"
+    }
+  ]
+}

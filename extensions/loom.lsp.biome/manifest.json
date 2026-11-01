@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "id": "loom.lsp.biome",
+  "version": "0.1.1",
+  "name": "Biome Language Server",
+  "publisher": "Loom",
+  "description": "The Biome language server.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "biome",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_servers": [
+      {
+        "id": "loom.lsp.biome.biome",
+        "name": "Biome",
+        "languages": [
+          "javascript",
+          "typescript",
+          "json",
+          "css"
+        ],
+        "command": "${extension}/biome",
+        "args": [
+          "lsp-proxy"
+        ],
+        "root_markers": [
+          "biome.json",
+          "biome.jsonc"
+        ],
+        "root_strategy": "nearest",
+        "root_fallback": "workspace",
+        "bindings": [
+          {
+            "language": "javascript",
+            "language_id": "javascript"
+          },
+          {
+            "language": "typescript",
+            "variant": "typescript",
+            "language_id": "typescript"
+          },
+          {
+            "language": "typescript",
+            "variant": "tsx",
+            "language_id": "typescriptreact"
+          },
+          {
+            "language": "json",
+            "language_id": "json"
+          },
+          {
+            "language": "css",
+            "language_id": "css"
+          }
+        ]
+      }
+    ]
+  }
+}

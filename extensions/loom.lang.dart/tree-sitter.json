@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "dart",
+      "path": ".",
+      "file-types": [
+        "dart"
+      ],
+      "highlights": "queries/dart/highlights.scm"
+    }
+  ]
+}

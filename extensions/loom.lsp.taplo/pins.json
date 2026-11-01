@@ -1,0 +1,66 @@
+{
+  "version": "0.10.0",
+  "platforms": {
+    "windows-x86_64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-windows-x86_64.gz",
+      "sha256": "550fdc955343f8a196447a05346ecf8827e391726e4ded577bb00a0a36cf220c",
+      "size": 5182493,
+      "format": "gz",
+      "executables": [
+        "taplo.exe"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-windows-aarch64.gz",
+      "sha256": "c16a9a1248bdd746fde657b0196bfc47c8bede1e50ae73b7d9d33088a6682180",
+      "size": 4810191,
+      "format": "gz",
+      "executables": [
+        "taplo.exe"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-x86_64.gz",
+      "sha256": "898122cde3a0b1cd1cbc2d52d3624f23338218c91b5ddb71518236a4c2c10ef2",
+      "size": 4921954,
+      "format": "gz",
+      "executables": [
+        "taplo"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-aarch64.gz",
+      "sha256": "713734314c3e71894b9e77513c5349835eefbd52908445a0d73b0c7dc469347d",
+      "size": 4616415,
+      "format": "gz",
+      "executables": [
+        "taplo"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
+      "sha256": "8fe196b894ccf9072f98d4e1013a180306e17d244830b03986ee5e8eabeb6156",
+      "size": 5116068,
+      "format": "gz",
+      "executables": [
+        "taplo"
+      ]
+    },
+    "linux-aarch64": {
+      "url": "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-aarch64.gz",
+      "sha256": "033681d01eec8376c3fd38fa3703c79316f5e14bb013d859943b60a07bccdcc3",
+      "size": 4631779,
+      "format": "gz",
+      "executables": [
+        "taplo"
+      ]
+    }
+  },
+  "licenses": {
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/tamasfe/taplo/0.10.0/LICENSE",
+      "sha256": "b23690ab205e06bf09725ef88e0b321175cbc2dd4d9f8ec7f7cd0577302c244d",
+      "size": 1070
+    }
+  }
+}

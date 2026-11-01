@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "julia",
+      "path": ".",
+      "file-types": [
+        "jl"
+      ],
+      "highlights": "queries/julia/highlights.scm"
+    }
+  ]
+}

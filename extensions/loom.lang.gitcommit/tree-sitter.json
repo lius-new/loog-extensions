@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "gitcommit",
+      "path": ".",
+      "file-types": [
+        "commit_editmsg",
+        "merge_msg",
+        "tag_editmsg"
+      ],
+      "highlights": "queries/gitcommit/highlights.scm"
+    }
+  ]
+}

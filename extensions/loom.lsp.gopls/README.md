@@ -1,0 +1,14 @@
+# gopls Language Server
+
+The gopls language server.
+
+Extension package: 0.1.0. Upstream program: 0.24.0.
+
+## Serves
+
+- **gopls**: `go`
+
+License: BSD-3-Clause. Platform: every supported platform.
+
+Loom starts the server when you open a file it serves, and asks before running it the first time.
+`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.

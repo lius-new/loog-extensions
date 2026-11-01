@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "gitignore",
+      "path": ".",
+      "file-types": [
+        "gitignore",
+        ".gitignore",
+        ".ignore"
+      ],
+      "highlights": "queries/gitignore/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "json5",
+      "path": ".",
+      "file-types": [
+        "json5"
+      ],
+      "highlights": "queries/json5/highlights.scm"
+    }
+  ]
+}

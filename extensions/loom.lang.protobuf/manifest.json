@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "loom.lang.protobuf",
+  "version": "0.1.1",
+  "name": "Protocol Buffers Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for Protocol Buffers.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "protocol buffers",
+    "syntax",
+    "tree-sitter",
+    "proto"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.protobuf.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

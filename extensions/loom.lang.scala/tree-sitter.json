@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "scala",
+      "path": ".",
+      "file-types": [
+        "scala",
+        "sc"
+      ],
+      "highlights": "queries/scala/highlights.scm"
+    }
+  ]
+}

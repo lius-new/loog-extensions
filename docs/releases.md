@@ -1,10 +1,9 @@
 # Automatic releases
 
-Extension versions are written explicitly in `recipe.toml` (`extension.version`)
-for built extensions, or `manifest.json` (`version`) for handwritten ones. Merge
-changes to `main`; the Release workflow tests the tools, checks every definition,
-compares the checkout to the signed registry, and delivers pending versions.
-There is no release form to fill in for normal publication.
+An extension is released when its own workflow, `.github/workflows/ext-<id>.yml`,
+runs on `main`: the workflow builds the extension's packages however the extension
+builds them, uploads them as an artifact, and calls the shared `publish.yml`. There is
+no release form to fill in for normal publication.
 
 ## Version policy
 
@@ -15,104 +14,83 @@ to 1.0.0 when its behavior and integration are stable; there is no shared releas
 number. Runtime requirements refer to the extension package, for example
 `loom.runtime.node@^0.1.0`, not Node's upstream major version.
 
-- A new id or a version newer than all its published versions is pending.
-- Published versions are immutable and are not rebuilt. Changes to an extension's
-  packaging inputs require a new extension version. PR and main checks compare
-  Git changes; new index entries also record the input fingerprint and commit.
-- Markdown documentation alone does not request a new package. Shared builder or
-  toolchain changes apply to future versions and do not republish existing ones.
-- Server/runtime `pack.version` pins the upstream program. `extension.version`
-  names the extension package and advances independently of that program;
-  changing it alone does not change the downloaded program or its pins.
-- Removed definitions do not remove previously published versions from the index.
-
-Each run scans all current pending versions, including an interrupted earlier
-batch. Multiple queued pushes may coalesce; the current version of each extension
-in the checkout is the delivery target. Do not merge several unpublished versions
-of the same extension if every intermediate version needs to be released.
+- A version newer than all of an extension's published versions is new.
+- Published versions are immutable. When the extension's files changed since a version
+  was published (Markdown documentation excepted) and its version did not, publishing
+  refuses it: bump the version. What counts as the extension's files is what git
+  tracks in its folder, so ignored folders such as `node_modules` or build output
+  never do. Index entries record that fingerprint and the commit.
+- The version in the manifest names the extension package and advances independently of
+  the upstream program it repackages.
+- Removed extensions do not remove previously published versions from the index.
 
 ## Delivery
 
-1. Fetch and verify the existing registry. Network errors, missing signatures and
-   unknown keys fail the run; none is treated as an empty registry.
-2. Check the signing key and prepare a production validator. There is no
-   structure-only fallback in automatic publication.
-3. Build each pending extension for all platforms its recipe declares, validate
-   every staged package and its language samples, and pack it. Failures are
-   recorded independently so other extensions can proceed. Staging and expanded
-   upstream archives are removed after each extension to bound runner disk use.
-4. Publish complete extension releases in dependency order. Draft assets can be
-   repaired; public assets are never overwritten. Every asset's size and GitHub
-   SHA-256 are checked before and after publication. Creation returns the stable
-   release ID; upload verification, publication and final verification use that
-   ID instead of rediscovering the draft through tags or lists. Just-written
-   metadata has bounded verification retries; uploads are not repeated by those
-   retries. Tags point to the tested checkout commit.
-5. Fetch the latest verified registry again, preserve its existing versions and
-   add successful versions whose dependencies are available. Upload a signed,
-   immutable `index-<sequence>.json` generation first and verify it; then replace
-   the current index/signature pair and verify those published bytes too.
-6. Produce the bundle lock/snapshot and a delivery report. A batch with failed or
-   deferred extensions finishes as failed even when independent ones succeeded.
+1. The extension's workflow builds the packages and uploads them. It never sees the
+   signing key and cannot publish anything itself.
+2. `publish.yml` checks that the signing key is the one Loom trusts, prepares the
+   production validator (there is no structure-only fallback), and runs
+   `release intake`.
+3. Intake unpacks every package and checks it: manifest, files, name, one version for
+   all platforms, a version newer than the published ones, the extension unchanged
+   since a published version, and Loom's own loaders importing it. One extension's
+   failure does not stop others.
+4. `release publish` creates each extension's release as a draft, uploads the
+   packages, checks every asset's size and GitHub SHA-256, publishes it, then checks
+   again. Creation returns the stable release ID; later steps use it instead of
+   rediscovering the draft through tags or lists. Tags point to the tested commit.
+5. It then fetches the latest verified registry again, keeps its existing versions and
+   adds the successful ones whose dependencies are available. A signed, immutable
+   `index-<sequence>.json` generation is uploaded and verified first; then the current
+   index/signature pair is replaced and verified.
+6. The bundle lock and a delivery report are produced. A batch with failed or deferred
+   extensions finishes as failed even when independent ones succeeded.
 
-Publication is serialized with `cancel-in-progress: false`. The workflow checks
-and builds the same source SHA, and signing secrets are only exposed to the
-preflight and publication steps. Cached downloads and compiled grammar modules
-remain hash-verified by their existing builders.
+Publication is serialized (`concurrency: extension-publication`, no cancelling), so
+there is one writer of the index at a time whichever extensions are releasing.
 
-## Recovery and preview
+## Recovery
 
-Rerun the failed workflow to finish delivery. If an extension release became public
-before its index update finished, the original packages are downloaded, verified
-and validated; they are not recompiled or repacked. If the index already contains
-the verified version, it is not rewritten and its sequence is not incremented.
-If an index/signature upload was interrupted, the newest verified immutable
-generation restores the current pair. An incomplete generation is not overwritten;
-its sequence is reserved and the next new index uses a higher sequence.
+Rerun the failed workflow. If a release became public before the index update
+finished, intake takes the packages the release was published with, not the ones this
+run built, provided the extension's files are those of the released commit; nothing is
+rebuilt or re-uploaded. If the index already lists the version it is left alone and its
+sequence does not grow. If an index/signature upload was interrupted, the newest
+verified generation restores the current pair, and an incomplete generation is never
+overwritten.
 
-**Actions → Release → Run workflow** remains available for maintenance. Its default
-`preview=true` only lists pending versions. Turning preview off performs the same
-strict delivery as a main push. Publication only runs from `main`.
+The run's artifact `delivery-<artifact>-<run-id>` contains the plan, results, final
+report, packages, signed index and bundle lock.
 
-The run summary and `extension-delivery-<run-id>` artifact contain the plan,
-prepared results, final report, packages, signed index and bundle lock. A green
-preview means the plan is valid; it is not proof that packages were published.
-
-The commands used by CI can also be run locally:
+The commands can also be run locally:
 
 ```sh
-node scripts/loom-ext.mjs release plan
-node scripts/loom-ext.mjs release preflight   # requires LOOM_INDEX_KEY
-LOOM_EXT_VALIDATE=/absolute/path/loom-ext-validate node scripts/loom-ext.mjs release prepare
-node scripts/loom-ext.mjs release publish     # requires gh authentication and LOOM_INDEX_KEY
+node scripts/loom-ext.mjs release intake path/to/packages --dry-run   # checks only
+node scripts/loom-ext.mjs release preflight    # requires LOOM_INDEX_KEY
+node scripts/loom-ext.mjs release intake path/to/packages   # records what to publish
+node scripts/loom-ext.mjs release publish      # requires gh authentication and LOOM_INDEX_KEY
 ```
 
-`release plan` reads the registry and writes `.work/release/plan.json` without
-publishing. `release prepare` builds and validates without publishing. These files
-are tied to the checkout SHA and the extension input fingerprints.
+## Enabling the workflows
 
-## Enabling the workflow
-
-The repository must have its existing `LOOM_INDEX_KEY` Actions secret; its public
-key must match `loom-ext.toml`'s `index.keys`. The key stays separate from Loom's
-application signing key.
+The repository must have its `LOOM_INDEX_KEY` Actions secret; its public key must match
+`loom-ext.toml`'s `index.keys`. The key stays separate from Loom's application signing
+key. Extension workflows pass it to `publish.yml` with `secrets: inherit` and never
+mention it themselves.
 
 Prefer a published Linux x64 validator pinned by URL and SHA-256 in
-`tools/validator.lock`. Until one exists, CI builds the exact production source
-commit in `tools/validator-source.toml` with its locked dependencies. **That commit
-must be available in the Loom repository before this workflow is merged to main.**
-The currently pinned commit is the locally tested `61088d608b3fd3e7c77fc0f861d660cdeafce251`,
-available on Loom's `codex/extension-validator-source` branch. The workflow uses
-the immutable commit SHA. Do not replace it with an arbitrary moving branch or
-silently bypass validation. Once validator
-binaries are published, update `tools/validator.lock`; the binary takes precedence.
+`tools/validator.lock`. Until one exists, CI builds the exact production source commit
+in `tools/validator-source.toml` with its locked dependencies. The commit must stay
+reachable in the Loom repository (it is on `main`); the workflow uses the immutable
+commit SHA. Do not replace it with an arbitrary moving branch or silently bypass
+validation. Once validator binaries are published, update `tools/validator.lock`; the
+binary takes precedence.
 
 The workflow emits the lock as an artifact; refreshing the copy in Loom's repository
 for an application release remains a separate task.
 
 ## Early-stage baseline
 
-All packages started over at 0.1.0 (index sequence 8 is the first generation of
-the new baseline). That one-time reset is finished and its tooling has been
-removed: published releases and their tags are immutable from here on, and no
-workflow input deletes them.
+All packages started over at 0.1.0 (index sequence 8 is the first generation of the
+new baseline). That one-time reset is finished and its tooling removed: published
+releases and their tags are immutable from here on, and no workflow input deletes them.

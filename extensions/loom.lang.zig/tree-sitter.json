@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "zig",
+      "path": ".",
+      "file-types": [
+        "zig"
+      ],
+      "highlights": "queries/zig/highlights.scm"
+    }
+  ]
+}

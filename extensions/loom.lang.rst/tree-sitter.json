@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "rst",
+      "path": ".",
+      "file-types": [
+        "rst"
+      ],
+      "highlights": "queries/rst/highlights.scm"
+    }
+  ]
+}

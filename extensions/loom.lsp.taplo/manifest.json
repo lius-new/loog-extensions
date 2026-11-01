@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "id": "loom.lsp.taplo",
+  "version": "0.1.1",
+  "name": "Taplo Language Server",
+  "publisher": "Loom",
+  "description": "The Taplo language server.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "taplo",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_servers": [
+      {
+        "id": "loom.lsp.taplo.taplo",
+        "name": "Taplo",
+        "languages": [
+          "toml"
+        ],
+        "command": "${extension}/taplo",
+        "args": [
+          "lsp",
+          "stdio"
+        ],
+        "root_markers": [
+          ".taplo.toml",
+          "taplo.toml"
+        ],
+        "root_strategy": "nearest",
+        "root_fallback": "workspace",
+        "bindings": [
+          {
+            "language": "toml",
+            "language_id": "toml"
+          }
+        ]
+      }
+    ]
+  }
+}

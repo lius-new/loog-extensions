@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "c",
+      "path": ".",
+      "file-types": [
+        "c",
+        "h"
+      ],
+      "highlights": "queries/c/highlights.scm"
+    }
+  ]
+}

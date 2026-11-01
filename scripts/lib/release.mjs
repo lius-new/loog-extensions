@@ -4,21 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {setTimeout as pause} from 'node:timers/promises';
-import {ROOT, DIST, WORK, assert, files, fileHash, hash, readJson, removeUnder, writeAtomic} from './util.mjs';
-import {hasRecipe, clearStage, stageDirectory, stagedPlatforms} from './stage.mjs';
-import {buildExtension, readRecipe} from './builders.mjs';
-import {packPlatforms} from './build-server.mjs';
+import {ROOT, DIST, WORK, assert, fileHash, hash, writeAtomic} from './util.mjs';
 import {artifactName} from './platform.mjs';
-import {checkExtension, parseRequirement} from './manifest.mjs';
-import {compare, satisfies} from './semver.mjs';
-import {buildIndex, describe, releaseTag, validateIndex} from './index.mjs';
+import {parseRequirement} from './manifest.mjs';
+import {satisfies} from './semver.mjs';
+import {buildIndex, releaseTag, validateIndex} from './index.mjs';
 import {verifyIndex, signIndex, publicKeyOf} from './sign.mjs';
-import {fetchPinned, extractArchive} from './fetch.mjs';
-import {runValidator} from './validator.mjs';
-import {packExtension} from '../commands/pack.mjs';
 import {GitHubReleases} from './github.mjs';
 
-const SHA = /^[a-f0-9]{40}$/;
 const meaningful = name => !/\.md$/i.test(name);
 const git = (root, args) => execFileSync('git', args, {cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024});
 export const revision = (root = ROOT) => git(root, ['rev-parse', 'HEAD']).trim();
@@ -30,43 +23,10 @@ export function fingerprint(root, id, ref) {
   const prefix = `extensions/${id}/`;
   const entries = ref
     ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', prefix]).split('\0').filter(Boolean)
-    : files(path.join(root, prefix)).map(file => prefix + file);
+    // What git tracks or would track: ignored folders (dependencies, build output) are not inputs.
+    : git(root, ['ls-files', '-z', '-c', '-o', '--exclude-standard', '--', prefix]).split('\0').filter(file => file && fs.existsSync(path.join(root, file)));
   return hash(JSON.stringify(entries.filter(meaningful).sort().map(file => [file.slice(prefix.length),
     ref ? hash(execFileSync('git', ['show', `${ref}:${file}`], {cwd: root, maxBuffer: 32 * 1024 * 1024})) : fileHash(path.join(root, file))])));
-}
-
-export function changedExtensions(root, base, head) {
-  if (!base || /^0+$/.test(base)) return new Set();
-  assert(SHA.test(base) && SHA.test(head), 'Release comparison needs full commit SHAs');
-  return new Set(git(root, ['diff', '--name-only', '--no-renames', '-z', base, head, '--', 'extensions/'])
-    .split('\0').filter(meaningful).map(file => /^extensions\/([^/]+)\//.exec(file)?.[1]).filter(Boolean));
-}
-
-export function definitions(root = ROOT) {
-  return fs.readdirSync(path.join(root, 'extensions'), {withFileTypes: true}).filter(e => e.isDirectory()).map(e => {
-    const dir = path.join(root, 'extensions', e.name);
-    const recipe = hasRecipe(e.name, path.join(root, 'extensions')) ? readRecipe(e.name, path.join(root, 'extensions')) : null;
-    const manifest = recipe?.extension ?? readJson(path.join(dir, 'manifest.json'));
-    return {id: e.name, version: manifest.version, fingerprint: fingerprint(root, e.name),
-      platforms: (recipe && recipe.kind !== 'language' ? packPlatforms(recipe.pack) : ['any']).sort()};
-  }).sort((a, b) => a.id.localeCompare(b.id));
-}
-
-export function planRelease(defs, index, changed = new Set(), commit = '0'.repeat(40)) {
-  const pending = [], skipped = [];
-  for (const item of defs) {
-    const versions = index.extensions.find(e => e.id === item.id)?.versions ?? [];
-    const published = versions.find(v => v.version === item.version);
-    if (published) {
-      assert(!(published.source?.fingerprint && published.source.fingerprint !== item.fingerprint) && !changed.has(item.id),
-        `${item.id} ${item.version}: published packaging inputs changed; bump extension.version`);
-      skipped.push(item.id);
-    } else {
-      assert(versions.every(v => compare(item.version, v.version) > 0), `${item.id}: a new version must be newer than the published versions`);
-      pending.push(item);
-    }
-  }
-  return {schema: 1, revision: commit, sequence: index.sequence, pending, skipped};
 }
 
 async function get(url, fetcher = fetch, headers = {}) {
@@ -188,67 +148,6 @@ export function checkRecords(item, records, directory) {
     const file = path.join(directory, record.file);
     assert(fileHash(file) === record.sha256 && fs.statSync(file).size === record.size, `${record.file}: local size or SHA-256 does not match`);
   }
-}
-
-/** Check every platform and run the real validator, including handwritten languages. */
-export function validateStaged(item, {root = ROOT, dist = DIST, validator, validate = runValidator} = {}) {
-  assert(validator, 'Automatic releases require loom-ext-validate');
-  const actual = stagedPlatforms(item.id, dist);
-  assert(JSON.stringify(actual) === JSON.stringify(item.platforms), `${item.id}: staged platforms differ from the recipe`);
-  const recipe = hasRecipe(item.id, path.join(root, 'extensions')) ? readRecipe(item.id, path.join(root, 'extensions')) : null;
-  const samples = recipe?.kind === 'language' ? Object.entries(recipe.grammars).map(([grammar, value]) => ({grammar,
-    sample: path.join(root, 'extensions', item.id, value.sample)})) : [];
-  const samplesFile = samples.length ? path.join(dist, 'samples', `${item.id}.json`) : null;
-  if (samplesFile) writeAtomic(samplesFile, JSON.stringify(samples));
-  for (const platform of actual) {
-    const directory = stageDirectory(item.id, platform, dist);
-    const {manifest, problems} = checkExtension(directory, {built: true});
-    assert(!problems.length, `${item.id}: ${problems.join('; ')}`);
-    assert(manifest.id === item.id && manifest.version === item.version, `${item.id}: staged identity differs from the plan`);
-    if (!manifest.contributes?.languages?.length) continue;
-    const results = validate(validator, directory, samplesFile);
-    for (const sample of samples) assert(results.some(r => r.grammar === sample.grammar && r.colored > 0), `${sample.grammar}: sample was not colored`);
-  }
-}
-
-export async function prepareRelease(item, {root = ROOT, dist = DIST, work = WORK, validator, repository,
-  lookup = readRelease, validate = runValidator, download = fetchPinned} = {}) {
-  assert(fingerprint(root, item.id) === item.fingerprint, `${item.id}: inputs changed after planning`);
-  clearStage(item.id, dist);
-  const tag = releaseTag(item.id, item.version);
-  const remote = await lookup(repository, tag);
-  let records;
-  if (remote && !remote.draft) {
-    // Never recompile or repack a public version: use the original bytes.
-    if (SHA.test(remote.target_commitish)) assert(fingerprint(root, item.id, remote.target_commitish) === item.fingerprint,
-      `${tag}: inputs differ from its released commit; bump extension.version`);
-    const names = item.platforms.map(platform => artifactName(item.id, item.version, platform));
-    assert(remote.assets.length === names.length && remote.assets.every(a => names.includes(a.name)), `${tag}: release has unexpected platforms`);
-    records = [];
-    for (const platform of item.platforms) {
-      const name = artifactName(item.id, item.version, platform), asset = remote.assets.find(a => a.name === name);
-      assert(/^sha256:[a-f0-9]{64}$/.test(asset.digest ?? ''), `${name}: GitHub supplied no SHA-256`);
-      const file = path.join(dist, 'packages', name);
-      await download(asset.browser_download_url, asset.digest.slice(7), file);
-      const scratch = path.join(work, 'release-recovery', `${item.id}-${platform}`);
-      removeUnder(work, scratch);
-      await extractArchive(file, scratch);
-      assert(fs.readdirSync(scratch).length === 1 && fs.existsSync(path.join(scratch, item.id, 'manifest.json')), `${name}: invalid package root`);
-      const stage = stageDirectory(item.id, platform, dist);
-      fs.mkdirSync(path.dirname(stage), {recursive: true});
-      fs.cpSync(path.join(scratch, item.id), stage, {recursive: true});
-      removeUnder(work, scratch);
-      records.push({id: item.id, version: item.version, platform, file: name, size: asset.size, sha256: asset.digest.slice(7)});
-    }
-    checkAssets(remote, records);
-  } else {
-    await buildExtension(item.id, {root: path.join(root, 'extensions'), dist, work});
-  }
-  validateStaged(item, {root, dist, validator, validate});
-  records ??= await packExtension(item.id, dist);
-  checkRecords(item, records, path.join(dist, 'packages'));
-  return {id: item.id, version: item.version, records, description: describe(item.id, dist),
-    source: {fingerprint: item.fingerprint}, recovered: Boolean(remote && !remote.draft)};
 }
 
 /** Only versions whose required extensions exist can be made discoverable. */

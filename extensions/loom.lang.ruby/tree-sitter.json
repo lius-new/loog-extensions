@@ -1,0 +1,16 @@
+{
+  "grammars": [
+    {
+      "name": "ruby",
+      "path": ".",
+      "file-types": [
+        "rb",
+        "rake",
+        "gemspec",
+        "gemfile",
+        "rakefile"
+      ],
+      "highlights": "queries/ruby/highlights.scm"
+    }
+  ]
+}

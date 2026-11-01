@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loom.lang.perl",
+  "version": "0.1.1",
+  "name": "Perl Language",
+  "publisher": "Loom",
+  "description": "Syntax highlighting for Perl.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "perl",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "NOASSERTION",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom.lang.perl.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

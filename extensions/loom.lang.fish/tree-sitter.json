@@ -1,0 +1,12 @@
+{
+  "grammars": [
+    {
+      "name": "fish",
+      "path": ".",
+      "file-types": [
+        "fish"
+      ],
+      "highlights": "queries/fish/highlights.scm"
+    }
+  ]
+}

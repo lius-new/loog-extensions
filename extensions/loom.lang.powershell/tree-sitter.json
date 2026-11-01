@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "powershell",
+      "path": ".",
+      "file-types": [
+        "ps1",
+        "psm1",
+        "psd1"
+      ],
+      "highlights": "queries/powershell/highlights.scm"
+    }
+  ]
+}

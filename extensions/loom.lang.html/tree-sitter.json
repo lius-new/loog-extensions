@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "html",
+      "path": ".",
+      "file-types": [
+        "html",
+        "htm"
+      ],
+      "highlights": "queries/html/highlights.scm",
+      "injections": "queries/html/injections.scm"
+    }
+  ]
+}

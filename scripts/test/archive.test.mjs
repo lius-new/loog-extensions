@@ -5,7 +5,6 @@ import path from 'node:path';
 import * as tar from 'tar';
 import {createPackage, extractPackage, listPackage, MAX_ENTRIES} from '../lib/archive.mjs';
 import {artifactName, chooseArtifact, hostPlatform, nodeKey, validPlatform} from '../lib/platform.mjs';
-import {extractInto} from '../lib/unpack.mjs';
 import {theme, workspace} from './fixtures.mjs';
 
 test('packing is reproducible and unpacks to the same files', async t => {
@@ -70,13 +69,4 @@ test('large server packages retain thousands of stubs while the entry bound rema
   assert.ok((await listPackage(packed.file)).length > 5500);
   for (let i = 5500; i <= MAX_ENTRIES; i++) fs.writeFileSync(path.join(stubs, i + '.pyi'), '');
   await assert.rejects(createPackage(directory, path.join(root, 'too-many.loomext')), /too many files/);
-});
-
-test('XZ archives pass through the checked extractor on Windows and Unix', async t => {
-  const root = workspace(t);
-  const archive = path.join(root, 'fixture.tar.xz');
-  fs.writeFileSync(archive, Buffer.from('/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4An/AHJdADSbimg4EP0nwrgNeBp1zBXK7jbosWaAlkrbN98PMupHTk1QpgcARBkTWXBrEOCFqj/538g9c4dCmUO4PqOAPEEpLOArfGWu0td6xDFsdN4f/rqOp9RXARTnHu38t+mXXu4EjRuDJqe1BCot4boQxIjpAAAAANgf67nOAvHLAAGOAYAUAABSNfksscRn+wIAAAAABFla', 'base64'));
-  const target = path.join(root, 'unpacked');
-  await extractInto(archive, 'tar.xz', target);
-  assert.equal(fs.readFileSync(path.join(target, 'input/value.txt'), 'utf8'), 'xz fixture\n');
 });

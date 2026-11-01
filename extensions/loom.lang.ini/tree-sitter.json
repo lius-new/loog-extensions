@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "ini",
+      "path": ".",
+      "file-types": [
+        "ini",
+        "cfg",
+        "conf"
+      ],
+      "highlights": "queries/ini/highlights.scm"
+    }
+  ]
+}

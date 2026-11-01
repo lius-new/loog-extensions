@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "diff",
+      "path": ".",
+      "file-types": [
+        "diff",
+        "patch"
+      ],
+      "highlights": "queries/diff/highlights.scm"
+    }
+  ]
+}

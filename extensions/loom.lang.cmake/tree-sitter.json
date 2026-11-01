@@ -1,0 +1,13 @@
+{
+  "grammars": [
+    {
+      "name": "cmake",
+      "path": ".",
+      "file-types": [
+        "cmakelists.txt",
+        "cmake"
+      ],
+      "highlights": "queries/cmake/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "id": "loom.lsp.rust-analyzer",
+  "version": "0.1.1",
+  "name": "rust-analyzer Language Server",
+  "publisher": "Loom",
+  "description": "The rust-analyzer language server.",
+  "categories": [
+    "Languages"
+  ],
+  "keywords": [
+    "rust-analyzer",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "repository": "https://github.com/lius-new/loom-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loom": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_servers": [
+      {
+        "id": "loom.lsp.rust-analyzer.rust-analyzer",
+        "name": "rust-analyzer",
+        "languages": [
+          "rust"
+        ],
+        "command": "${extension}/rust-analyzer",
+        "root_markers": [
+          "Cargo.toml",
+          "rust-project.json"
+        ],
+        "root_strategy": "outermost",
+        "root_fallback": "file_directory",
+        "bindings": [
+          {
+            "language": "rust",
+            "language_id": "rust"
+          }
+        ]
+      }
+    ]
+  }
+}

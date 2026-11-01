@@ -1,0 +1,22 @@
+{
+  "grammars": [
+    {
+      "name": "typescript",
+      "path": ".",
+      "file-types": [
+        "ts",
+        "mts",
+        "cts"
+      ],
+      "highlights": "queries/typescript/highlights.scm"
+    },
+    {
+      "name": "tsx",
+      "path": ".",
+      "file-types": [
+        "tsx"
+      ],
+      "highlights": "queries/tsx/highlights.scm"
+    }
+  ]
+}
