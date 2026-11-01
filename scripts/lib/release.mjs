@@ -69,7 +69,8 @@ export function planRelease(defs, index, changed = new Set(), commit = '0'.repea
 }
 
 async function get(url, fetcher = fetch, headers = {}) {
-  const response = await fetcher(url, {headers, signal: AbortSignal.timeout(120000)});
+  const fresh = url + (url.includes('?') ? '&' : '?') + '_check=' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  const response = await fetcher(fresh, {headers: {'Cache-Control': 'no-cache', ...headers}, signal: AbortSignal.timeout(120000)});
   assert(response.ok, `${url}: HTTP ${response.status}`);
   return response;
 }

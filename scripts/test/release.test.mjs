@@ -55,10 +55,10 @@ test('registry failures and invalid signatures never become an empty index', asy
   const bytes = Buffer.from(JSON.stringify(empty));
   const signature = signIndex(bytes, keys.privatePem, 'test-1');
   const response = value => new Response(value, {status: 200});
-  const fetcher = async url => response(url.endsWith('.sig') ? signature : bytes);
+  const fetcher = async url => response(new URL(url).pathname.endsWith('.sig') ? signature : bytes);
   assert.equal((await readRegistry(config, fetcher)).index.sequence, 3);
   await assert.rejects(readRegistry(config, async () => new Response('', {status: 503})), /HTTP 503/);
-  await assert.rejects(readRegistry(config, async url => response(url.endsWith('.sig') ? signature : JSON.stringify({...empty, sequence: 4}))), /signature/);
+  await assert.rejects(readRegistry(config, async url => response(new URL(url).pathname.endsWith('.sig') ? signature : JSON.stringify({...empty, sequence: 4}))), /signature/);
   await assert.rejects(readRegistry({...config, index: {keys: {}}}, fetcher), /unknown key/);
 });
 
@@ -217,7 +217,7 @@ test('a mismatched current index/signature pair recovers the newest verified imm
   const assets = ['index-4.json', 'index-4.json.sig', 'index-5.json.sig'].map(name => ({name}));
   const responses = {'index.json': bytes(4), 'index.json.sig': signature(3), 'index-4.json': bytes(4), 'index-4.json.sig': signature(4)};
   const fetcher = async url => url.startsWith('https://api.github.com/')
-    ? new Response(JSON.stringify({assets})) : new Response(responses[url.split('/').at(-1)] ?? '', {status: responses[url.split('/').at(-1)] ? 200 : 404});
+    ? new Response(JSON.stringify({assets})) : new Response(responses[new URL(url).pathname.split('/').at(-1)] ?? '', {status: responses[new URL(url).pathname.split('/').at(-1)] ? 200 : 404});
   const recovered = await readRegistry(config, fetcher);
   assert.equal(recovered.index.sequence, 4);
   assert.equal(recovered.maxSequence, 5, 'an incomplete attempted generation is never overwritten');
@@ -341,4 +341,21 @@ test('draft lookup propagates inventory failures and uses fresh requests for ass
   assert.equal((await readRelease('acme/extensions', 'demo', fetcher)).assets.length, 2);
   assert.notEqual(urls[0], urls[2]);
   await assert.rejects(readRelease('acme/extensions', 'demo', async url => new Response('', {status: new URL(url).pathname.includes('/tags/') ? 404 : 503})), /HTTP 503/);
+});
+
+
+test('registry pair reads bypass old CDN aliases without weakening signature verification', async () => {
+  const keys = generateKeyPair();
+  const config = {repository: 'acme/extensions', index: {keys: {'test-1': keys.publicRaw}}};
+  const bytes = Buffer.from(JSON.stringify(empty));
+  const signature = signIndex(bytes, keys.privatePem, 'test-1');
+  const assets = [];
+  const fetcher = async (url, options) => {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'api.github.com') return new Response(JSON.stringify({assets}));
+    assert.equal(options.headers['Cache-Control'], 'no-cache');
+    if (!parsed.searchParams.get('_check')) return new Response('old cached alias');
+    return new Response(parsed.pathname.endsWith('.sig') ? signature : bytes);
+  };
+  assert.equal((await readRegistry(config, fetcher)).recovered, false);
 });
