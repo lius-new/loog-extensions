@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: write
+      actions: read
     concurrency:
       group: extension-publication
       cancel-in-progress: false
@@ -36,10 +37,20 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.artifact }}
-          path: .work/handed-over
+      - name: Collect the packages of every build of this commit that has finished
+        # GitHub keeps one waiting run per concurrency group and cancels older waiting ones,
+        # so a run cannot count on being the one that publishes its own extension. Each
+        # run publishes whatever is finished; extensions already published are skipped, and
+        # the last run waiting always sees every build that completed before it started.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .work/handed-over
+          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            | jq -rs '[.[].artifacts[] | select((.name | startswith("packages-")) and (.expired | not) and .workflow_run.head_sha == "${{ github.sha }}")]
+                      | group_by(.name) | map(max_by(.created_at))[] | "\(.workflow_run.id) \(.name)"' \
+            | while read -r run name; do gh run download "$run" --name "$name" --dir ".work/handed-over/$name"; done
+          ls .work/handed-over
       - name: Check the publication signing key before anything else
         env:
           LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
@@ -74,7 +85,7 @@ jobs:
       - name: Take in the packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/loom-ext.mjs release intake .work/handed-over
+        run: node scripts/loom-ext.mjs release intake .work/handed-over/*
       - name: Publish the releases and update the signed index
         env:
           GH_TOKEN: ${{ github.token }}

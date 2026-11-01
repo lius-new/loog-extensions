@@ -7,6 +7,7 @@ on:
     paths:
       - extensions/loom.lang.julia/**
       - .github/workflows/ext-loom.lang.julia.yml
+      - .github/workflows/publish.yml
   pull_request:
     paths:
       - extensions/loom.lang.julia/**
@@ -42,6 +43,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
+      actions: read
     uses: ./.github/workflows/publish.yml
     with:
       artifact: packages-loom.lang.julia

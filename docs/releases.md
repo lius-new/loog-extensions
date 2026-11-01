@@ -46,8 +46,15 @@ number. Runtime requirements refer to the extension package, for example
 6. The bundle lock and a delivery report are produced. A batch with failed or deferred
    extensions finishes as failed even when independent ones succeeded.
 
-Publication is serialized (`concurrency: extension-publication`, no cancelling), so
-there is one writer of the index at a time whichever extensions are releasing.
+Publication is serialized (`concurrency: extension-publication`), so there is one
+writer of the index at a time whichever extensions are releasing. GitHub keeps only the
+newest waiting run of such a group and cancels the older waiting ones, even without
+`cancel-in-progress`; many extensions releasing together therefore show some publish
+jobs as canceled. Nothing is lost: each publish run first collects the packages of
+every extension build of the same commit that has finished, and publishes all of them
+(extensions already published are skipped). The last run waiting always sees every
+build that finished before it started, and a build that finishes later asks for
+another run.
 
 ## Recovery
 

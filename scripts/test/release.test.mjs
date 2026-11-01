@@ -146,6 +146,11 @@ test('publication is one writer at a time, needs the signing secret, and runs in
   assert.match(text, /workflow_call:/);
   assert.match(text, /group: extension-publication\s+cancel-in-progress: false/);
   assert.ok(text.indexOf('release preflight') < text.indexOf('release intake') && text.indexOf('release intake') < text.indexOf('release publish'));
+  // GitHub cancels all but the newest waiting run of a concurrency group, so a run publishes
+  // every finished build of its commit, not only the one that called it.
+  assert.match(text, /actions: read/);
+  assert.match(text, /workflow_run\.head_sha == "\$\{\{ github\.sha \}\}"/);
+  assert.match(text, /release intake \.work\/handed-over\/\*/);
   assert.doesNotMatch(text, /--unsigned|--dry-run/);
   assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets.LOOM_INDEX_KEY \}\}/);
   assert.match(text, /if: always\(\)/);
