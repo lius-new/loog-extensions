@@ -23,8 +23,25 @@ export class GitHubReleases {
     return JSON.parse(this.run(['api', 'repos/' + this.repository + '/releases', '--paginate', '--slurp'])).flat();
   }
 
+  listTags() {
+    return JSON.parse(this.run(['api', 'repos/' + this.repository + '/tags?per_page=100', '--paginate', '--slurp'])).flat().map(tag => tag.name);
+  }
+
   delete(tag) {
-    this.run(['release', 'delete', tag, '--repo', this.repository, '--cleanup-tag', '--yes']);
+    // Drafts need not have a Git tag. A previous attempt may also have removed
+    // the release before failing to remove its tag, so delete each independently.
+    try {
+      this.run(['release', 'delete', tag, '--repo', this.repository, '--yes']);
+    } catch (error) {
+      const message = String(error.stderr ?? error.message);
+      if (!/release not found|HTTP 404\b/i.test(message)) throw error;
+    }
+    try {
+      this.run(['api', '--method', 'DELETE', 'repos/' + this.repository + '/git/refs/tags/' + encodeURIComponent(tag)]);
+    } catch (error) {
+      const message = String(error.stderr ?? error.message);
+      if (!/HTTP 404\b/i.test(message) && !(/HTTP 422\b/i.test(message) && /Reference does not exist/i.test(message))) throw error;
+    }
   }
 
   /** The release for `tag` (drafts included), or null. */

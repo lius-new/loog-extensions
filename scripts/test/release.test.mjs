@@ -103,6 +103,7 @@ function publication(t) {
   const remote = new Map(); const calls = [];
   let registry = {index: empty, bytes: Buffer.from(JSON.stringify(empty)), signature: signIndex(Buffer.from(JSON.stringify(empty)), keys.privatePem, 'test-1')};
   const releases = {
+    listTags: () => [],
     createDraft(tag, title, notes, options) {assert.equal(options.target, commit); calls.push('create'); remote.set(tag, {draft: true, assets: []});},
     upload(tag, files) {
       calls.push(tag === 'registry' ? (path.basename(files[0]) === 'index.json' ? 'index' : 'generation') : 'packages');
@@ -274,6 +275,7 @@ test('a clean early-stage reset verifies a higher signed empty index before dele
   const ctx = publication(t);
   (await ctx.registry()).maxSequence = 7;
   ctx.releases.list = () => ['loom.theme.demo-1.0.0', 'loom.runtime.node-22.23.3', 'registry', 'v0.1.9', 'another-release'].map(tag_name => ({tag_name}));
+  ctx.releases.listTags = () => ['loom.lang.orphan-1.0.0', 'registry', 'v0.1.9'];
   const deleted = [];
   ctx.releases.delete = tag => {
     assert.equal((ctx.calls.at(-1)), deleted.length ? 'delete' : 'index');
@@ -286,8 +288,8 @@ test('a clean early-stage reset verifies a higher signed empty index before dele
   assert.deepEqual(ctx.calls, []);
   const report = await resetRegistry({...options, confirmed: true});
   assert.equal(report.sequence, 8);
-  assert.deepEqual(report.deleted, ['loom.theme.demo-1.0.0', 'loom.runtime.node-22.23.3']);
-  assert.deepEqual(ctx.calls, ['generation', 'index', 'delete', 'delete']);
+  assert.deepEqual(report.deleted, ['loom.theme.demo-1.0.0', 'loom.runtime.node-22.23.3', 'loom.lang.orphan-1.0.0']);
+  assert.deepEqual(ctx.calls, ['generation', 'index', 'delete', 'delete', 'delete']);
   const current = await ctx.registry();
   assert.deepEqual(current.index.extensions, []);
   assert.equal(current.recovered, false);

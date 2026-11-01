@@ -15,7 +15,9 @@ export async function resetRegistry({config, privateKey, confirmed = false, item
   const previous = await registry(config);
   const all = releases.list();
   assert(Array.isArray(all) && all.every(item => typeof item.tag_name === 'string'), 'Invalid release inventory');
-  const tags = [...new Set(all.map(item => item.tag_name).filter(tag => /^loom\.(?:lang|lsp|runtime|theme|queries)\.[a-z0-9-]+-/.test(tag)))];
+  const refs = releases.listTags();
+  assert(Array.isArray(refs) && refs.every(tag => typeof tag === 'string'), 'Invalid tag inventory');
+  const tags = [...new Set([...all.map(item => item.tag_name), ...refs].filter(tag => /^loom\.(?:lang|lsp|runtime|theme|queries)\.[a-z0-9-]+-/.test(tag)))];
   const index = buildIndex({packages: [], repository: config.repository, keyId: config.index['key-id'], validityDays: config.index['validity-days'], now});
   index.sequence = (previous.maxSequence ?? previous.index.sequence) + 1;
   assert(!validateIndex(index).length, 'Invalid empty registry');

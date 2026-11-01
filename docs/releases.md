@@ -121,6 +121,10 @@ receipts remain available. No version-migration or downgrade exceptions are adde
 The reset shares the publication concurrency slot, so an older delivery finishes
 before it begins. The signing key and all package baselines are checked before
 any remote mutation. The empty index is verified before old releases are removed.
+Cleanup enumerates both releases and Git tags, including orphaned tags left by an
+interrupted attempt. A missing release or tag is already clean; permission,
+transport and other validation failures still stop the reset.
+
 Once reset has run, retry ordinary delivery with **reset=false**; rerunning with
 reset=true deliberately starts over and deletes any newly published packages too.
 Existing development installations must reinstall extensions after this reset,
