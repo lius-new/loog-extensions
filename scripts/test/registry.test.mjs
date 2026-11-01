@@ -240,66 +240,6 @@ test('the index builder accepts previous data without packages of the same exten
 });
 
 
-const githubError = message => Object.assign(new Error(message), {stderr: message});
-
-test('reset deletion tolerates a tagless draft and an already deleted release on retry', () => {
-  const calls = []; let present = true;
-  const github = new GitHubReleases('acme/extensions', args => {
-    calls.push(args);
-    if (args[0] === 'release') {
-      assert.equal(args.includes('--cleanup-tag'), false);
-      if (!present) throw githubError('release not found');
-      present = false; return '';
-    }
-    assert.deepEqual(args, ['api', '--method', 'DELETE', 'repos/acme/extensions/git/refs/tags/loom.lsp.zls-0.17.0']);
-    throw githubError('HTTP 422: Reference does not exist');
-  });
-  github.delete('loom.lsp.zls-0.17.0');
-  github.delete('loom.lsp.zls-0.17.0');
-  assert.equal(calls.length, 4);
-});
-
-test('reset deletion removes a published tag or orphaned tag independently of its release', () => {
-  for (const missingRelease of [false, true]) {
-    const calls = [];
-    const github = new GitHubReleases('acme/extensions', args => {
-      calls.push(args);
-      if (args[0] === 'release' && missingRelease) throw githubError('HTTP 404: Not Found');
-      return '';
-    });
-    github.delete('loom.lang.demo-1.0.0');
-    assert.deepEqual(calls, [
-      ['release', 'delete', 'loom.lang.demo-1.0.0', '--repo', 'acme/extensions', '--yes'],
-      ['api', '--method', 'DELETE', 'repos/acme/extensions/git/refs/tags/loom.lang.demo-1.0.0'],
-    ]);
-  }
-});
-
-test('reset cleanup still fails on permission, transport and unrelated validation errors', () => {
-  for (const message of ['HTTP 403: Resource not accessible', 'HTTP 422: Validation Failed', 'HTTP 500: Internal Server Error', 'Connection reset']) {
-    let calls = 0;
-    const github = new GitHubReleases('acme/extensions', args => {
-      calls++;
-      if (args[0] === 'api') throw githubError(message);
-      return '';
-    });
-    assert.throws(() => github.delete('loom.lang.demo-1.0.0'), error => error.message === message);
-    assert.equal(calls, 2);
-  }
-  let calls = 0;
-  const github = new GitHubReleases('acme/extensions', () => {calls++; throw githubError('HTTP 403: Forbidden');});
-  assert.throws(() => github.delete('loom.lang.demo-1.0.0'), /HTTP 403/);
-  assert.equal(calls, 1);
-});
-
-test('tag inventory includes every page so reset can resume after a release was already removed', () => {
-  const github = new GitHubReleases('acme/extensions', args => {
-    assert.deepEqual(args, ['api', 'repos/acme/extensions/tags?per_page=100', '--paginate', '--slurp']);
-    return JSON.stringify([[{name:'loom.lang.demo-1.0.0'}], [{name:'loom.lsp.demo-0.1.0'}]]);
-  });
-  assert.deepEqual(github.listTags(), ['loom.lang.demo-1.0.0', 'loom.lsp.demo-0.1.0']);
-});
-
 
 test('draft creation keeps its returned ID and ID publication does not rediscover a tag', () => {
   const calls = []; const draft = {id:123,tag_name:'loom.lang.demo-0.1.0',draft:true,assets:[]};

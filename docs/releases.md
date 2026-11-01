@@ -110,26 +110,9 @@ binaries are published, update `tools/validator.lock`; the binary takes preceden
 The workflow emits the lock as an artifact; refreshing the copy in Loom's repository
 for an application release remains a separate task.
 
-## Early-stage clean reset
+## Early-stage baseline
 
-The initial mixed package versions have been reset to 0.1.0. Upstream versions,
-source commits and download pins are unchanged. To apply this to the public
-repository, run Release on main with **preview=false** and **reset=true** once.
-This deliberately publishes an empty signed index, deletes every extension
-release and its tag in this repository, and then rebuilds and publishes all
-current definitions. The registry sequence still increases so frozen snapshots
-and caches accept the new index. The registry release and signed generation
-receipts remain available. No version-migration or downgrade exceptions are added.
-
-The reset shares the publication concurrency slot, so an older delivery finishes
-before it begins. The signing key and all package baselines are checked before
-any remote mutation. The empty index is verified before old releases are removed.
-Cleanup enumerates both releases and Git tags, including orphaned tags left by an
-interrupted attempt. A missing release or tag is already clean; permission,
-transport and other validation failures still stop the reset.
-
-Once reset has run, retry ordinary delivery with **reset=false**; rerunning with
-reset=true deliberately starts over and deletes any newly published packages too.
-Existing development installations must reinstall extensions after this reset,
-and Loom's frozen lock/snapshot must be refreshed from the new signed index.
-Normal pushes and previews never reset anything.
+All packages started over at 0.1.0 (index sequence 8 is the first generation of
+the new baseline). That one-time reset is finished and its tooling has been
+removed: published releases and their tags are immutable from here on, and no
+workflow input deletes them.
