@@ -23,7 +23,7 @@ export const MAX_DOCUMENT = 64 * 1024;
  * What the list shows before anything is installed: the icon (SVG as text, PNG as
  * base64), the README and the changelog, read from the staged package.
  */
-function preview(id, directory, manifest) {
+export function preview(id, directory, manifest) {
   const read = (relative, limit, what) => {
     const bytes = fs.readFileSync(path.join(directory, ...relative.split('/')));
     assert(bytes.length <= limit, `${id}: the ${what} is ${bytes.length} bytes; the index carries at most ${limit}`);
@@ -36,8 +36,20 @@ function preview(id, directory, manifest) {
     result.icon = {format: svg ? 'svg' : 'png', data: svg ? bytes.toString('utf8') : bytes.toString('base64')};
   }
   if (manifest.readme) result.readme = read(manifest.readme, MAX_DOCUMENT, 'README').toString('utf8');
-  if (manifest.changelog) result.changelog = read(manifest.changelog, MAX_DOCUMENT, 'changelog').toString('utf8');
+  if (manifest.changelog) result.changelog = shorten(fs.readFileSync(path.join(directory, ...manifest.changelog.split('/'))));
   return result;
+}
+
+const SHORTENED = '\n\n(Shortened here; the installed extension carries the full changelog.)\n';
+
+/** The changelog as text; one over the limit keeps its newest part, cut at a paragraph. */
+export function shorten(bytes, limit = MAX_DOCUMENT) {
+  if (bytes.length <= limit) return bytes.toString('utf8');
+  const room = limit - Buffer.byteLength(SHORTENED);
+  // Cutting inside a multi-byte character leaves a replacement character at the end; drop it.
+  const cut = bytes.subarray(0, room).toString('utf8').replace(/�+$/, '');
+  const paragraph = cut.lastIndexOf('\n\n');
+  return (paragraph > 0 ? cut.slice(0, paragraph) : cut).trimEnd() + SHORTENED;
 }
 
 /** What the index says about an extension, taken from a staged copy of it. */

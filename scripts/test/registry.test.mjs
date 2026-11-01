@@ -5,7 +5,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {generateKeyPair, publicKeyOf, signIndex, verifyIndex} from '../lib/sign.mjs';
-import {buildIndex, validateIndex} from '../lib/index.mjs';
+import {MAX_DOCUMENT, buildIndex, shorten, validateIndex} from '../lib/index.mjs';
 import {GitHubReleases} from '../lib/github.mjs';
 import {createPackage} from '../lib/archive.mjs';
 import {intake} from '../lib/intake.mjs';
@@ -90,6 +90,16 @@ test('the index lists each extension with its packages and what Loom needs to ch
   assert.deepEqual(version.engines, {loom: '>=0.1.8 <0.3'});
   assert.deepEqual(version.artifacts.map(artifact => artifact.platform), ['any']);
   assert.equal(version.artifacts[0].url, 'https://github.com/acme/extensions/releases/download/loom.lang.demo-1.0.0/loom.lang.demo-1.0.0-any.loomext');
+});
+
+test('a changelog over the limit keeps its newest part, cut at a paragraph', () => {
+  assert.equal(shorten(Buffer.from('# Changes\n')), '# Changes\n');
+  const long = Buffer.from(Array.from({length: 4000}, (_, i) => `## ${i}\n\n- 变更 ${i}`).join('\n\n'));
+  const short = shorten(long);
+  assert.ok(Buffer.byteLength(short) <= MAX_DOCUMENT);
+  assert.ok(short.startsWith('## 0\n'));
+  assert.match(short, /Shortened here/);
+  assert.ok(!short.includes('�'));
 });
 
 test('a signing key is made once and the index it signs verifies against it', async t => {

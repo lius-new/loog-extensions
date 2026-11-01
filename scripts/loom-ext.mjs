@@ -2,7 +2,7 @@
 // The loom-extensions command line. Each command is a module in ./commands.
 import {main} from './lib/cli.mjs';
 
-const COMMANDS = ['check', 'dev', 'lock', 'keygen', 'release'];
+const COMMANDS = ['check', 'dev', 'lock', 'keygen', 'reindex', 'release'];
 
 main(async () => {
   const [name, ...rest] = process.argv.slice(2);

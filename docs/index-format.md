@@ -44,7 +44,8 @@ platform. It is published as an asset of the `registry` release, next to
   details before it is installed. `icon` is `{ "format": "svg" | "png", "data": … }`
   (SVG as text, PNG as base64) of at most 32 KiB; `readme` and `changelog` are the
   Markdown text, at most 64 KiB each. They are taken from the newest staged package
-  and refreshed with every publication; building fails when one is over its limit.
+  and refreshed with every publication. An icon or README over its limit fails the
+  build; a changelog over it keeps its newest part, cut at a paragraph, with a note.
 - Versions are newest first. A published version never changes; to fix one, release
   a new version. `index` refuses to rebuild a version with other contents.
 - A version is for `any` platform or for named ones. Loom installs the package for its
