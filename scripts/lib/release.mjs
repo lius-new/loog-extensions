@@ -116,13 +116,27 @@ export async function readRegistry(config, fetcher = fetch) {
 
 export async function readRelease(repository, tag, fetcher = fetch) {
   const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
-  const response = await fetcher(`https://api.github.com/repos/${repository}/releases/tags/${encodeURIComponent(tag)}`, {
-    headers: {Accept: 'application/vnd.github+json', ...(token ? {Authorization: `Bearer ${token}`} : {})},
-    signal: AbortSignal.timeout(120000),
-  });
-  if (response.status === 404) return null;
-  assert(response.ok, `Reading ${tag}: HTTP ${response.status}`);
-  return response.json();
+  const headers = {Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache', ...(token ? {Authorization: 'Bearer ' + token} : {})};
+  const base = 'https://api.github.com/repos/' + repository + '/releases';
+  const read = url => fetcher(url + (url.includes('?') ? '&' : '?') + '_check=' + Date.now() + '-' + Math.random().toString(16).slice(2),
+    {headers, signal: AbortSignal.timeout(120000)});
+  const response = await read(base + '/tags/' + encodeURIComponent(tag));
+  if (response.status !== 404) {
+    assert(response.ok, 'Reading ' + tag + ': HTTP ' + response.status);
+    return response.json();
+  }
+  // The tag endpoint is for published releases. Authenticated listings also
+  // include drafts, whose tag may not exist until publication. Never cache the
+  // pre-create 404 or a pre-upload asset listing during readback verification.
+  for (let page = 1; ; page++) {
+    const listing = await read(base + '?per_page=100&page=' + page);
+    assert(listing.ok, 'Reading release inventory for ' + tag + ': HTTP ' + listing.status);
+    const releases = await listing.json();
+    assert(Array.isArray(releases), 'Invalid GitHub release inventory');
+    const found = releases.find(release => release.tag_name === tag);
+    if (found) return found;
+    if (releases.length < 100) return null;
+  }
 }
 
 export function checkAssets(release, records) {

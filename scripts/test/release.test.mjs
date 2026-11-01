@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {checkout, populate, cli, write} from './cli.mjs';
 import {generateKeyPair, signIndex, verifyIndex} from '../lib/sign.mjs';
 import {buildIndex} from '../lib/index.mjs';
-import {planRelease, definitions, fingerprint, changedExtensions, readRegistry, validateStaged,
+import {planRelease, definitions, fingerprint, changedExtensions, readRegistry, readRelease, validateStaged,
   checkAssets, checkRecords, prepareRelease, finishRelease, readyToIndex} from '../lib/release.mjs';
 
 const commit = 'a'.repeat(40);
@@ -311,4 +311,34 @@ test('the destructive reset is available only through a manual non-preview workf
   assert.match(text, /if: github.event_name == 'workflow_dispatch' && inputs.reset && !inputs.preview/);
   assert.match(text, /run: node scripts\/reset-registry.mjs --confirm/);
   assert.ok(text.indexOf('reset-registry.mjs --confirm') < text.indexOf('id: plan'));
+});
+
+
+test('release lookup finds drafts through authenticated listings when the published-tag endpoint returns 404', async () => {
+  const calls = [];
+  const draft = {id: 7, tag_name: 'loom.lang.demo-0.1.0', draft: true, assets: [{name: 'package.loomext'}]};
+  const fetcher = async (url, options) => {
+    calls.push(url); assert.equal(options.headers['Cache-Control'], 'no-cache');
+    const parsed = new URL(url); assert.ok(parsed.searchParams.get('_check'));
+    if (parsed.pathname.includes('/tags/')) return new Response('', {status: 404});
+    const page = parsed.searchParams.get('page');
+    return new Response(JSON.stringify(page === '1' ? Array.from({length: 100}, (_, i) => ({tag_name: 'unrelated-' + i})) : [draft]));
+  };
+  assert.deepEqual(await readRelease('acme/extensions', draft.tag_name, fetcher), draft);
+  assert.equal(calls.length, 3);
+  assert.deepEqual(await readRelease('acme/extensions', 'missing', async url => new Response(new URL(url).pathname.includes('/tags/') ? '' : '[]',
+    {status: new URL(url).pathname.includes('/tags/') ? 404 : 200})), null);
+});
+
+test('draft lookup propagates inventory failures and uses fresh requests for asset readback', async () => {
+  let reads = 0; const urls = [];
+  const fetcher = async url => {
+    urls.push(url);
+    if (new URL(url).pathname.includes('/tags/')) return new Response('', {status: 404});
+    return new Response(JSON.stringify([{tag_name: 'demo', draft: true, assets: Array(++reads).fill({name: 'asset'})}]));
+  };
+  assert.equal((await readRelease('acme/extensions', 'demo', fetcher)).assets.length, 1);
+  assert.equal((await readRelease('acme/extensions', 'demo', fetcher)).assets.length, 2);
+  assert.notEqual(urls[0], urls[2]);
+  await assert.rejects(readRelease('acme/extensions', 'demo', async url => new Response('', {status: new URL(url).pathname.includes('/tags/') ? 404 : 503})), /HTTP 503/);
 });
