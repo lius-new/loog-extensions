@@ -2,7 +2,7 @@
 
 The gopls language server.
 
-Extension package: 0.1.0. Upstream program: 0.24.0.
+Extension package: 0.2.0. Upstream program: 0.24.0.
 
 ## Serves
 
@@ -10,5 +10,13 @@ Extension package: 0.1.0. Upstream program: 0.24.0.
 
 License: BSD-3-Clause. Platform: every supported platform.
 
-Loom starts the server when you open a file it serves, and asks before running it the first time.
+The extension's TypeScript WASM owns its Go language client, document synchronization
+and server lifecycle. It uses Loom's general process/provider/UI APIs and creates
+its own status color block. Server execution follows project trust.
+
+Set `LOOM_SOURCE` to the matching Loom checkout, run `npm ci`, then
+`node build.mjs [platform…]` with Go installed. The private `language-clients/`
+sources are bundled independently into this package, and are not part of the SDK.
+The declared `configuration` and `initialization` settings accept JSON text.
+
 `PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.

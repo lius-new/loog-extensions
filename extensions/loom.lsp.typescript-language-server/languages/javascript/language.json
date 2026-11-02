@@ -1,0 +1,1 @@
+{"name":"javascript","display_name":"JavaScript","badge":"JS","aliases":["js","jsx"],"comments":{"line":"//","block":["/*","*/"]},"variants":[{"id":"javascript"}],"files":[{"extensions":["js","jsx","mjs","cjs"],"variant":"javascript"}]}

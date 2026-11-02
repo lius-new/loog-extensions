@@ -8,7 +8,7 @@ a signed index from here and installs what a person asks for, and what a file ne
 | Kind | Id | What it is |
 | --- | --- | --- |
 | Highlight | `loom.lang.<name>` | Syntax highlighting: a Tree-sitter grammar compiled to WebAssembly, its queries and file types |
-| Language service | `loom.lsp.<name>` | What answers hints and diagnostics: a language server program, per platform, with the languages it serves |
+| Language service | `loom.lsp.<name>` | An extension component with typed language providers, its own private client and the server payload |
 | Runtime | `loom.runtime.<name>` | An interpreter other extensions run on, such as Node.js |
 | Theme | `loom.theme.<name>` | Color themes |
 | Queries | `loom.queries.<name>` | Extra highlight rules for a grammar that another extension owns |
@@ -16,6 +16,12 @@ a signed index from here and installs what a person asks for, and what a file ne
 Highlighting and the language service are separate extensions, so each can be chosen,
 updated and disabled on its own. A highlight extension names the language service
 extensions it works well with in `recommends`.
+
+Rust, Go, JavaScript and TypeScript are the first component clients (Loom >=0.1.9).
+Their private sources and checks are in [language-clients](language-clients/README.md).
+Other historical server recipes are retained but listed as `deferred` in
+`loom-ext.toml`, excluding them from new automatic/manual builds until migration.
+Already published assets remain available to compatible older Loom versions.
 
 ## What an extension is here
 

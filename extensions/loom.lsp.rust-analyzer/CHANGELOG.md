@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- Bundle an extension-owned language client with typed providers and status bar UI.
+- Use general Loom process, document and workspace APIs instead of a host server declaration.
+
 ## 0.1.3
 
 - Changed the extension category from Languages to Language Services.

@@ -7,6 +7,10 @@ repository = "lius-new/loom-extensions"
 # The extensions Loom ships inside its installer. `lock` pins exactly these.
 bundled = ["loom.theme.aura", "loom.lang.json", "loom.lang.markdown"]
 
+# Historical host-LSP recipes retained until their component migration. They are
+# excluded from new builds/publication; published releases remain available.
+deferred = ["loom.lsp.bash-language-server", "loom.lsp.biome", "loom.lsp.clangd", "loom.lsp.lua-language-server", "loom.lsp.marksman", "loom.lsp.pyright", "loom.lsp.ruff", "loom.lsp.taplo", "loom.lsp.vscode-langservers-extracted", "loom.lsp.yaml-language-server", "loom.lsp.zls"]
+
 [index]
 # Names the public key the application uses to check the index signature.
 key-id = "index-2026-1"

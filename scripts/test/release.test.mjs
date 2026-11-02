@@ -50,6 +50,23 @@ test('a fingerprint follows the files git sees, leaves out Markdown, and notices
   assert.notEqual(fingerprint(repo.root, 'loom.theme.demo'), original);
 });
 
+test('private language client sources affect all official client fingerprints only', t => {
+  const repo = fixture(t);
+  const theme = fingerprint(repo.root, 'loom.theme.demo');
+  const ids = ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'];
+  for (const id of ids) write(repo.extensions, `${id}/src/main.ts`, 'export const client = true;');
+  const before = ids.map(id => fingerprint(repo.root, id));
+  write(repo.root, 'language-clients/client.ts', 'export const revision = 1;');
+  for (let at = 0; at < ids.length; at++) assert.notEqual(fingerprint(repo.root, ids[at]), before[at]);
+  assert.equal(fingerprint(repo.root, 'loom.theme.demo'), theme);
+  const source = fingerprint(repo.root, ids[0]);
+  write(repo.root, 'language-clients/README.md', '# Documentation');
+  assert.equal(fingerprint(repo.root, ids[0]), source);
+    write(repo.root, 'language-clients/client.test.ts', 'test();');
+    write(repo.root, 'language-clients/fixtures/native-ui/src/main.ts', 'fixture();');
+    assert.equal(fingerprint(repo.root, ids[0]), source);
+});
+
 test('registry failures and invalid signatures never become an empty index', async () => {
   const keys = generateKeyPair();
   const config = {repository: 'acme/extensions', index: {keys: {'test-1': keys.publicRaw}}};

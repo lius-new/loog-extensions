@@ -14,7 +14,7 @@ export const CATEGORIES = ['Themes', 'Syntax Highlighting', 'Language Services',
 export const MAX_ICON_BYTES = 256 * 1024;
 export const MAX_DOCUMENT_BYTES = 512 * 1024;
 export const EVENTS = ['document.open', 'document.change', 'document.close', 'document.save',
-  'selection.change', 'focus.change', 'root.change'];
+  'selection.change', 'focus.change', 'root.change', 'workspace.files'];
 
 const SEGMENT = /^[a-z0-9][a-z0-9-]*$/;
 export const validId = id => typeof id === 'string' && id.split('.').length >= 2 && id.split('.').every(part => SEGMENT.test(part));
@@ -28,13 +28,14 @@ const QUERY_FILES = ['highlights.scm', 'injections.scm'];
  * diagnostics, themes are colour themes. Keep in step with `Contributes` in Loom's
  * src/features/extensions/manifest.rs, which refuses any other name.
  */
-export const CONTRIBUTIONS = ['commands', 'themes', 'snippets', 'highlight', 'highlight_queries', 'language_service', 'settings'];
+export const CONTRIBUTIONS = ['commands', 'themes', 'snippets', 'languages', 'highlight', 'highlight_queries', 'language_service', 'settings'];
 export const LANGUAGE_SERVICE = ['servers', 'providers'];
+export const PROVIDER_KINDS = ['completion', 'diagnostics', 'formatting', 'code-actions', 'save-participant', 'hover', 'definition', 'document-symbols', 'signature-help', 'inlay-hints', 'references', 'workspace-symbols', 'document-highlights', 'rename', 'folding-ranges', 'selection-ranges', 'call-hierarchy', 'type-hierarchy', 'code-lens', 'format-on-type', 'execute-command', 'highlights'];
 
 /** What a package of this id must contribute, by the naming scheme. */
 export const KINDS = [
   {prefix: 'loom.lang.', name: 'highlight', need: c => c.highlight?.length, message: 'contribute highlight'},
-  {prefix: 'loom.lsp.', name: 'language service', need: c => c.language_service?.servers?.length, message: 'declare a language service server'},
+  {prefix: 'loom.lsp.', name: 'language service', need: c => c.language_service?.providers?.length || c.language_service?.servers?.length, message: 'declare language service providers'},
   {prefix: 'loom.theme.', name: 'theme', need: c => c.themes?.length, message: 'contribute a theme'},
   {prefix: 'loom.queries.', name: 'highlight queries', need: c => c.highlight_queries?.length, message: 'contribute highlight queries'},
   {prefix: 'loom.runtime.', name: 'runtime', need: () => true, message: ''},
@@ -183,7 +184,7 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
       if (!fs.existsSync(path.join(dir, ...entry.path.split('/')))) add(`${what} ${entry.id}: ${entry.path} does not exist`);
     } catch (error) { add(error.message); }
   };
-  for (const [kind, what] of [['themes', 'theme'], ['highlight', 'highlight'], ['snippets', 'snippet']]) {
+  for (const [kind, what] of [['themes', 'theme'], ['highlight', 'highlight'], ['languages', 'language identity'], ['snippets', 'snippet']]) {
     for (const entry of contributes[kind] ?? []) resource(entry, what);
   }
   for (const entry of contributes.themes ?? []) {
@@ -193,6 +194,21 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
     }
   }
   for (const entry of contributes.highlight ?? []) checkLanguagePack(dir, entry.path, problems);
+  for (const entry of contributes.languages ?? []) {
+    try {
+      relative(entry.path, 'language identity path');
+      if (path.posix.basename(entry.path) !== 'language.json') throw new Error('must name language.json');
+      const target = path.join(dir, ...entry.path.split('/'));
+      if (!fs.existsSync(target)) continue;
+      if (fs.statSync(target).size > 1024 * 1024) throw new Error('exceeds 1 MiB');
+      const value = readJson(target);
+      if (!GRAMMAR.test(value.name ?? '') || value.name === 'plaintext') throw new Error('invalid canonical language name');
+      if (!Array.isArray(value.variants) || !value.variants.length || value.variants.some(variant => !GRAMMAR.test(variant.id ?? '') || Object.hasOwn(variant, 'grammar'))) throw new Error('variants must declare identities without parser bindings');
+      const variants = new Set(value.variants.map(variant => variant.id));
+      if (variants.size !== value.variants.length) throw new Error('duplicate variant');
+      if (!Array.isArray(value.files) || value.files.some(file => !variants.has(file.variant))) throw new Error('file associations must name a declared variant');
+    } catch (error) { add(`language identity ${entry.id}: ${error.message}`); }
+  }
   for (const query of contributes.highlight_queries ?? []) {
     resource(query, 'highlight query');
     if (!GRAMMAR.test(query.grammar ?? '') || !QUERY_FILES.includes(query.file)) add(`highlight query ${query.id}: needs a grammar name and highlights.scm or injections.scm`);
@@ -207,6 +223,13 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
         if (built && !fs.existsSync(target) && !fs.existsSync(`${target}.exe`)) add(`executable ${executable} is not in the package`);
       } catch (error) { add(error.message); }
     }
+  }
+  for (const provider of contributes.language_service?.providers ?? []) {
+    namespaced(provider.id, 'provider');
+    if (!PROVIDER_KINDS.includes(provider.kind)) add(`provider ${provider.id}: unknown kind ${provider.kind}`);
+    if (!manifest.api || !manifest.component) add(`provider ${provider.id}: requires api and component`);
+    if (!(manifest.capabilities ?? []).includes('documents.read') || !(manifest.capabilities ?? []).includes('languages')) add(`provider ${provider.id}: declare documents.read and languages`);
+    if (!Array.isArray(provider.selector?.languages) || !provider.selector.languages.length || !provider.selector.languages.every(name => GRAMMAR.test(name))) add(`provider ${provider.id}: languages must be canonical names`);
   }
   for (const server of contributes.language_service?.servers ?? []) {
     namespaced(server.id, 'language server');

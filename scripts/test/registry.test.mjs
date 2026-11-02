@@ -103,6 +103,15 @@ test('a changelog over the limit keeps its newest part, cut at a paragraph', () 
   assert.ok(!short.includes('�'));
 });
 
+test('component versions retain their ABI so newer hosts can exclude historical declarations', () => {
+  const id = 'loom.lsp.component';
+  const result = buildIndex({packages:[{id, version:'0.2.0', platform:'any', file:'client.loomext', sha256:'a'.repeat(64), size:4}],
+    repository:'acme/extensions', keyId:'test', validityDays:30,
+    descriptions:{[id]:{entry:{id, name:'Client', language_service:{languages:['rust']}}, manifest:{api:'loom:extension@0.1.0'}}}});
+  assert.equal(result.extensions[0].versions[0].api, 'loom:extension@0.1.0');
+  assert.deepEqual(result.extensions[0].language_service.languages, ['rust']);
+});
+
 test('a signing key is made once and the index it signs verifies against it', async t => {
   const repo = await packaged(t);
   const keyFile = path.join(repo.root, 'keys/index.pem');

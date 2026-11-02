@@ -1,9 +1,8 @@
 // Builds loom.lsp.rust-analyzer into dist/loom.lsp.rust-analyzer-<version>-<platform>.loomext for every platform in
 // pins.json, or for the ones named: node build.mjs [platform…]
 //   npm ci && node build.mjs
-// Each package is the upstream release archive repackaged unchanged: what pins.json
-// says to include, checked against the pinned hash. This project depends on nothing
-// outside itself except what package.json names.
+// Server resources retain their pinned upstream hashes. The extension-owned
+// TypeScript client is built against the Loom checkout named by LOOM_SOURCE.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -13,11 +12,14 @@ import {pipeline} from 'node:stream/promises';
 import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import xz from 'xz-decompress';
+import { buildClient } from '../../language-clients/build.mjs';
+import { clientNotices } from '../../language-clients/notices.mjs';
 
 const {XzReadableStream} = xz;
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
 
 const here = import.meta.dirname;
+const component = buildClient(here);
 const pins = JSON.parse(fs.readFileSync(path.join(here, 'pins.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(here, 'manifest.json'), 'utf8'));
 const work = path.join(here, '.work'), dist = path.join(here, 'dist');
@@ -57,6 +59,9 @@ for (const platform of platforms) {
   fs.rmSync(path.join(dist, 'package', platform), {recursive: true, force: true});
   fs.mkdirSync(folder, {recursive: true});
   for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
+  fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
+  fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
+  clientNotices(folder);
 
   if (pin.format === 'gz') fs.writeFileSync(path.join(folder, pin.executables[0]), zlib.gunzipSync(fs.readFileSync(archive)));
   else if (pin.format === 'raw') fs.copyFileSync(archive, path.join(folder, pin.executables[0]));

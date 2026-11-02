@@ -29,6 +29,11 @@ test('shared build and publication inputs select every extension', () => {
   assert.deepEqual(selectExtensions(ids, [], {all: true}), sorted);
 });
 
+test('private language client changes rebuild all three official clients', () => {
+  const clients = ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'];
+  assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/protocol.ts']), clients.sort());
+});
+
 test('manual selection is explicit, sorted and rejects unknown or malformed IDs', () => {
   assert.deepEqual(selectExtensions(ids, [], {all: true, requested: ' loom.lang.zig,loom.lang.c,loom.lang.c '}), ['loom.lang.c', 'loom.lang.zig']);
   assert.deepEqual(selectExtensions(ids, [], {all: true, requested: ' '}), sorted);
@@ -110,4 +115,14 @@ test('the planner writes a GitHub matrix and an explicit empty-batch guard', t =
   fs.writeFileSync(output, '');
   assert.deepEqual(run({...env, GITHUB_EVENT_NAME: 'workflow_dispatch'}, root), ['loom.lang.c']);
   assert.equal(fs.readFileSync(output, 'utf8'), 'matrix={"extension":["loom.lang.c"]}\nhas-extensions=true\n');
+});
+
+test('deferred historical recipes are excluded from automatic and manual builds', t => {
+  const {root} = repository(t);
+  write(root, 'loom-ext.toml', 'schema = 1\nrepository = "acme/extensions"\nbundled = []\ndeferred = ["loom.lsp.gopls"]\n[index]\nkey-id = "test"\nvalidity-days = 30\n');
+  const event = write(root, 'event.json', {});
+  const output = write(root, 'output.txt', '');
+  const env = {GITHUB_EVENT_PATH:event, GITHUB_OUTPUT:output, GITHUB_EVENT_NAME:'workflow_dispatch'};
+  assert.deepEqual(run(env, root), ['loom.lang.c', 'loom.lang.zig']);
+  assert.throws(() => run({...env, REQUESTED_EXTENSIONS:'loom.lsp.gopls'}, root), /Unknown extension/);
 });

@@ -54,6 +54,10 @@ platform. It is published as an asset of the `registry` release, next to
 - A version is for `any` platform or for named ones. Loom installs the package for its
   own platform, else `any`.
 - `engines.loom` is a version range; Loom picks the newest version that is compatible.
+- Component versions carry their manifest `api` (currently
+  `loom:extension@0.1.0`). The new host excludes language-service versions without
+  this contract, so it never installs historical pure server declarations as a
+  working language client. Served languages are collected from provider selectors.
 - `sequence` only grows. Loom ignores an index whose sequence is lower than one it has
   seen, so an old index cannot be put back. After `expires` Loom treats the index as
   stale and offers nothing new, while already installed extensions keep working.

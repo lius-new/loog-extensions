@@ -73,7 +73,10 @@ export function describe(id, dist = DIST) {
   }
   if (highlight.length) entry.highlight = highlight;
   Object.assign(entry, preview(id, directory, manifest));
-  const served = (manifest.contributes?.language_service?.servers ?? []).flatMap(server => server.languages);
+  const served = [
+    ...(manifest.contributes?.language_service?.providers ?? []).flatMap(provider => provider.selector?.languages ?? []),
+    ...(manifest.contributes?.language_service?.servers ?? []).flatMap(server => server.languages),
+  ];
   if (served.length) entry.language_service = {languages: [...new Set(served)].sort()};
   return {entry, manifest};
 }
@@ -100,7 +103,7 @@ export function buildIndex({packages, repository, keyId, validityDays, now = new
       assert(JSON.stringify(old.artifacts) === JSON.stringify(artifacts), `${id} ${version} is already published with different contents; release a new version`);
     }
     versions.set(version, {
-      version, engines: manifest.engines, capabilities: manifest.capabilities ?? [], requires: manifest.requires ?? [],
+      version, ...(manifest.api ? {api: manifest.api} : {}), engines: manifest.engines, capabilities: manifest.capabilities ?? [], requires: manifest.requires ?? [],
       recommends: manifest.recommends ?? [], artifacts,
       ...((old?.source ?? sources[id]) ? {source: old?.source ?? sources[id]} : {}),
     });

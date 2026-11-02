@@ -2,12 +2,15 @@
 // or for the ones named: node build.mjs [platform…]
 //   npm ci && node build.mjs        (needs Go on the PATH)
 // Each package is the pinned Go module compiled for its platform with the pinned Go
-// toolchain. This project depends on nothing outside itself except what package.json names.
+// toolchain. Client build sources stay in this repository; LOOM_SOURCE selects
+// the general Loom SDK used to compile the extension's WASM.
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import * as tar from 'tar';
+import { buildClient } from '../../language-clients/build.mjs';
+import { clientNotices } from '../../language-clients/notices.mjs';
 
 const CONFIG = {
   "go": "1.27.0",
@@ -61,6 +64,7 @@ const CONFIG = {
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
 
 const here = import.meta.dirname;
+const component = buildClient(here);
 const pins = JSON.parse(fs.readFileSync(path.join(here, 'pins.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(here, 'manifest.json'), 'utf8'));
 const work = path.join(here, '.work'), dist = path.join(here, 'dist');
@@ -102,6 +106,9 @@ for (const platform of platforms) {
   fs.rmSync(path.join(dist, 'package', platform), {recursive: true, force: true});
   fs.mkdirSync(folder, {recursive: true});
   for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
+  fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
+  fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
+  clientNotices(folder);
   target.executables.forEach((name, index) => { fs.copyFileSync(found[index], path.join(folder, name)); fs.chmodSync(path.join(folder, name), 0o755); });
   for (const [name, license] of Object.entries(pins.licenses ?? {})) {
     fs.mkdirSync(path.join(folder, 'licenses'), {recursive: true});

@@ -2,16 +2,19 @@
 //   npm ci && node build.mjs
 // The server's own packages are in payload/ (package.json and its lock file, which
 // pins every dependency by integrity hash). They are installed without running
-// any lifecycle script. This project depends on nothing outside itself except what
-// package.json names.
+// any lifecycle script. Client sources stay in this repository; LOOM_SOURCE
+// selects the general Loom SDK used to compile the extension's WASM.
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import * as tar from 'tar';
+import { buildClient } from '../../language-clients/build.mjs';
+import { clientNotices } from '../../language-clients/notices.mjs';
 
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
 
 const here = import.meta.dirname;
+const component = buildClient(here);
 const manifest = JSON.parse(fs.readFileSync(path.join(here, 'manifest.json'), 'utf8'));
 const work = path.join(here, '.work'), dist = path.join(here, 'dist');
 
@@ -20,6 +23,9 @@ const folder = path.join(dist, 'package', manifest.id);
 fs.rmSync(path.join(dist, 'package'), {recursive: true, force: true});
 fs.mkdirSync(folder, {recursive: true});
 for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
+fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
+fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
+clientNotices(folder);
 
 // The lock file is the only source of versions.
 const install = path.join(work, 'payload');

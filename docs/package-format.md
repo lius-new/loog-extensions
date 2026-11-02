@@ -46,11 +46,11 @@ any other name (`languages` and `language_servers` are not accepted):
 | --- | --- |
 | `highlight` | Syntax colouring: grammar packs |
 | `highlight_queries` | Extra colouring rules for a grammar |
-| `language_service` | What answers hints and diagnostics: `servers` (programs Loom runs) and `providers` (answers the extension's own code gives) |
+| `language_service` | Typed `providers` implemented by the extension component |
 | `themes` | Colour themes |
 
 Names must follow the scheme: `loom.lang.*` contributes highlight, `loom.lsp.*`
-declares a language service server, `loom.theme.*` a theme, `loom.queries.*` highlight
+declares language service providers, `loom.theme.*` a theme, `loom.queries.*` highlight
 queries, `loom.runtime.*` a runtime. The index says what an extension is for by the
 field it has (`highlight`, `language_service`), never by its id.
 
@@ -60,32 +60,28 @@ field it has (`highlight`, `language_service`), never by its id.
 description, with each grammar's WebAssembly module (`tree-sitter-<name>.wasm`) and its
 `highlights` and `injections` queries inside the package.
 
-### Language service servers
+### Language service components
 
-`contributes.language_service.servers` lists them:
+`contributes.language_service.providers` lists typed providers:
 
 ```json
 {
-  "id": "loom.lsp.rust-analyzer.rust-analyzer",
-  "name": "rust-analyzer",
-  "languages": ["rust"],
-  "command": "${extension}/rust-analyzer",
-  "args": [],
-  "root_markers": ["Cargo.toml", "rust-project.json"],
-  "root_strategy": "outermost",
-  "root_fallback": "file_directory",
-  "priority": 10,
-  "bindings": [{ "language": "rust", "language_id": "rust" }],
-  "initialization_options": {}
+  "id": "loom.lsp.rust-analyzer.completion",
+  "kind": "completion",
+  "selector": { "languages": ["rust"] }
 }
 ```
 
-A command starts with `${extension}/` (a file in this package) or `${runtime.<name>}/`
-(a file in the `loom.runtime.<name>` extension this one `requires`). It never names a
-program found on `PATH`. On Windows `.exe` is appended to a command without an
-extension. `bindings` map Loom's languages (and variants) to the language ids the
-server expects. `root_strategy`, `root_fallback`, `priority` and `bindings` go beyond
-what Loom reads today; they are part of the contract Loom is being extended to.
+The manifest also declares `api: "loom:extension@0.1.0"`, its `component`,
+activation events and capabilities. Private client code owns process launch,
+root selection, protocol language IDs and initialization. Programs are package
+executables or come from declared runtime dependencies; launch still requires
+workspace trust. General SDK APIs wrap Loom services and contain no language client.
+
+The first clients support Rust, Go, JavaScript and TypeScript and require Loom
+>=0.1.9. The retired `servers` declaration is rejected by the new host. Historical
+recipes for other languages remain explicitly `deferred` in `loom-ext.toml` until
+they are migrated; their already published releases are retained.
 
 ## Platforms
 

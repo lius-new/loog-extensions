@@ -1,7 +1,10 @@
 {
   "schema": 1,
   "id": "loom.lsp.rust-analyzer",
-  "version": "0.1.3",
+  "version": "0.2.0",
+  "api": "loom:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["rust"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "rust-analyzer Language Server",
   "publisher": "Loom",
   "description": "The rust-analyzer language server.",
@@ -19,34 +22,41 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loom": ">=0.1.8 <0.3"
+    "loom": ">=0.1.9 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
+    "languages": [{ "id": "loom.lsp.rust-analyzer.language", "path": "languages/rust/language.json" }],
+    "settings": [
+      { "key": "loom.lsp.rust-analyzer.configuration", "kind": "string", "default": "{}" },
+      { "key": "loom.lsp.rust-analyzer.initialization", "kind": "string", "default": "{}" },
+      { "key": "loom.lsp.rust-analyzer.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loom.lsp.rust-analyzer.rust-analyzer",
-          "name": "rust-analyzer",
-          "languages": [
-            "rust"
-          ],
-          "command": "${extension}/rust-analyzer",
-          "root_markers": [
-            "Cargo.toml",
-            "rust-project.json"
-          ],
-          "root_strategy": "outermost",
-          "root_fallback": "file_directory",
-          "bindings": [
-            {
-              "language": "rust",
-              "language_id": "rust"
-            }
-          ]
-        }
+      "providers": [
+        { "id": "loom.lsp.rust-analyzer.diagnostics", "kind": "diagnostics", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.completion", "kind": "completion", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.hover", "kind": "hover", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.definition", "kind": "definition", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.document-symbols", "kind": "document-symbols", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.signature-help", "kind": "signature-help", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.formatting", "kind": "formatting", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.code-actions", "kind": "code-actions", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.references", "kind": "references", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.document-highlights", "kind": "document-highlights", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.rename", "kind": "rename", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.code-lens", "kind": "code-lens", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.format-on-type", "kind": "format-on-type", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.execute-command", "kind": "execute-command", "selector": { "languages": ["rust"] } },
+        { "id": "loom.lsp.rust-analyzer.highlights", "kind": "highlights", "selector": { "languages": ["rust"] } }
       ]
     }
   }

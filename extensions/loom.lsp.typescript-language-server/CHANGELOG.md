@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- Bundle the JavaScript/TypeScript language client with typed providers and status bar UI.
+- Use general Loom APIs and the locked TypeScript dependency instead of a host server declaration.
+
 ## 0.1.3
 
 - Changed the extension category from Languages to Language Services.

@@ -13,6 +13,12 @@ validator tools, root package files or `loom-ext.toml` select all extensions. Ot
 repository documentation does not start extension builds. An initial push or a
 force push whose previous tip is unavailable conservatively builds everything.
 
+"All" means all active recipes. IDs in `loom-ext.toml`'s `deferred` list are
+excluded from automatic and manual builds. Their historical sources and existing
+published assets remain intact until component migration. Rust, Go and JS/TS are
+the first component clients; other pure server declarations cannot run in the new
+Loom host. New language-service index versions retain their component ABI.
+
 For manual recovery, dispatch **Extensions** on `main`. Its optional `extensions`
 input accepts comma-separated IDs; leave it empty to build all extensions. Dispatches
 on other branches only build. Rerunning failed jobs reuses the successful build

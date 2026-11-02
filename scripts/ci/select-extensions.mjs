@@ -3,13 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {loadConfig} from '../lib/config.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const shared = file => file.startsWith('.github/workflows/') || file.startsWith('scripts/') ||
   file.startsWith('tools/') || ['package.json', 'package-lock.json', 'loom-ext.toml'].includes(file);
 
 export function selectExtensions(available, files, {all = false, requested = ''} = {}) {
-  const ids = [...available].sort();
+  const ids = [...new Set(available)].sort();
   if (requested.trim()) {
     const selected = [...new Set(requested.split(',').map(id => id.trim()))];
     for (const id of selected) if (!ids.includes(id)) throw new Error('Unknown extension: ' + id);
@@ -17,6 +18,9 @@ export function selectExtensions(available, files, {all = false, requested = ''}
   }
   if (all || files.some(shared)) return ids;
   const changed = new Set(files.filter(file => file.startsWith('extensions/')).map(file => file.split('/')[1]));
+  if (files.some(file => file.startsWith('language-clients/'))) {
+    for (const id of ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server']) changed.add(id);
+  }
   return ids.filter(id => changed.has(id));
 }
 
@@ -38,9 +42,10 @@ export function changedFiles(eventName, event, root = ROOT) {
 }
 
 export function run(env = process.env, root = ROOT) {
+  const deferred = fs.existsSync(path.join(root, 'loom-ext.toml')) ? loadConfig(root).deferred : [];
   const available = fs.readdirSync(path.join(root, 'extensions'), {withFileTypes: true})
     .filter(entry => entry.isDirectory() && /^loom\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(entry.name))
-    .map(entry => entry.name);
+    .map(entry => entry.name).filter(id => !deferred.includes(id));
   const event = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf8'));
   const changes = changedFiles(env.GITHUB_EVENT_NAME, event, root);
   const selected = selectExtensions(available, changes.files, {...changes,

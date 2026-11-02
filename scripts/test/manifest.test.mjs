@@ -24,6 +24,19 @@ test('valid theme, language and server extensions have no problems', t => {
   assert.deepEqual(problems(server(root), {built: true}), []);
 });
 
+test('language service identities work without grammars and reject parser bindings', t => {
+  const dir = server(workspace(t));
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  manifest.contributes.languages = [{ id: `${manifest.id}.identity`, path: 'languages/demo/language.json' }];
+  write(dir, 'manifest.json', manifest);
+  const identity = { name: 'demo', variants: [{ id: 'demo' }], files: [{ extensions: ['demo'], variant: 'demo' }] };
+  write(dir, 'languages/demo/language.json', identity);
+  assert.deepEqual(problems(dir), []);
+  identity.variants[0].grammar = 'demo';
+  write(dir, 'languages/demo/language.json', identity);
+  assert.match(problems(dir).join('\n'), /without parser bindings/);
+});
+
 test('language categories describe a specific function and reject Languages', t => {
   const root = workspace(t);
   for (const [dir, category] of [[language(root), 'Syntax Highlighting'], [server(root), 'Language Services']]) {
@@ -83,11 +96,11 @@ test('contribution points are named by what they are for, and an old or unknown 
   const root = workspace(t);
   const dir = language(root);
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-  // `languages` said nothing about what it was for; Loom no longer reads it.
+  // Syntax grammars cannot be passed off as metadata-only identities.
   manifest.contributes = {languages: manifest.contributes.highlight};
   write(dir, 'manifest.json', manifest);
   const text = problems(dir).join('\n');
-  assert.match(text, /contributes\.languages is not a contribution point/);
+  assert.match(text, /language identity .*must name language\.json/);
   assert.match(text, /must contribute highlight/);
   manifest.contributes = {highlight: [{id: 'loom.lang.demo.grammar', path: 'tree-sitter.json'}], language_service: {servers: []}, themes: []};
   write(dir, 'manifest.json', manifest);

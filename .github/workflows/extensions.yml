@@ -30,6 +30,8 @@ jobs:
         with:
           node-version: 22
       - name: Select affected extensions
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Write affected extension matrix
         id: select
         env:
           REQUESTED_EXTENSIONS: ${{ inputs.extensions }}
@@ -40,6 +42,8 @@ jobs:
     if: needs.plan.outputs.has-extensions == 'true'
     name: Build ${{ matrix.extension }}
     runs-on: ubuntu-latest
+    env:
+      LOOM_SOURCE: ${{ github.workspace }}/.work/loom-sdk
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
@@ -53,6 +57,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check out the general Loom SDK
+        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        uses: actions/checkout@v4
+        with:
+          repository: lius-new/loom
+          ref: 20722d73bc3f068ca60f4a2f608b9542d54c261f
+          path: .work/loom-sdk
+          persist-credentials: false
+      - name: Install the SDK's locked component toolchain
+        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        working-directory: .work/loom-sdk/tests/extensions/js-guest
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - uses: actions/setup-go@v5
         if: matrix.extension == 'loom.lsp.gopls'
         with:

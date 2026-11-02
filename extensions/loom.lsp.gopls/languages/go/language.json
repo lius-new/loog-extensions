@@ -1,0 +1,1 @@
+{"name":"go","display_name":"Go","badge":"GO","aliases":["golang"],"comments":{"line":"//","block":["/*","*/"]},"variants":[{"id":"go"}],"files":[{"extensions":["go"],"variant":"go"}]}

@@ -1,0 +1,1 @@
+{"name":"rust","display_name":"Rust","badge":"RS","aliases":["rs"],"comments":{"line":"//","block":["/*","*/"]},"variants":[{"id":"rust"}],"files":[{"extensions":["rs"],"variant":"rust"}]}

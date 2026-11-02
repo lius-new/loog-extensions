@@ -21,11 +21,14 @@ export const releaseDirectory = (work = WORK) => path.join(work, 'release');
  * builder/toolchain changes affect future builds; documentation alone is skipped. */
 export function fingerprint(root, id, ref) {
   const prefix = `extensions/${id}/`;
+  const prefixes = [prefix];
+  if (['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'].includes(id)) prefixes.push('language-clients/');
   const entries = ref
-    ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', prefix]).split('\0').filter(Boolean)
+    ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', ...prefixes]).split('\0').filter(Boolean)
     // What git tracks or would track: ignored folders (dependencies, build output) are not inputs.
-    : git(root, ['ls-files', '-z', '-c', '-o', '--exclude-standard', '--', prefix]).split('\0').filter(file => file && fs.existsSync(path.join(root, file)));
-  return hash(JSON.stringify(entries.filter(meaningful).sort().map(file => [file.slice(prefix.length),
+    : git(root, ['ls-files', '-z', '-c', '-o', '--exclude-standard', '--', ...prefixes]).split('\0').filter(file => file && fs.existsSync(path.join(root, file)));
+  const input = file => meaningful(file) && (!file.startsWith('language-clients/') || (!file.endsWith('.test.ts') && !file.startsWith('language-clients/fixtures/')));
+  return hash(JSON.stringify(entries.filter(input).sort().map(file => [file.startsWith(prefix) ? file.slice(prefix.length) : `../${file}`,
     ref ? hash(execFileSync('git', ['show', `${ref}:${file}`], {cwd: root, maxBuffer: 32 * 1024 * 1024})) : fileHash(path.join(root, file))])));
 }
 
