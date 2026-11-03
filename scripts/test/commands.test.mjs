@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {createPackage} from '../lib/archive.mjs';
+import {hostPlatform} from '../lib/platform.mjs';
+import {theme} from './fixtures.mjs';
 import {checkout, cli, populate, write} from './cli.mjs';
 
 /** Package extension `id` the way any project might, into `<root>/handed-over`. */
@@ -56,6 +59,66 @@ test('dev unpacks the package for this machine into the folder Loom reads', asyn
   assert.ok(fs.existsSync(path.join(active, 'themes/dark.json')));
   assert.ok(!fs.existsSync(path.join(active, 'stale.txt')), 'the version folder is replaced, not merged');
   assert.match(cli(repo.root, ['dev', path.join(repo.root, 'handed-over')], {LOOM_EXTENSIONS_DIR: ''}).err, /Say where to put them/);
+});
+
+/** Give extension `id` a build.mjs that packs it the way a project might, for the platform it is given. */
+function buildable(repo, id) {
+  const archive = pathToFileURL(path.join(import.meta.dirname, '../lib/archive.mjs')).href;
+  write(repo.extensions, `${id}/build.mjs`, `import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {createPackage} from ${JSON.stringify(archive)};
+const here = import.meta.dirname, id = path.basename(here);
+const staged = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'try-build-')), id);
+fs.cpSync(here, staged, {recursive: true, filter: source => !/(build\\.mjs|dist|seen\\.txt|source\\.txt)$/.test(source)});
+fs.writeFileSync(path.join(here, 'seen.txt'), process.argv.slice(2).join(' '));
+fs.writeFileSync(path.join(here, 'source.txt'), process.env.LOOM_SOURCE ?? '');
+await createPackage(staged, path.join(here, 'dist', id + '-1.0.0-any.loomext'), id);
+`);
+}
+
+test('try builds for this machine, unpacks, and starts Loom with the folder', async t => {
+  const repo = checkout(t); populate(repo, ['theme']);
+  buildable(repo, 'loom.theme.demo');
+  write(repo.root, 'loom.mjs', `import fs from 'node:fs';
+fs.writeFileSync('started.txt', process.env.LOOM_EXTENSIONS_DIR);
+process.exit(3);
+`);
+  const target = path.join(repo.root, 'dev-dir');
+  const result = cli(repo.root, ['try', 'loom.theme.demo', '--to', target, '--run', 'node loom.mjs']);
+  assert.equal(result.status, 3, result.all);
+  assert.equal(fs.readFileSync(path.join(repo.extensions, 'loom.theme.demo/seen.txt'), 'utf8'), hostPlatform());
+  assert.ok(fs.existsSync(path.join(target, 'loom.theme.demo/1.0.0/manifest.json')));
+  assert.equal(fs.readFileSync(path.join(repo.root, 'started.txt'), 'utf8'), target);
+  assert.match(cli(repo.root, ['try', 'loom.theme.unknown', '--no-run']).err, /Unknown extension/);
+  assert.match(cli(repo.root, ['try']).err, /Name the extensions to try/);
+});
+
+test('try takes the Loom checkout from --source, for the build and for running', async t => {
+  const repo = checkout(t); populate(repo, ['theme']);
+  buildable(repo, 'loom.theme.demo');
+  const loom = path.join(repo.root, 'elsewhere/loom');
+  assert.match(cli(repo.root, ['try', 'loom.theme.demo', '--source', loom, '--no-run']).err, /not a Loom checkout/);
+  write(loom, 'Cargo.toml', '[package]\n');
+  const result = cli(repo.root, ['try', 'loom.theme.demo', '--source', loom, '--to', path.join(repo.root, 'dev-dir'), '--run', 'node -e 1'], {LOOM_SOURCE: ''});
+  assert.equal(result.status, 0, result.all);
+  assert.equal(fs.readFileSync(path.join(repo.extensions, 'loom.theme.demo/source.txt'), 'utf8'), loom);
+});
+
+test('try builds what an extension requires unless it is already installed', async t => {
+  const repo = checkout(t); populate(repo, ['theme']);
+  theme(repo.extensions, 'loom.theme.base');
+  for (const id of ['loom.theme.demo', 'loom.theme.base']) buildable(repo, id);
+  const manifest = path.join(repo.extensions, 'loom.theme.demo/manifest.json');
+  const demo = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+  write(repo.extensions, 'loom.theme.demo/manifest.json', {...demo, requires: ['loom.theme.base@^1.0.0']});
+  const target = path.join(repo.root, 'dev-dir');
+  const first = cli(repo.root, ['try', 'loom.theme.demo', '--to', target, '--no-run']);
+  assert.equal(first.status, 0, first.all);
+  assert.match(first.out, /requires loom\.theme\.base/);
+  assert.ok(fs.existsSync(path.join(target, 'loom.theme.base/1.0.0/manifest.json')));
+  const second = cli(repo.root, ['try', 'loom.theme.demo', '--to', target, '--no-run']);
+  assert.doesNotMatch(second.out, /requires loom\.theme\.base/);
 });
 
 test('unknown commands and the removed build commands are refused', t => {

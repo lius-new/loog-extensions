@@ -8,6 +8,7 @@ committed.
 | --- | --- |
 | `check <package or folder…>` | Takes the packages in as publishing would, without publishing: each is unpacked, its manifest and files are checked, and with `loom-ext-validate` Loom's own loaders import it. |
 | `dev <package or folder…> [--to dir]` | Unpacks the package for this machine (or the one that runs anywhere) into a folder Loom reads (`LOOM_EXTENSIONS_DIR`). |
+| `try <id…> [--source loom-dir] [--to dir] [--run command] [--no-run]` | Builds the named extensions for this machine (`node build.mjs <platform>` in each folder, `npm ci` first when `node_modules` is missing), unpacks them as `dev` does, then starts Loom on that folder. Extensions they `requires` are built too unless the folder already holds them. The folder is `--to`, `LOOM_EXTENSIONS_DIR` or `.work/dev-extensions`; The Loom checkout is `--source` or `LOOM_SOURCE`: builds compile against it, and with no `--run` or `LOOM_EXT_RUN` Loom starts as `cargo run` in it. Otherwise Loom is `--run`, `LOOM_EXT_RUN` or `loom`, run from the current directory. `--no-run` stops after unpacking. Loom is restarted on every run; nothing is reloaded in place. |
 | `release preflight` | Checks that the signing key is the one Loom trusts. |
 | `release intake <package or folder…> [--dry-run]` | Checks the packages against the signed index and the releases already published, and records what is to be published. `--dry-run` only checks. |
 | `release publish` | Uploads the releases, then the signed index; see [Automatic releases](releases.md). |
@@ -28,8 +29,8 @@ Platforms are written `<os>-<arch>` (`windows-x86_64`, `linux-aarch64`,
 - `index.key-id`: names the public key Loom uses to check the signature.
 - `index.validity-days`: how long a signed index stays valid.
 
-Environment: `LOOM_INDEX_KEY` (the private key), `LOOM_EXTENSIONS_DIR` (where `dev`
-copies to), `LOOM_EXT_VALIDATE` (the validator binary), `LOOM_EXT_ROOT` (run the tools
+Environment: `LOOM_INDEX_KEY` (the private key), `LOOM_EXTENSIONS_DIR` (where `dev` and
+`try` copy to), `LOOM_EXT_RUN` (the command `try` starts), `LOOM_EXT_VALIDATE` (the validator binary), `LOOM_EXT_ROOT` (run the tools
 against another checkout).
 
 ## loom-ext-validate

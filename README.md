@@ -42,6 +42,16 @@ node scripts/loom-ext.mjs check path/to/packages   # would publishing accept the
 Try an extension in a local Loom without publishing anything:
 
 ```sh
+npm run try -- loom.theme.aura                   # starts the installed `loom`
+npm run try -- loom.lsp.gopls --source <loom>    # builds against, and `cargo run`s, that checkout
+```
+
+Set `LOOM_SOURCE` to your Loom checkout once and `--source` is no longer needed.
+`try` builds for this machine, unpacks into `.work/dev-extensions` and starts Loom
+with `LOOM_EXTENSIONS_DIR` set: `--run` or `LOOM_EXT_RUN` if given, else `cargo run` in
+the checkout, else `loom`. The same by hand:
+
+```sh
 cd extensions/loom.theme.aura && npm ci && node build.mjs
 node scripts/loom-ext.mjs dev extensions/loom.theme.aura/dist --to ~/loom-extensions-dev
 LOOM_EXTENSIONS_DIR=~/loom-extensions-dev loom
