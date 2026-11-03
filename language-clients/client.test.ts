@@ -9,6 +9,20 @@ function harness(initializeMessages: any[] = []) {
   const responses = new Map<string, any>();
   const settings = new Map<string, any>();
   const watches: any[] = [];
+  const widgets = new Map<string, any>(), placements: any[] = [], statuses: any[] = [];
+  function widget(description: any, parent?: any) {
+    const value = { ...description, parent: parent?.id };
+    widgets.set(value.id, value);
+    const changed = () => {
+      if (value.id === 'language-status-text') statuses.push({ text: value.text, color: widgets.get('language-status').background });
+    };
+    changed();
+    return {
+      id: value.id,
+      update(patch: any) { Object.assign(value, patch); changed(); },
+      remove() { for (const [id, node] of widgets) if (id === value.id || node.parent === value.id) widgets.delete(id); },
+    };
+  }
   const content = { value: 'fn main() {}' };
   const timers = new Set<{ milliseconds: number; callback(): void; cancel(): void }>();
   let listener: any;
@@ -17,7 +31,7 @@ function harness(initializeMessages: any[] = []) {
     providers: { register(_id: string, kind: string, handler: any) { handlers.set(kind, handler); }, onCommand(id: string, handler: any) { commands.set(id, handler); }, configure(value: any) { configured.set(value.provider, value); }, publishDiagnostics() {} },
     timers: { after(milliseconds: number, callback: () => void) { const timer = { milliseconds, callback() { timers.delete(timer); callback(); }, cancel() { timers.delete(timer); } }; timers.add(timer); if (milliseconds === 0) queueMicrotask(() => { if (timers.has(timer)) timer.callback(); }); return timer; } },
     workspace: { onDidSave() {}, roots: () => [{ id: 1n, path: '/work', name: 'work' }], captureDocument: () => ({ document: { ...reference }, snapshot: { text: () => content.value, release() {} } }), watchFiles(request: any, listener: any) { const watch = { request, listener, disposed: false, ready: Promise.resolve(), dispose() { this.disposed = true; } }; watches.push(watch); return watch; } },
-    ui: { block: (value: any) => value, text: (text: string, value: any) => ({ ...value, text }), create() { return { update() {}, remove() {} }; } },
+    ui: { row: (value: any) => ({ ...value, kind: 'row' }), text: (text: string, value: any) => ({ ...value, text, kind: 'text' }), target: (id: string) => ({ publicId: id }), insertBefore(target: any, node: any, options: any) { placements.push({ target, node, options }); }, createElement: widget, create: (parent: any, description: any) => widget(description, parent) },
     onMessage(callback: any) { listener = callback; },
     processes: { spawn(_request: any, output: any) {
       let exit: any;
@@ -34,7 +48,7 @@ function harness(initializeMessages: any[] = []) {
   };
   const client = new Client(api, { getSetting(key: string) { return settings.get(key); }, readFile() { return { text: '' }; }, log() {} }, { id: 'example.rust', name: 'Rust', languages: ['rust'], program: 'server', args: [], markers: ['Cargo.toml'], languageId: () => 'rust' });
   const settle = async () => { for (let i = 0; i < 30; i++) await Promise.resolve(); };
-  return { api, client, handlers, commands, configured, processes, timers, sent, responses, settings, watches, content, reference, message: (message: any) => listener(message), settle };
+  return { api, client, handlers, commands, configured, processes, timers, sent, responses, settings, watches, widgets, placements, statuses, content, reference, message: (message: any) => listener(message), settle };
 }
 
 test('workspace symbols merge all roots without requiring an active document', async () => {
@@ -52,8 +66,7 @@ test('workspace symbols merge all roots without requiring an active document', a
 
 test('progress reports retain titles and distinguish string and numeric tokens', async () => {
   const h = harness();
-  const statuses: any[] = [];
-  h.client.status = (text, color) => { statuses.push({ text, color }); };
+  const statuses = h.statuses;
   await h.message({ tag: 'document-opened', val: h.reference });
   await h.client.documents.get(1n)!.queue;
   const session = [...h.client.sessions.values()][0]!;
@@ -64,9 +77,55 @@ test('progress reports retain titles and distinguish string and numeric tokens',
   await notify('7', { kind: 'begin', title: 'Second' });
   await notify(7, { kind: 'end' });
   assert.equal(statuses.at(-1).text, 'Rust: Second');
-  assert.equal(statuses.at(-1).color, 0x665522);
+  assert.equal(statuses.at(-1).color, 0x818cf8);
   await notify('7', { kind: 'end' });
-  assert.equal(statuses.at(-1).text, 'Rust: Ready');
+  assert.equal(statuses.at(-1).text, 'Rust');
+  await h.message({ tag: 'shutdown' });
+});
+
+test('status rows remain passive, preserve their handles and stop after the final idle session', async () => {
+  const h = harness();
+  await h.message({ tag: 'document-opened', val: h.reference });
+  await h.client.documents.get(1n)!.queue;
+  assert.ok(h.statuses.some(value => value.text === 'Rust: Starting' && value.color === 0x818cf8));
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust', color: 0x10b981 });
+  assert.equal(h.widgets.get('language-status').kind, 'row');
+  assert.equal(h.widgets.get('language-status').width, undefined);
+  assert.equal(h.widgets.get('language-status').height, 24);
+  assert.equal(h.widgets.size, 4);
+  assert.equal(h.placements.length, 1);
+  assert.equal(h.placements[0].target.publicId, 'statusbar.cursor-position');
+  const session = [...h.client.sessions.values()][0]!;
+  session.rpc.input(JSON.stringify({ jsonrpc: '2.0', method: '$/progress', params: { token: 1, value: { kind: 'begin', title: 'Loading', percentage: 42 } } }));
+  await h.settle();
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust: Loading 42%', color: 0x818cf8 });
+  assert.equal(h.placements.length, 1);
+  await h.message({ tag: 'document-closed', val: h.reference });
+  session.idle!.callback(); await h.settle();
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust: Stopped', color: 0x71717a });
+  await h.message({ tag: 'shutdown' });
+  assert.equal(h.widgets.size, 0);
+});
+
+test('a process that cannot start reports an error instead of leaving a busy status', async () => {
+  const h = harness();
+  h.api.processes.spawn = () => { throw new Error('executable unavailable'); };
+  await h.message({ tag: 'document-opened', val: h.reference });
+  await h.client.documents.get(1n)!.queue.catch(() => {}); await h.settle();
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust: Error · executable unavailable', color: 0xf43f5e });
+  await h.message({ tag: 'shutdown' });
+});
+
+test('healthy roots cannot overwrite another root error or unfinished work', async () => {
+  const h = harness();
+  h.client.status('1:broken', 'error', 'workspace failed');
+  h.client.status('2:healthy', 'ready');
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust: Error · workspace failed', color: 0xf43f5e });
+  await h.message({ tag: 'roots-changed', val: [{ id: 2n, path: '/other', name: 'other' }] });
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust', color: 0x10b981 });
+  h.client.status('2:busy', 'busy', 'Indexing');
+  h.client.status('2:healthy', 'ready');
+  assert.deepEqual(h.statuses.at(-1), { text: 'Rust: Indexing', color: 0x818cf8 });
   await h.message({ tag: 'shutdown' });
 });
 
@@ -86,11 +145,10 @@ test('root selection respects POSIX case and preserves Windows and filesystem ro
 test('workspace load errors stay visible after initialization and progress completes', async () => {
   const failure = 'Error loading workspace folders (expected 1, got 0)';
   const h = harness([{ method: 'window/showMessage', params: { type: 1, message: failure } }]);
-  const statuses: any[] = [];
-  h.client.status = (text, color) => { statuses.push({ text, color }); };
+  const statuses = h.statuses;
   await h.message({ tag: 'document-opened', val: h.reference });
   await h.client.documents.get(1n)!.queue;
-  assert.deepEqual(statuses.at(-1), { text: `Rust: ${failure}`, color: 0x9b3030 });
+  assert.deepEqual(statuses.at(-1), { text: `Rust: Error · ${failure}`, color: 0xf43f5e });
   const session = [...h.client.sessions.values()][0]!;
   for (const notification of [
     { method: '$/progress', params: { token: 1, value: { kind: 'begin', title: 'Loading' } } },
@@ -99,7 +157,7 @@ test('workspace load errors stay visible after initialization and progress compl
   ]) {
     session.rpc.input(JSON.stringify({ jsonrpc: '2.0', ...notification }));
     await h.settle();
-    assert.deepEqual(statuses.at(-1), { text: `Rust: ${failure}`, color: 0x9b3030 });
+    assert.deepEqual(statuses.at(-1), { text: `Rust: Error · ${failure}`, color: 0xf43f5e });
   }
 });
 

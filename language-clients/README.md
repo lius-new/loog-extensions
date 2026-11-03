@@ -3,7 +3,21 @@
 These private build sources are compiled into each of the Rust, Go and
 JavaScript/TypeScript extension components. Each installed extension owns its
 RPC connection, documents, capability registrations, processes and status block.
+The 0.2.2 clients require Loom 0.1.10 and its independent `loom:ui/tree@0.1.0`
+interface. Each client chooses `statusbar.cursor-position` as a logical target
+and inserts its status before that component; there is no language-specific
+host layout branch. Missing targets keep the indicator hidden until it returns.
+Before publishing these packages, update the workflow's pinned Loom SDK source
+to a committed revision containing that interface; the builder rejects older SDKs.
 The general Loom SDK contains none of this language-specific behavior.
+
+Each plugin takes its display name from its own manifest at build time. Its
+status is a passive, content-sized row with horizontal padding and no click,
+hover, tooltip, or details UI. The shared client owns four presentation states:
+ready (green, plugin name), busy (purple, startup or task text), stopped (gray),
+and error (red, a bounded single-line reason). Errors take priority over busy
+and ready sessions across roots; initialization progress cannot prematurely
+report ready. No download or installation state is delegated to Loom.
 
 Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT,
 SDK and locked component toolchain. CI obtains those from `lius-new/loom` at
@@ -26,12 +40,17 @@ on the next activation.
 Local checks:
 
 ```sh
-node --experimental-transform-types --test language-clients/client.test.ts language-clients/protocol.test.ts
+node --experimental-transform-types --test language-clients/client.test.ts language-clients/protocol.test.ts language-clients/status.test.ts
 node --experimental-transform-types --test --test-concurrency=1 language-clients/acceptance.test.ts
 node language-clients/stage.mjs
 ```
 
 `stage.mjs` prepares local acceptance artifacts under `.work/packages`. It uses
+versioned `<id>/<version>` folders and updates `extensions.json`, preserving
+other installed packages and disabled choices while pinning the staged versions.
+Loom loads the versions named in that index, not flat folders next to it.
+Set `LOOM_EXTENSIONS_DIR` to the absolute `.work/packages` path and launch Loom
+from the same terminal so the test process inherits the override. The script uses
 the built pinned gopls (falling back to the available local binary), pinned
 downloaded rust-analyzer and locked TypeScript
 payload. Release packaging uses each extension's `build.mjs` and pinned server

@@ -1,8 +1,8 @@
-# TypeScript Language Server Language Server
+# TypeScript Language Server
 
 The TypeScript Language Server language server.
 
-Extension package: 0.2.0. Upstream program: 6.0.2 (TypeScript 5.9.3).
+Extension package: 0.2.2. Upstream program: 6.0.2 (TypeScript 5.9.3).
 
 ## Serves
 
@@ -19,7 +19,8 @@ use their corresponding server language IDs. The client is in this extension
 repository, not Loom's general TypeScript SDK.
 
 Execution follows project trust. The extension draws its status color block
-through general UI APIs. It uses the locked TypeScript dependency bundled beside
+before the cursor-position component through Loom 0.1.10's general UI tree API.
+It uses the locked TypeScript dependency bundled beside
 the server when the workspace has no compatible TypeScript installation.
 
 Set `LOOM_SOURCE` to the matching Loom checkout, run `npm ci`, then

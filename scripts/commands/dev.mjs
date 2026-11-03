@@ -3,7 +3,8 @@
 // Build the packages however the extension's project builds them.
 import fs from 'node:fs';
 import path from 'node:path';
-import {WORK, assert, copyTree, removeUnder} from '../lib/util.mjs';
+import {WORK, assert, copyTree, removeUnder, fileHash} from '../lib/util.mjs';
+import {developmentDirectory, registerDevelopment} from '../lib/development.mjs';
 import {extractPackage} from '../lib/archive.mjs';
 import {checkExtension} from '../lib/manifest.mjs';
 import {ANY, hostPlatform} from '../lib/platform.mjs';
@@ -28,14 +29,17 @@ export async function run(argv) {
     const platform = platformOf(file, manifest);
     // The package for this machine, or the one that runs anywhere.
     if (platform !== host && platform !== ANY) continue;
-    if (!chosen.has(manifest.id) || platform === host) chosen.set(manifest.id, directory);
+    if (!chosen.has(manifest.id) || platform === host) chosen.set(manifest.id, {directory, manifest, file});
   }
   assert(chosen.size, `None of the packages is for ${host}`);
-  for (const [id, directory] of chosen) {
-    const output = path.join(destination, id);
+  const staged = [];
+  for (const [id, {directory, manifest, file}] of chosen) {
+    const output = developmentDirectory(destination, manifest);
     removeUnder(destination, output);
     copyTree(directory, output);
+    staged.push({directory: output, source: {kind: 'file', sha256: fileHash(file), file: path.resolve(file)}});
     console.log(`${id} -> ${output}`);
   }
+  registerDevelopment(destination, staged);
   removeUnder(WORK, scratch);
 }

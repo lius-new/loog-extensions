@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- Show a passive, content-sized status block using the plugin name and ready, busy, stopped or error states.
+- Place the server status before the cursor-position component using the general UI tree API.
+- Upgrade: Use Loom 0.1.10 or newer for relative UI placement.
+
 ## 0.2.1
 
 - Fix workspace loading, diagnostics, completion and hover for Windows extended-length and UNC paths.

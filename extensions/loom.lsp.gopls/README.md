@@ -2,7 +2,7 @@
 
 The gopls language server.
 
-Extension package: 0.2.0. Upstream program: 0.24.0.
+Extension package: 0.2.2. Upstream program: 0.24.0.
 
 ## Serves
 
@@ -12,7 +12,8 @@ License: BSD-3-Clause. Platform: every supported platform.
 
 The extension's TypeScript WASM owns its Go language client, document synchronization
 and server lifecycle. It uses Loom's general process/provider/UI APIs and creates
-its own status color block. Server execution follows project trust.
+its own status color block before the cursor-position component using the general
+UI tree API in Loom 0.1.10 or newer. Server execution follows project trust.
 
 Set `LOOM_SOURCE` to the matching Loom checkout, run `npm ci`, then
 `node build.mjs [platform…]` with Go installed. The private `language-clients/`

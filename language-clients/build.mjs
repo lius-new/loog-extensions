@@ -8,12 +8,16 @@ import { createHash } from 'node:crypto';
 export function buildClient(directory, { checkOnly = false } = {}) {
   const loom = path.resolve(process.env.LOOM_SOURCE ?? path.join(import.meta.dirname, '../../..'));
   const sdk = path.join(loom, 'sdk/typescript');
+  if (!fs.existsSync(path.join(loom, 'wit/loom-extension/deps/ui/world.wit'))) {
+    throw new Error('These clients require the Loom 0.1.10 UI tree API. Update LOOM_SOURCE and the CI SDK source pin before building.');
+  }
   const tools = path.join(loom, 'tests/extensions/js-guest/node_modules');
   const work = path.join(directory, '.work/client');
   fs.mkdirSync(work, { recursive: true });
   const configuration = path.join(work, 'tsconfig.json');
   fs.writeFileSync(configuration, JSON.stringify({
     extends: path.join(sdk, 'tsconfig.json'),
+    compilerOptions: { resolveJsonModule: true },
     include: [path.join(directory, 'src/**/*.ts'), path.join(import.meta.dirname, '*.ts'), path.join(sdk, 'src/**/*.ts'), path.join(sdk, 'generated/**/*.d.ts')].map(value => value.replaceAll('\\', '/')),
     exclude: [path.join(import.meta.dirname, '*.test.ts').replaceAll('\\', '/')],
   }, null, 2));
@@ -29,7 +33,8 @@ export function buildClient(directory, { checkOnly = false } = {}) {
     }
   };
   add(path.join(directory, 'src')); add(path.join(sdk, 'src')); add(path.join(sdk, 'generated')); add(path.join(loom, 'wit/loom-extension'));
-  for (const name of ['client.ts', 'protocol.ts', 'results.ts', 'build.mjs']) hash.update(fs.readFileSync(path.join(import.meta.dirname, name)));
+  hash.update(fs.readFileSync(path.join(directory, 'manifest.json')));
+  for (const name of ['client.ts', 'protocol.ts', 'results.ts', 'status.ts', 'build.mjs']) hash.update(fs.readFileSync(path.join(import.meta.dirname, name)));
   for (const file of [path.join(sdk, 'build.mjs'), path.join(sdk, 'tsconfig.json'), path.join(loom, 'tests/extensions/js-guest/package-lock.json')]) hash.update(fs.readFileSync(file));
   const key = hash.digest('hex');
   const stamp = path.join(work, 'source.sha256');

@@ -54,7 +54,7 @@ for (const entry of entries) test(`real ${entry.name}: negotiated providers, edi
     clock: { now: () => process.hrtime.bigint() },
     timers: { after(ms: number, callback: () => void) { const id = setTimeout(() => { timers.delete(id); callback(); }, ms); timers.add(id); return { cancel() { clearTimeout(id); timers.delete(id); } }; } },
     providers: { register(id: string, kind: string, handler: any) { handlers.set(`${id}:${kind}`, handler); }, configure(value: any) { configurations.set(value.provider, value); }, onCommand() {}, publishDiagnostics(_provider: string, _path: string, _version: bigint, items: any[]) { /* raw results remain available on the client document */ } },
-    ui: { block: (value: any) => value, text: (text: string, value: any) => ({ ...value, text }), create(_mount: any, description: any) { statuses.push(description); return { update(value: any) { statuses.push(value); }, remove() {} }; } },
+    ui: { row: (value: any) => value, text: (text: string, value: any) => ({ ...value, text }), target: (id: string) => ({ publicId: id }), insertBefore() {}, createElement(description: any) { statuses.push(description); return { update(value: any) { statuses.push(value); }, remove() {} }; }, create(_mount: any, description: any) { statuses.push(description); return { update(value: any) { statuses.push(value); }, remove() {} }; } },
     workspace: { roots: () => roots, captureDocument: snapshots, onDidSave() {}, watchFiles() { return { ready: Promise.resolve(), dispose() {} }; }, applyWorkspaceEdit: async () => ({ tag: 'committed' }), showDocument: async () => ({ tag: 'committed' }) },
     processes: { spawn(request: any, output: any) {
       const folder = request.root === 2n ? secondRoot : root;
@@ -233,6 +233,6 @@ for (const entry of entries) test(`real ${entry.name}: negotiated providers, edi
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   assert.ok(document.diagnostics.length, `syntax error produced no diagnostics: ${logs.join('\n')}`);
-  assert.ok(statuses.some(status => String(status.text).includes('Ready')));
+  assert.ok(statuses.some(status => status.label === `${config.name}: Ready`));
   fs.writeFileSync(path.join(root, 'observed.json'), JSON.stringify({ language: entry.language, server: entry.program, node: process.version, os: `${os.platform()} ${os.release()} ${os.arch()}`, capabilities: caps, measurements, multi_root: true, diagnostics: document.diagnostics.length, statuses }, null, 2));
 });

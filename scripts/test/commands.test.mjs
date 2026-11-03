@@ -42,12 +42,19 @@ test('dev unpacks the package for this machine into the folder Loom reads', asyn
   const repo = checkout(t); populate(repo, ['theme']);
   await packageOf(repo, 'loom.theme.demo');
   const target = path.join(repo.root, 'loom-extensions-dir');
-  write(target, 'loom.theme.demo/stale.txt', 'left from before');
+  write(target, 'loom.theme.demo/1.0.0/stale.txt', 'left from before');
   const result = cli(repo.root, ['dev', path.join(repo.root, 'handed-over'), '--to', target]);
   assert.equal(result.status, 0, result.all);
-  assert.ok(fs.existsSync(path.join(target, 'loom.theme.demo/manifest.json')));
-  assert.ok(fs.existsSync(path.join(target, 'loom.theme.demo/themes/dark.json')));
-  assert.ok(!fs.existsSync(path.join(target, 'loom.theme.demo/stale.txt')), 'the folder is replaced, not merged');
+  const state = JSON.parse(fs.readFileSync(path.join(target, 'extensions.json'), 'utf8'));
+  const entry = state.extensions['loom.theme.demo'];
+  assert.equal(entry.version, '1.0.0');
+  assert.equal(entry.pinned, true);
+  assert.equal(entry.source.kind, 'file');
+  assert.match(entry.source.sha256, /^[a-f0-9]{64}$/);
+  const active = path.join(target, 'loom.theme.demo', entry.version);
+  assert.ok(fs.existsSync(path.join(active, 'manifest.json')));
+  assert.ok(fs.existsSync(path.join(active, 'themes/dark.json')));
+  assert.ok(!fs.existsSync(path.join(active, 'stale.txt')), 'the version folder is replaced, not merged');
   assert.match(cli(repo.root, ['dev', path.join(repo.root, 'handed-over')], {LOOM_EXTENSIONS_DIR: ''}).err, /Say where to put them/);
 });
 

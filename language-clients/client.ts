@@ -2,6 +2,7 @@
 // sessions and compiles this code into its WASM; there is no shared host client.
 import { Rpc, Text, uri, nativePath, normalizePath, fileKey, markdown, type Json, type Timer } from './protocol.ts';
 import * as result from './results.ts';
+import { StatusWidget, statusPriority, type Status, type StatusState } from './status.ts';
 
 export interface Configuration {
   id: string; name: string; languages: string[]; program: string; args: string[];
@@ -96,8 +97,9 @@ class Session {
   stopped = false;
   watches = new Map<string, { dispose(): void }[]>();
   dynamic = new Map<string, { field: string; options: Json }>();
-  progress = new Map<string, { title: string; message: string }>();
+  progress = new Map<string, { title: string; message: string; percentage?: number }>();
   private serverError?: string;
+  private initialized = false;
   semantic = new Map<string, { id?: string; data: number[] }>();
   private edits = new Set<Promise<Json>>();
   async waitForEdits(): Promise<void> {
@@ -111,11 +113,12 @@ class Session {
   constructor(readonly client: Client, readonly key: string, readonly root: Json, readonly cwd: string, readonly path: string, readonly attempt = 0) {
     this.attempts = attempt;
     this.initialization = JSON.stringify(client.setting('initialization', client.config.initialization ?? {}));
-    this.ready = this.start();
+    // Publish failures only after the new session has been registered by Client.
+    this.ready = Promise.resolve().then(() => this.start());
   }
   private async start(): Promise<void> {
     const { api, config } = this.client;
-    this.client.status(`${config.name}: Starting`, 0x665522);
+    this.client.status(this.key, 'busy', 'Starting');
     this.client.enableTimings();
     try {
       this.process = api.processes.spawn({ root: this.root.id, program: config.program, args: config.args, cwd: this.cwd || undefined, env: [], framing: 'content-length-text' }, (output: Json) => {
@@ -133,6 +136,7 @@ class Session {
       await this.rpc.notify('initialized', {});
       await this.rpc.notify('workspace/didChangeConfiguration', { settings: this.client.setting('configuration', {}) });
       this.client.configure();
+      this.initialized = true;
       this.updateStatus();
       this.stable = api.timers.after(60000, () => { this.stable = undefined; this.attempts = 0; });
     } catch (error) { this.failed(error as Error); throw error; }
@@ -165,9 +169,12 @@ class Session {
     this.stop();
   }
   private updateStatus(): void {
+    if (this.stopped) return;
     const latest = [...this.progress.values()].at(-1);
-    const text = this.serverError ?? (latest ? `${latest.title} ${latest.message}`.trim() : 'Ready');
-    this.client.status(`${this.client.config.name}: ${text}`, this.serverError ? 0x9b3030 : this.progress.size ? 0x665522 : 0x246842);
+    const detail = latest ? [latest.title, latest.message, latest.percentage === undefined ? '' : `${latest.percentage}%`].filter(Boolean).join(' ') : undefined;
+    if (this.serverError) this.client.status(this.key, 'error', this.serverError);
+    else if (latest || !this.initialized) this.client.status(this.key, 'busy', detail || (this.initialized ? undefined : 'Starting'));
+    else this.client.status(this.key, 'ready');
   }
   private async receive(method: string, params: Json): Promise<Json> {
     const { api, host } = this.client;
@@ -201,7 +208,12 @@ class Session {
       else {
         if (!this.progress.has(token) && this.progress.size >= 64) throw new Error('progress token budget exceeded');
         const previous = this.progress.get(token);
-        this.progress.set(token, { title: String(params.value.title ?? previous?.title ?? '').slice(0, 2000), message: String(params.value.message ?? previous?.message ?? '').slice(0, 2000) });
+        const percentage = params.value.percentage ?? previous?.percentage;
+        this.progress.set(token, {
+          title: String(params.value.title ?? previous?.title ?? '').slice(0, 2000),
+          message: String(params.value.message ?? previous?.message ?? '').slice(0, 2000),
+          percentage: typeof percentage === 'number' && Number.isFinite(percentage) ? Math.round(Math.max(0, Math.min(100, percentage))) : undefined,
+        });
       }
       this.updateStatus();
       return;
@@ -307,9 +319,10 @@ export class Client {
   documents = new Map<bigint, Document>();
   private restarts = new Map<string, Timer>();
   private revisions = new Map<string, bigint>();
-  private widget: Json;
-  private label: Json;
+  private readonly widget: StatusWidget;
+  private readonly statuses = new Map<string, Status>();
   constructor(readonly api: Json, readonly host: Json, readonly config: Configuration) {
+    this.widget = new StatusWidget(api.ui, config.name, message => host.log(1, message));
     for (const kind of kinds) api.providers.register(`${config.id}.${kind}`, kind, (call: Json) => this.provide(call));
     for (const [base, resolve] of [['completion', 'completion-resolve'], ['code-actions', 'code-action-resolve'], ['rename', 'prepare-rename'], ['code-lens', 'code-lens-resolve']]) api.providers.register(`${config.id}.${base}`, resolve, (call: Json) => this.provide(call));
     for (const kind of kinds) api.providers.onCommand(`${config.id}.${kind}`, (call: Json) => this.execute(call.command));
@@ -339,13 +352,14 @@ export class Client {
       this.measurements.delete(name);
     } else this.measurements.set(name, samples);
   }
-  status(text: string, color: number): void {
-    try {
-      if (!this.widget) {
-        this.widget = this.api.ui.create('statusbar.extensions', this.api.ui.block({ id: 'language-status', label: this.config.name, background: color, width: 220, height: 28 }));
-        this.label = this.api.ui.create(this.widget, this.api.ui.text(text, { id: 'language-status-text', foreground: 0xffffff, width: 220, height: 28 }));
-      } else { this.widget.update({ background: color }); this.label.update({ text }); }
-    } catch (error) { this.host.log(1, `Status widget: ${error}`); }
+  status(key: string, state: StatusState, detail?: string): void {
+    this.statuses.set(key, { state, detail });
+    this.refreshStatus();
+  }
+  private refreshStatus(): void {
+    // A healthy root must not hide another root's error or unfinished work.
+    const status = [...this.statuses.values()].sort((a, b) => statusPriority[b.state] - statusPriority[a.state])[0];
+    this.widget.update(status ?? { state: 'stopped' });
   }
   byUri(url: string): Document | undefined { return [...this.documents.values()].find(doc => fileKey(uri(doc.reference.path)) === fileKey(url)); }
   protocolVersion(url: string, version: number): bigint {
@@ -384,15 +398,23 @@ export class Client {
     this.sessions.set(key, session); return session;
   }
   private unused(session: Session): void {
-    if (session.stopped || [...this.documents.values()].some(doc => doc.session === session)) return;
+    if ([...this.documents.values()].some(doc => doc.session === session)) return;
+    if (session.stopped) {
+      this.restarts.get(session.key)?.cancel(); this.restarts.delete(session.key);
+      this.statuses.delete(session.key); this.refreshStatus();
+      return;
+    }
     session.idle?.cancel();
     session.idle = this.api.timers.after(60000, () => {
       session.idle = undefined;
       if ([...this.documents.values()].some(doc => doc.session === session)) return;
       void session.shutdown().finally(() => {
-        if (this.sessions.get(session.key) === session) this.sessions.delete(session.key);
+        if (this.sessions.get(session.key) === session) {
+          this.sessions.delete(session.key);
+          this.statuses.delete(session.key);
+        }
         this.configure();
-        if (!this.sessions.size) this.status(`${this.config.name}: Stopped`, 0x555555);
+        this.refreshStatus();
       });
     });
   }
@@ -412,7 +434,7 @@ export class Client {
     this.sessions.delete(session.key);
     this.forgetCompletions(session);
     this.host.log(2, `${this.config.name}: ${error.message}`);
-    this.status(`${this.config.name}: ${error.message}`, 0x9b3030);
+    this.status(session.key, 'error', error.message);
     this.configure();
     if (session.attempts >= 3 || ![...this.documents.values()].some(doc => doc.session === session)) return;
     this.restarts.get(session.key)?.cancel();
@@ -531,8 +553,9 @@ export class Client {
       const roots = new Set(value.map((root: Json) => root.id));
       for (const [key, session] of this.sessions) if (!roots.has(session.root.id)) { this.forgetCompletions(session); session.stop(); this.sessions.delete(key); this.restarts.get(key)?.cancel(); this.restarts.delete(key); }
       for (const [key, timer] of this.restarts) if (!roots.has(BigInt(key.split(':')[0]!))) { timer.cancel(); this.restarts.delete(key); }
+      for (const key of this.statuses.keys()) if (!roots.has(BigInt(key.split(':')[0]!))) this.statuses.delete(key);
       for (const [id, doc] of this.documents) if (!roots.has(doc.session.root.id)) this.documents.delete(id);
-      if (!this.sessions.size) this.status(`${this.config.name}: Stopped`, 0x555555);
+      this.refreshStatus();
       this.configure(); return;
     }
     if (message.tag === 'settings-changed') {
@@ -554,7 +577,7 @@ export class Client {
       }
       return;
     }
-    if (message.tag === 'shutdown') { this.forgetCompletions(); for (const timer of this.restarts.values()) timer.cancel(); this.restarts.clear(); await Promise.all([...this.sessions.values()].map(session => session.shutdown())); this.widget?.remove(); }
+    if (message.tag === 'shutdown') { this.forgetCompletions(); for (const timer of this.restarts.values()) timer.cancel(); this.restarts.clear(); await Promise.all([...this.sessions.values()].map(session => session.shutdown())); this.statuses.clear(); this.widget.dispose(); }
   }
   private async execute(command: Json): Promise<void> {
     let args = JSON.parse(command.arguments ?? '[]');
