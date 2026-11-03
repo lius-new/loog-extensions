@@ -11,6 +11,8 @@ import { Client, type Configuration } from './client.ts';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const base = path.join(import.meta.dirname, '.work/acceptance');
+// Match the canonical paths exposed by Loom after restoring a Windows workspace.
+const documentPath = (value: string) => process.platform === 'win32' ? path.toNamespacedPath(value) : value;
 fs.mkdirSync(base, { recursive: true });
 const entries = [
   { name: 'rust', language: 'rust', file: 'src/main.rs', marker: 'Cargo.toml', project: '[workspace]\n[package]\nname="loom_acceptance"\nversion="0.1.0"\nedition="2021"\n',
@@ -36,9 +38,9 @@ for (const entry of entries) test(`real ${entry.name}: negotiated providers, edi
   fs.writeFileSync(source, entry.text);
   fs.writeFileSync(secondSource, entry.text);
   let value = entry.text;
-  const reference: any = { document: 1n, lifecycle: 1n, path: source, language: entry.language, variant: entry.language, version: 0n };
-  const secondReference = { ...reference, document: 2n, path: secondSource };
-  let roots = [{ id: 1n, name: entry.name, path: root }];
+  const reference: any = { document: 1n, lifecycle: 1n, path: documentPath(source), language: entry.language, variant: entry.language, version: 0n };
+  const secondReference = { ...reference, document: 2n, path: documentPath(secondSource) };
+  let roots = [{ id: 1n, name: entry.name, path: documentPath(root) }];
   const handlers = new Map<string, any>();
   const configurations = new Map<string, any>();
   const logs: string[] = [];
@@ -187,7 +189,7 @@ for (const entry of entries) test(`real ${entry.name}: negotiated providers, edi
   }
   // Real independent processes for two workspace roots, with navigation kept
   // in its originating root and workspace-symbol aggregation across both.
-  roots.push({ id: 2n, name: 'second', path: secondRoot });
+  roots.push({ id: 2n, name: 'second', path: documentPath(secondRoot) });
   await listener({ tag: 'roots-changed', val: roots });
   await listener({ tag: 'document-opened', val: secondReference });
   const secondDocument = client.documents.get(2n)!;

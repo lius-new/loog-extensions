@@ -133,8 +133,12 @@ export class Rpc {
   private fail(error: Error): void { if (!this.closed) { this.close(error); this.failed(error); } }
 }
 
+export function normalizePath(path: string): string {
+  // Windows canonical paths are filesystem paths, not UNC URI authorities.
+  return path.replaceAll('\\', '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\/(?=[a-z]:\/)/i, '');
+}
 export function uri(path: string): string {
-  const normalized = path.replaceAll('\\', '/');
+  const normalized = normalizePath(path);
   if (normalized.startsWith('//')) {
     const [authority, ...rest] = normalized.slice(2).split('/');
     return `file://${authority}/${rest.map(encodeURIComponent).join('/')}`;

@@ -1,6 +1,6 @@
 // Private build sources of the official plugins. Every artifact owns its own
 // sessions and compiles this code into its WASM; there is no shared host client.
-import { Rpc, Text, uri, nativePath, fileKey, markdown, type Json, type Timer } from './protocol.ts';
+import { Rpc, Text, uri, nativePath, normalizePath, fileKey, markdown, type Json, type Timer } from './protocol.ts';
 import * as result from './results.ts';
 
 export interface Configuration {
@@ -23,7 +23,7 @@ const fields: Record<string, string[]> = {
 const tokenTypes = ['namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter', 'parameter', 'variable', 'property', 'enumMember', 'event', 'function', 'method', 'macro', 'keyword', 'modifier', 'comment', 'string', 'number', 'regexp', 'operator', 'decorator'];
 const tokenModifiers = ['declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract', 'async', 'modification', 'documentation', 'defaultLibrary'];
 function normalizedPath(path: string): string {
-  const value = path.replaceAll('\\', '/');
+  const value = normalizePath(path);
   return value === '/' || /^[a-z]:\/$/i.test(value) ? value : value.replace(/\/+$/, '');
 }
 function folderKey(path: string): string { const value = fileKey(uri(path)); return value.endsWith('/') ? value : value + '/'; }
@@ -81,7 +81,7 @@ function matches(selector: Json, document: Json, language: string): boolean {
         else if (ch === '?') expression += '[^/]';
         else expression += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       }
-      const path = document.path.replaceAll('\\', '/');
+      const path = normalizePath(document.path);
       if (!new RegExp(`^${expression}$`).test(path) && !new RegExp(`^${expression}$`).test(path.split('/').at(-1)!)) return false;
     }
     return true;
@@ -97,6 +97,7 @@ class Session {
   watches = new Map<string, { dispose(): void }[]>();
   dynamic = new Map<string, { field: string; options: Json }>();
   progress = new Map<string, { title: string; message: string }>();
+  private serverError?: string;
   semantic = new Map<string, { id?: string; data: number[] }>();
   private edits = new Set<Promise<Json>>();
   async waitForEdits(): Promise<void> {
@@ -132,7 +133,7 @@ class Session {
       await this.rpc.notify('initialized', {});
       await this.rpc.notify('workspace/didChangeConfiguration', { settings: this.client.setting('configuration', {}) });
       this.client.configure();
-      this.client.status(`${config.name}: Ready`, 0x246842);
+      this.updateStatus();
       this.stable = api.timers.after(60000, () => { this.stable = undefined; this.attempts = 0; });
     } catch (error) { this.failed(error as Error); throw error; }
   }
@@ -162,6 +163,11 @@ class Session {
     if (this.stopped) return;
     try { await this.rpc.request('shutdown', null, undefined, 1000); await this.rpc.notify('exit'); } catch {}
     this.stop();
+  }
+  private updateStatus(): void {
+    const latest = [...this.progress.values()].at(-1);
+    const text = this.serverError ?? (latest ? `${latest.title} ${latest.message}`.trim() : 'Ready');
+    this.client.status(`${this.client.config.name}: ${text}`, this.serverError ? 0x9b3030 : this.progress.size ? 0x665522 : 0x246842);
   }
   private async receive(method: string, params: Json): Promise<Json> {
     const { api, host } = this.client;
@@ -197,11 +203,18 @@ class Session {
         const previous = this.progress.get(token);
         this.progress.set(token, { title: String(params.value.title ?? previous?.title ?? '').slice(0, 2000), message: String(params.value.message ?? previous?.message ?? '').slice(0, 2000) });
       }
-      const latest = [...this.progress.values()].at(-1);
-      this.client.status(`${this.client.config.name}: ${latest ? `${latest.title} ${latest.message}`.trim() : 'Ready'}`, this.progress.size ? 0x665522 : 0x246842);
+      this.updateStatus();
       return;
     }
-    if (method === 'window/logMessage' || method === 'window/showMessage' || method === 'window/showMessageRequest') { host.log(params.type <= 2 ? 1 : 0, String(params.message)); return null; }
+    if (method === 'window/logMessage' || method === 'window/showMessage' || method === 'window/showMessageRequest') {
+      const message = String(params.message);
+      host.log(params.type === 1 ? 2 : params.type === 2 ? 1 : 0, message);
+      if (params.type === 1 && method !== 'window/logMessage') {
+        this.serverError = message.slice(0, 4000);
+        this.updateStatus();
+      }
+      return null;
+    }
     if (method === 'client/registerCapability') {
       const registrations = params.registrations ?? [];
       if (!Array.isArray(registrations) || registrations.length > 64) throw new Error('invalid registration batch');

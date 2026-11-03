@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Fix workspace loading, diagnostics, completion and hover for Windows extended-length and UNC paths.
+- Keep server-reported workspace errors visible in the status bar after initialization and progress updates.
+
 ## 0.2.0
 
 - Bundle an extension-owned language client with typed providers and status bar UI.

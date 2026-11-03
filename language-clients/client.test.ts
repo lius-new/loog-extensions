@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Client } from './client.ts';
 
-function harness() {
+function harness(initializeMessages: any[] = []) {
   const handlers = new Map<string, any>(), commands = new Map<string, any>(), configured = new Map<string, any>();
   const processes: { exit(value: any): void; killed: number }[] = [];
   const sent: any[] = [];
@@ -26,6 +26,8 @@ function harness() {
       return { exited, kill() { state.killed++; }, async write(bytes: Uint8Array) {
         const message = JSON.parse(new TextDecoder().decode(bytes));
         sent.push(message);
+        if (message.method === 'initialize') for (const notification of initializeMessages)
+          queueMicrotask(() => output({ channel: 'stdout', text: JSON.stringify({ jsonrpc: '2.0', ...notification }) }));
         if (message.method === 'initialize' || message.method === 'shutdown' || responses.has(message.method)) queueMicrotask(() => output({ channel: 'stdout', bytes: new TextEncoder().encode(JSON.stringify({ jsonrpc: '2.0', id: message.id, result: message.method === 'initialize' ? { capabilities: { textDocumentSync: 2, completionProvider: {}, definitionProvider: true, semanticTokensProvider: { full: true } } } : responses.get(message.method) ?? null })) }));
       } };
     } },
@@ -78,6 +80,58 @@ test('root selection respects POSIX case and preserves Windows and filesystem ro
     await h.message({ tag: 'document-opened', val: h.reference }); await h.client.documents.get(1n)!.queue;
     assert.equal(h.sent.find(item => item.method === 'initialize').params.rootUri, root === '/' ? 'file:///' : `file:///${root}`);
     await h.message({ tag: 'shutdown' });
+  }
+});
+
+test('workspace load errors stay visible after initialization and progress completes', async () => {
+  const failure = 'Error loading workspace folders (expected 1, got 0)';
+  const h = harness([{ method: 'window/showMessage', params: { type: 1, message: failure } }]);
+  const statuses: any[] = [];
+  h.client.status = (text, color) => { statuses.push({ text, color }); };
+  await h.message({ tag: 'document-opened', val: h.reference });
+  await h.client.documents.get(1n)!.queue;
+  assert.deepEqual(statuses.at(-1), { text: `Rust: ${failure}`, color: 0x9b3030 });
+  const session = [...h.client.sessions.values()][0]!;
+  for (const notification of [
+    { method: '$/progress', params: { token: 1, value: { kind: 'begin', title: 'Loading' } } },
+    { method: '$/progress', params: { token: 1, value: { kind: 'end' } } },
+    { method: 'window/showMessage', params: { type: 3, message: 'Information' } },
+  ]) {
+    session.rpc.input(JSON.stringify({ jsonrpc: '2.0', ...notification }));
+    await h.settle();
+    assert.deepEqual(statuses.at(-1), { text: `Rust: ${failure}`, color: 0x9b3030 });
+  }
+});
+
+test('canonical Windows document and root paths synchronize and accept server diagnostics', async () => {
+  for (const [root, source, expectedRoot] of [
+    [String.raw`\\?\C:\work`, String.raw`C:\work\src\a.rs`, 'file:///C:/work'],
+    [String.raw`C:\work`, String.raw`\\?\C:\work\src\a.rs`, 'file:///C:/work'],
+    [String.raw`\\?\UNC\server\share\work`, String.raw`\\server\share\work\src\a.rs`, 'file://server/share/work'],
+    [String.raw`\\server\share\work`, String.raw`\\?\UNC\server\share\work\src\a.rs`, 'file://server/share/work'],
+  ]) {
+    const h = harness();
+    h.reference.path = source;
+    h.api.workspace.roots = () => [{ id: 1n, name: 'work', path: root }];
+    h.client.host.readFile = (_root: bigint, file: string) => {
+      if (file !== 'Cargo.toml') throw new Error('not found');
+      return { text: '' };
+    };
+    const published: any[] = [];
+    h.api.providers.publishDiagnostics = (...args: any[]) => published.push(args);
+    await h.message({ tag: 'document-opened', val: h.reference });
+    const doc = h.client.documents.get(1n)!;
+    await doc.queue;
+    assert.equal(h.sent.find(message => message.method === 'initialize').params.rootUri, expectedRoot);
+    assert.equal(h.sent.find(message => message.method === 'textDocument/didOpen').params.textDocument.uri, `${expectedRoot}/src/a.rs`);
+    doc.session.rpc.input(JSON.stringify({ jsonrpc: '2.0', method: 'textDocument/publishDiagnostics', params: {
+      uri: `${expectedRoot}/src/a.rs`, version: doc.serverVersion,
+      diagnostics: [{ range: { start: { line: 0, character: 3 }, end: { line: 0, character: 7 } }, severity: 1, message: 'test error' }],
+    } }));
+    await h.settle();
+    assert.equal(published.length, 1);
+    assert.equal(published[0][1], source);
+    assert.equal(published[0][3][0].message, 'test error');
   }
 });
 

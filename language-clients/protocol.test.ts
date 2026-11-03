@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Rpc, Text, uri, nativePath } from './protocol.ts';
+import { Rpc, Text, uri, nativePath, fileKey } from './protocol.ts';
 import { completion, completionMatches, signatures, selections, workspaceEdit, semantic, semanticDelta, command } from './results.ts';
 
 test('positions preserve Chinese, surrogate pairs, CRLF and both negotiated units', () => {
@@ -12,6 +12,21 @@ test('positions preserve Chinese, surrogate pairs, CRLF and both negotiated unit
   }
   for (const path of ['C:/work/中 #%.rs', '/work/a b.ts', '//server/share/中.go']) assert.equal(nativePath(uri(path)), path);
   assert.throws(() => nativePath('https://example.com/file'), /only file/);
+});
+
+test('Windows canonical paths use standard file URIs and share server document identities', () => {
+  for (const [canonical, native, expected] of [
+    [String.raw`\\?\C:\work\中 #%.go`, 'C:/work/中 #%.go', 'file:///C:/work/%E4%B8%AD%20%23%25.go'],
+    [String.raw`\\?\UNC\server\share\中 #%.go`, '//server/share/中 #%.go', 'file://server/share/%E4%B8%AD%20%23%25.go'],
+    ['//?/c:/work/a.go', 'c:/work/a.go', 'file:///c:/work/a.go'],
+    ['//?/unc/server/share/a.go', '//server/share/a.go', 'file://server/share/a.go'],
+  ]) {
+    assert.equal(uri(canonical), expected);
+    assert.equal(nativePath(uri(canonical)), native);
+    assert.equal(fileKey(uri(canonical)), fileKey(uri(native)));
+    assert.equal(fileKey(uri(canonical)), fileKey(uri(native.toUpperCase())));
+  }
+  assert.equal(uri('/work/UNC/a.go'), 'file:///work/UNC/a.go');
 });
 
 test('completion eligibility preserves native smart-case subsequences and defers Unicode', () => {
