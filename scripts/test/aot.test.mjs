@@ -38,6 +38,8 @@ test('native interoperability gates publication and uses immutable compiler arti
  const workflow=fs.readFileSync(new URL('../../.github/workflows/publish.yml',import.meta.url),'utf8');
  assert.match(workflow,/publish:\s+needs: \[aot-corpus, aot-native\]/);
  assert.match(workflow,/artifact-ids:.*needs.aot-corpus.outputs.artifact-id/);
+ // ID-based downloads otherwise nest even a single artifact under its name.
+ assert.match(workflow,/artifact-ids:[^\n]+\n\s+path: \.work\/aot-corpus\n\s+merge-multiple: true/);
  assert.match(workflow,/needs.aot-native.result == 'success'/);
  assert.match(workflow,/needs.aot-native.result == 'skipped'.*needs.aot-corpus.outputs.count == '0'/);
  for(const target of Object.values(TARGETS))assert.ok(workflow.includes('target: '+target));

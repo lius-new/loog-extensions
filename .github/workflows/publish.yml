@@ -98,6 +98,7 @@ jobs:
         with:
           artifact-ids: ${{ needs.aot-corpus.outputs.artifact-id }}
           path: .work/aot-corpus
+          merge-multiple: true
       - name: Require direct AOT loading and instantiate the real component ABI
         run: cargo run --release --locked --manifest-path .work/loom-sdk/Cargo.toml -p loom-extension-host --target ${{ matrix.target }} --example aot_verify -- .work/aot-corpus ${{ matrix.target }}
 
