@@ -2,7 +2,7 @@
 // pins.json, or for the ones named: node build.mjs [platform…]
 //   npm ci && node build.mjs
 // Server resources retain their pinned upstream hashes. The extension-owned
-// TypeScript client is built against the Loom checkout named by LOOM_SOURCE.
+// Rust WASM client is built against the Loom checkout named by LOOM_SOURCE.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -12,8 +12,7 @@ import {pipeline} from 'node:stream/promises';
 import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import xz from 'xz-decompress';
-import { buildClient } from '../../language-clients/build.mjs';
-import { clientNotices } from '../../language-clients/notices.mjs';
+import { buildClient, clientNotices } from '../../language-clients/rust/build.mjs';
 
 const {XzReadableStream} = xz;
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
@@ -61,7 +60,7 @@ for (const platform of platforms) {
   for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
   fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
   fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
-  clientNotices(folder);
+  clientNotices(folder, here);
 
   if (pin.format === 'gz') fs.writeFileSync(path.join(folder, pin.executables[0]), zlib.gunzipSync(fs.readFileSync(archive)));
   else if (pin.format === 'raw') fs.copyFileSync(archive, path.join(folder, pin.executables[0]));

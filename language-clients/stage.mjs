@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { buildClient } from './build.mjs';
+import { buildClient } from './rust/build.mjs';
 import { developmentDirectory, registerDevelopment } from '../scripts/lib/development.mjs';
 
 const repository = path.resolve(import.meta.dirname, '..');

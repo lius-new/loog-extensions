@@ -62,13 +62,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lius-new/loom
-          ref: 20722d73bc3f068ca60f4a2f608b9542d54c261f
+          ref: 7f5116eeecf06cb8b86d5196dff77fd443245730
           path: .work/loom-sdk
           persist-credentials: false
-      - name: Install the SDK's locked component toolchain
+      - name: Install the Rust language-client toolchain
         if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
-        working-directory: .work/loom-sdk/tests/extensions/js-guest
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.98.0
+          targets: wasm32-unknown-unknown
+      - name: Test the private Rust language client
+        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        run: cargo test --manifest-path rust/Cargo.toml --locked --lib
       - uses: actions/setup-go@v5
         if: matrix.extension == 'loom.lsp.gopls'
         with:

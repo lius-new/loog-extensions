@@ -17,8 +17,9 @@ Highlighting and the language service are separate extensions, so each can be ch
 updated and disabled on its own. A highlight extension names the language service
 extensions it works well with in `recommends`.
 
-Rust, Go, JavaScript and TypeScript are the first component clients (Loom >=0.1.9).
-Their private sources and checks are in [language-clients](language-clients/README.md).
+Rust, Go, JavaScript and TypeScript are the first component clients (Loom >=0.1.10).
+All three clients are implemented in Rust WASM; their private shared source and
+staging checks are in [language-clients](language-clients/README.md).
 Other historical server recipes are retained but listed as `deferred` in
 `loom-ext.toml`, excluding them from new automatic/manual builds until migration.
 Already published assets remain available to compatible older Loom versions.

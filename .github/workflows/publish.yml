@@ -14,7 +14,98 @@ permissions:
   contents: read
 
 jobs:
+  aot-corpus:
+    name: Build cross-platform AOT interoperability corpus
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact-id: ${{ steps.corpus.outputs.artifact-id }}
+      count: ${{ steps.emit.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: packages-*
+          path: .work/handed-over
+      - name: Select official component inputs
+        id: plan
+        run: node scripts/aot-contract.mjs plan .work/handed-over/*
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.plan.outputs.has-clients == 'true'
+        with:
+          toolchain: 1.98.0
+      - uses: actions/cache@v4
+        if: steps.plan.outputs.has-clients == 'true'
+        with:
+          path: tools/aot-compiler/target
+          key: aot-${{ runner.os }}-rust-1.98.0-${{ hashFiles('tools/aot-compiler/Cargo.lock', 'tools/aot-compiler/Cargo.toml', 'tools/aot-compiler/src/**') }}
+      - name: Compile trusted publisher tool
+        if: steps.plan.outputs.has-clients == 'true'
+        run: cargo build --release --locked --manifest-path tools/aot-compiler/Cargo.toml
+      - name: Generate signed conformance corpus
+        id: emit
+        run: node scripts/aot-contract.mjs emit .work/aot-corpus .work/handed-over/*
+      - uses: actions/upload-artifact@v4
+        id: corpus
+        with:
+          name: aot-contract-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .work/aot-corpus
+          retention-days: 3
+          if-no-files-found: error
+
+  aot-native:
+    name: Verify AOT on ${{ matrix.target }}
+    needs: aot-corpus
+    if: needs.aot-corpus.outputs.count != '0'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            target: x86_64-pc-windows-msvc
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: macos-15
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: lius-new/loom
+          ref: 7f5116eeecf06cb8b86d5196dff77fd443245730
+          path: .work/loom-sdk
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.98.0
+          targets: ${{ matrix.target }}
+      - uses: actions/cache@v4
+        with:
+          path: .work/loom-sdk/target
+          key: aot-host-${{ runner.os }}-${{ runner.arch }}-rust-1.98.0-${{ hashFiles('.work/loom-sdk/Cargo.lock', '.work/loom-sdk/crates/extension-host/**', '.work/loom-sdk/wit/**') }}
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.aot-corpus.outputs.artifact-id }}
+          path: .work/aot-corpus
+      - name: Require direct AOT loading and instantiate the real component ABI
+        run: cargo run --release --locked --manifest-path .work/loom-sdk/Cargo.toml -p loom-extension-host --target ${{ matrix.target }} --example aot_verify -- .work/aot-corpus ${{ matrix.target }}
+
+
   publish:
+    needs: [aot-corpus, aot-native]
+    if: >-
+      ${{ !cancelled() && needs.aot-corpus.result == 'success' && (needs.aot-native.result == 'success' || (needs.aot-native.result == 'skipped' && needs.aot-corpus.outputs.count == '0')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -73,10 +164,25 @@ jobs:
           cargo build --release --locked --manifest-path .work/validator-source/tools/ext-validate/Cargo.toml --bin loom-ext-validate
           mkdir -p tools/bin
           cp .work/validator-source/tools/ext-validate/target/release/loom-ext-validate tools/bin/loom-ext-validate
+      - name: Install the pinned AOT compiler toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.98.0
+      - name: Cache the trusted AOT compiler
+        uses: actions/cache@v4
+        with:
+          path: tools/aot-compiler/target
+          key: aot-${{ runner.os }}-rust-1.98.0-${{ hashFiles('tools/aot-compiler/Cargo.lock', 'tools/aot-compiler/Cargo.toml', 'tools/aot-compiler/src/**') }}
+      - name: Build the trusted cross-platform AOT compiler
+        run: cargo build --release --locked --manifest-path tools/aot-compiler/Cargo.toml
+      - name: Compile and authenticate official language-client AOT
+        env:
+          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+        run: node scripts/prepare-aot.mjs .work/handed-over/* --out .work/aot-packages
       - name: Take in the packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/loom-ext.mjs release intake .work/handed-over/*
+        run: node scripts/loom-ext.mjs release intake .work/aot-packages
       - name: Publish the releases and update the signed index
         env:
           GH_TOKEN: ${{ github.token }}
@@ -88,6 +194,7 @@ jobs:
         with:
           name: delivery-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            .work/aot-packages/aot-provenance.json
             .work/release
             dist/packages
             dist/index

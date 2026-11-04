@@ -1,14 +1,16 @@
 # Official language clients
 
-These private build sources are compiled into each of the Rust, Go and
-JavaScript/TypeScript extension components. Each installed extension owns its
+The three official clients compile private Rust sources from `rust/` into
+independent WASM components. Each extension has its own Cargo manifest and lock
+file; `rust/clients.json` retains its language IDs, program, arguments and root
+selection policy. JavaScript/TypeScript includes JSX/TSX. Each installed extension owns its
 RPC connection, documents, capability registrations, processes and status block.
-The 0.2.2 clients require Loom 0.1.10 and its independent `loom:ui/tree@0.1.0`
+The 0.2.4 clients require Loom 0.1.10 and its independent `loom:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific
 host layout branch. Missing targets keep the indicator hidden until it returns.
-Before publishing these packages, update the workflow's pinned Loom SDK source
-to a committed revision containing that interface; the builder rejects older SDKs.
+The workflow's pinned Loom SDK source has been updated
+to a committed revision containing that interface; builders reject older SDKs.
 The general Loom SDK contains none of this language-specific behavior.
 
 Each plugin takes its display name from its own manifest at build time. Its
@@ -19,9 +21,9 @@ and error (red, a bounded single-line reason). Errors take priority over busy
 and ready sessions across roots; initialization progress cannot prematurely
 report ready. No download or installation state is delegated to Loom.
 
-Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT,
-SDK and locked component toolchain. CI obtains those from `lius-new/loom` at
-`20722d73bc3f068ca60f4a2f608b9542d54c261f`; the production validator uses the same
+Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT
+and locked Rust component toolchain. CI obtains those from `lius-new/loom` at
+`7f5116eeecf06cb8b86d5196dff77fd443245730`; the production validator is pinned independently in tools/validator-source.toml, rather than sharing this
 source revision. The host contract is committed and pushed before these clients.
 No SDK is
 downloaded or installed into the user's editor at runtime.
@@ -37,7 +39,17 @@ The optional boolean `performance` setting logs bounded 100-sample RPC, JSON dec
 result-conversion and SDK submission summaries, containing no document text. It takes effect
 on the next activation.
 
-Local checks:
+Rust checks (run for each extension ID):
+
+```sh
+LOOM_SOURCE=/path/to/loom cargo test --manifest-path extensions/loom.lsp.rust-analyzer/rust/Cargo.toml --locked --lib
+```
+
+The retained TypeScript sources and tests are reference fixtures for the previous
+implementation; release builders and `stage.mjs` compile only the Rust clients.
+The shared componentizer also uses Rust and requires no JavaScript engine SDK.
+
+Reference checks and local staging:
 
 ```sh
 node --experimental-transform-types --test language-clients/client.test.ts language-clients/protocol.test.ts language-clients/status.test.ts
@@ -68,7 +80,7 @@ subsequence pattern before converting candidates. Unicode candidates and pattern
 remain with the native matcher. Filtered lists are incomplete and keep original
 resolve indices; broadening the pattern requests the full applicable list again.
 
-Windows verification of this source: 29 client unit tests, four real-server
+Historical Windows verification of the 0.2.2 TypeScript implementation: 29 client unit tests, four real-server
 functional/two-root cases, and all twelve native WASM performance cohorts passed.
 Loom's post-removal suite passed 1700 tests with 28 ignores. Its retained
 `docs/architecture/language-migration-evidence` has paired old-host/component
@@ -76,3 +88,16 @@ reports: 100 samples per operation, three document sizes and all four languages;
 all 36 p95 comparisons passed the unchanged budget. Components are below 16 MiB.
 The three final package builds also passed the updated production importer.
 Manual desktop QA and Linux/macOS execution are not claimed by these Windows runs.
+
+The Rust migration comparison is documented in `rust/BENCHMARKS.md`. It uses
+identical server payloads, the native Loom WASM executor, isolated cold caches,
+and three repeats of 100 requests per operation for small, 1 MiB and 8 MiB
+Unicode documents. Host memory excludes separate language-server processes.
+Migrating the TypeScript client does not remove its Node server dependency.
+
+## Authenticated release AOT
+
+Version 0.2.4 keeps these Rust WASM clients and adds authenticated native AOT in
+the trusted publication stage. A matching AOT-capable Loom host skips local
+compilation. Old hosts and incompatible profiles retain the portable WASM path.
+See `rust/AOT.md` for the authority boundary, native CI gate and measured costs.

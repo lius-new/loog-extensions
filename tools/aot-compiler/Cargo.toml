@@ -1,0 +1,12 @@
+[package]
+name = "loom-aot-compiler"
+version = "0.1.0"
+edition = "2024"
+publish = false
+[workspace]
+[dependencies]
+wasmtime = { version = "=50.0.1", default-features = false, features = ["runtime", "component-model", "cranelift", "std", "wat", "all-arch"] }
+serde_json = "1"
+ring = "0.17"
+[profile.release]
+opt-level = 2

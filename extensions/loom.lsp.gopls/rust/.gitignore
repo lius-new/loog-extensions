@@ -1,0 +1,4 @@
+/target/
+/componentize/target/
+/extension.wasm
+/native-*.json

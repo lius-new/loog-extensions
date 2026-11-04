@@ -9,8 +9,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import * as tar from 'tar';
-import { buildClient } from '../../language-clients/build.mjs';
-import { clientNotices } from '../../language-clients/notices.mjs';
+import { buildClient, clientNotices } from '../../language-clients/rust/build.mjs';
 
 const CONFIG = {
   "go": "1.27.0",
@@ -108,7 +107,7 @@ for (const platform of platforms) {
   for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
   fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
   fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
-  clientNotices(folder);
+  clientNotices(folder, here);
   target.executables.forEach((name, index) => { fs.copyFileSync(found[index], path.join(folder, name)); fs.chmodSync(path.join(folder, name), 0o755); });
   for (const [name, license] of Object.entries(pins.licenses ?? {})) {
     fs.mkdirSync(path.join(folder, 'licenses'), {recursive: true});

@@ -167,7 +167,7 @@ test('publication queues whole batches and reads artifacts only from its own run
   assert.match(text, /pattern: packages-\*/);
   assert.match(text, /path: \.work\/handed-over/);
   assert.doesNotMatch(text, /gh api|gh run download|workflow_run|github-token:|run-id:|inputs\.artifact/);
-  assert.match(text, /release intake \.work\/handed-over\/\*/);
+  assert.match(text, /release intake \.work\/aot-packages/);
   assert.doesNotMatch(text, /--unsigned|--dry-run/);
   assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets\.LOOM_INDEX_KEY \}\}/);
   assert.match(text, /if: always\(\)/);

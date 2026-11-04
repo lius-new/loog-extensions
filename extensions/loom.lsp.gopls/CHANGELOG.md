@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.4
+
+- Add release-side authenticated AOT for supported platforms, eliminating local compilation on matching AOT-capable Loom hosts.
+- Retain portable WASM for older hosts and incompatible runtime profiles.
+
+## 0.2.3
+
+- Replace the TypeScript/JavaScript-engine client with a Rust WebAssembly component.
+- Preserve typed language providers, document synchronization, settings, file watches, server recovery and status UI.
+- Reduce component size and runtime memory; keep the pinned gopls server unchanged.
+
 ## 0.2.2
 
 - Show a passive, content-sized status block using the plugin name and ready, busy, stopped or error states.

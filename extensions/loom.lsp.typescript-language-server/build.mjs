@@ -8,8 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import * as tar from 'tar';
-import { buildClient } from '../../language-clients/build.mjs';
-import { clientNotices } from '../../language-clients/notices.mjs';
+import { buildClient, clientNotices } from '../../language-clients/rust/build.mjs';
 
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
 
@@ -25,7 +24,7 @@ fs.mkdirSync(folder, {recursive: true});
 for (const file of FILES) fs.copyFileSync(path.join(here, file), path.join(folder, file));
 fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), { recursive: true });
 fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
-clientNotices(folder);
+clientNotices(folder, here);
 
 // The lock file is the only source of versions.
 const install = path.join(work, 'payload');
