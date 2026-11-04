@@ -54,16 +54,16 @@ test('private language client sources affect all official client fingerprints on
   const repo = fixture(t);
   const theme = fingerprint(repo.root, 'loom.theme.demo');
   const ids = ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'];
-  for (const id of ids) write(repo.extensions, `${id}/src/main.ts`, 'export const client = true;');
+  for (const id of ids) write(repo.extensions, `${id}/rust/Cargo.toml`, '[package]\nname = "client"');
   const before = ids.map(id => fingerprint(repo.root, id));
-  write(repo.root, 'language-clients/client.ts', 'export const revision = 1;');
+  write(repo.root, 'language-clients/rust/src/client.rs', 'const REVISION: u8 = 1;');
   for (let at = 0; at < ids.length; at++) assert.notEqual(fingerprint(repo.root, ids[at]), before[at]);
   assert.equal(fingerprint(repo.root, 'loom.theme.demo'), theme);
   const source = fingerprint(repo.root, ids[0]);
   write(repo.root, 'language-clients/README.md', '# Documentation');
   assert.equal(fingerprint(repo.root, ids[0]), source);
-    write(repo.root, 'language-clients/client.test.ts', 'test();');
-    write(repo.root, 'language-clients/fixtures/native-ui/src/main.ts', 'fixture();');
+    write(repo.root, 'language-clients/rust/src/tests.rs', '#[test] fn test() {}');
+    write(repo.root, 'language-clients/fixtures/native-ui/rust/src/lib.rs', 'fn fixture() {}');
     assert.equal(fingerprint(repo.root, ids[0]), source);
 });
 

@@ -45,15 +45,14 @@ Rust checks (run for each extension ID):
 LOOM_SOURCE=/path/to/loom cargo test --manifest-path extensions/loom.lsp.rust-analyzer/rust/Cargo.toml --locked --lib
 ```
 
-The retained TypeScript sources and tests are reference fixtures for the previous
-implementation; release builders and `stage.mjs` compile only the Rust clients.
+The previous TypeScript client sources and SDK have been removed. Release
+builders, local staging and the native UI test fixture all use the Rust client.
 The shared componentizer also uses Rust and requires no JavaScript engine SDK.
 
-Reference checks and local staging:
+Build the native UI fixture and prepare local staging:
 
 ```sh
-node --experimental-transform-types --test language-clients/client.test.ts language-clients/protocol.test.ts language-clients/status.test.ts
-node --experimental-transform-types --test --test-concurrency=1 language-clients/acceptance.test.ts
+node language-clients/fixtures/native-ui/build.mjs
 node language-clients/stage.mjs
 ```
 

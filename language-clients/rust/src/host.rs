@@ -23,6 +23,7 @@ pub struct State {
     pub answers: Vec<Answer>,
     pub configurations: BTreeMap<String, ProviderConfiguration>,
     pub nodes: BTreeMap<u64, UiDescription>,
+    pub ready_hover: Vec<bool>,
     pub spawned: Vec<(u64, ProcessRequest)>,
     pub killed: Vec<u64>,
     pub watches: BTreeMap<u64, WatchRequest>,
@@ -227,6 +228,13 @@ pub fn ui_create(_: &UiParent, value: &UiDescription) -> Result<u64, HostError> 
 }
 pub fn ui_update(id: u64, value: &UiDescription) -> Result<(), HostError> {
     state(|s| {
+        if value.label.as_deref() == Some(&format!("{}: Ready", crate::NAME)) {
+            s.ready_hover.push(
+                s.configurations
+                    .get(&format!("{}.hover", crate::ID))
+                    .is_some_and(|c| c.enabled),
+            );
+        }
         s.nodes.insert(id, value.clone());
     });
     Ok(())

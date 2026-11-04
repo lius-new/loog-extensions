@@ -80,7 +80,9 @@ impl Client {
                     json!({"settings":self.setting("configuration",json!({}))}),
                 )?;
                 s.ready = true;
-                self.configuration_dirty = true;
+                // Publish negotiated provider availability before advertising readiness.
+                self.configure(Some(s));
+                self.configuration_dirty = false;
                 s.stable = Some(self.timer(60000, Timer::Stable(s.process))?);
                 self.status(s);
                 let documents = self

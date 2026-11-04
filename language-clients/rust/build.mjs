@@ -21,9 +21,9 @@ export function buildClient(directory, {checkOnly = false} = {}) {
   return output;
 }
 
-export function clientNotices(folder,directory){
+export function clientNotices(folder,directory,{source=path.resolve(directory,'../..')}={}){
   const licenses=path.join(folder,'licenses');fs.mkdirSync(licenses,{recursive:true});
-  for(const name of ['LICENSE-MIT','LICENSE-APACHE'])fs.copyFileSync(path.join(directory,'../..',name),path.join(licenses,`loom-client-${name}`));
+  for(const name of ['LICENSE-MIT','LICENSE-APACHE'])fs.copyFileSync(path.join(source,name),path.join(licenses,`loom-client-${name}`));
   const manifest=path.join(directory,'rust/Cargo.toml');
   const metadata=JSON.parse(execFileSync('cargo',['metadata','--manifest-path',manifest,'--locked','--format-version','1','--filter-platform','wasm32-unknown-unknown'],{cwd:directory,encoding:'utf8',windowsHide:true}));
   const notices=[];

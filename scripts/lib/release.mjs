@@ -27,7 +27,7 @@ export function fingerprint(root, id, ref) {
     ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', ...prefixes]).split('\0').filter(Boolean)
     // What git tracks or would track: ignored folders (dependencies, build output) are not inputs.
     : git(root, ['ls-files', '-z', '-c', '-o', '--exclude-standard', '--', ...prefixes]).split('\0').filter(file => file && fs.existsSync(path.join(root, file)));
-  const input = file => meaningful(file) && (!file.startsWith('language-clients/') || (!file.endsWith('.test.ts') && !file.startsWith('language-clients/fixtures/')));
+  const input = file => meaningful(file) && (!file.startsWith('language-clients/') || (!['tests.rs', 'config_tests.rs'].includes(file.split('/').at(-1)) && !file.startsWith('language-clients/fixtures/')));
   return hash(JSON.stringify(entries.filter(input).sort().map(file => [file.startsWith(prefix) ? file.slice(prefix.length) : `../${file}`,
     ref ? hash(execFileSync('git', ['show', `${ref}:${file}`], {cwd: root, maxBuffer: 32 * 1024 * 1024})) : fileHash(path.join(root, file))])));
 }

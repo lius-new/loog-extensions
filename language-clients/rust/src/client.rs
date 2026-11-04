@@ -947,6 +947,7 @@ impl Client {
             doc.dirty = false;
             return Ok(());
         }
+        let next = Text::new(text.clone(), s.unit);
         s.version += 1;
         if doc.server_version.is_none() {
             s.notify("textDocument/didOpen",json!({"textDocument":{"uri":uri(&reference.path),"languageId":language_id(&reference.language, reference.variant.as_deref()),"version":s.version,"text":text.as_ref()}}))?;
@@ -958,10 +959,19 @@ impl Client {
             } else {
                 json!({"text":text.as_ref()})
             };
-            s.notify("textDocument/didChange",json!({"textDocument":{"uri":uri(&reference.path),"version":s.version},"contentChanges":[change]}))?;
-            doc.diagnostics.clear();
+            s.notify("textDocument/didChange",json!({"textDocument":{"uri":uri(&reference.path),"version":s.version},"contentChanges":[&change]}))?;
+            if !doc.diagnostics.is_empty() {
+                // Keep push findings aligned until the server publishes a replacement.
+                // A cached diagnostics response must not erase the host's mapped findings.
+                let change = if incremental {
+                    change
+                } else {
+                    doc.text.diff(&text)?
+                };
+                results::rebase_diagnostics(&mut doc.diagnostics, &doc.text, &next, &change)?;
+            }
         }
-        doc.text = Text::new(text, s.unit);
+        doc.text = next;
         doc.reference = reference;
         doc.server_version = Some(s.version);
         doc.dirty = false;

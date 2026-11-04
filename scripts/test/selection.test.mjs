@@ -31,7 +31,7 @@ test('shared build and publication inputs select every extension', () => {
 
 test('private language client changes rebuild all three official clients', () => {
   const clients = ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'];
-  assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/protocol.ts']), clients.sort());
+  assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/rust/src/protocol.rs']), clients.sort());
 });
 
 test('manual selection is explicit, sorted and rejects unknown or malformed IDs', () => {

@@ -25,7 +25,7 @@ LOOM_SOURCE=/path/to/loom cargo test --manifest-path rust/Cargo.toml --locked --
 The Rust manifest and locked dependencies are under rust/. The private shared
 source and builder are under ../../language-clients/rust/. The Rust component
 encoder produces extension.wasm independently for each plugin.
-No JavaScript engine or TypeScript SDK is included in the component. Unsigned development builds still use Wasmtime's local compilation/cache path.
+No JavaScript engine is included in the component. Unsigned development builds still use Wasmtime's local compilation/cache path.
 
 PROVENANCE.md records server sources; licenses/ includes the Rust dependency
 licenses. See rust/BENCHMARKS.md for the TS/Rust comparison and reproduction.

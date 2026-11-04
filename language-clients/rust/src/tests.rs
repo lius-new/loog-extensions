@@ -907,3 +907,45 @@ fn completion_batch_and_opaque_fallback_preserve_lsp_defaults_and_overrides() {
     assert!(item.get("textEdit").is_none());
     assert!(item.get("data").is_none());
 }
+
+#[test]
+fn readiness_is_published_after_negotiated_provider_availability() {
+    let (_client, _) = setup();
+    assert!(state(
+        |s| !s.ready_hover.is_empty() && s.ready_hover.iter().all(|enabled| *enabled)
+    ));
+}
+
+#[test]
+fn cached_push_diagnostics_follow_unicode_edits_until_the_next_publication() {
+    for unit in [ColumnUnit::Utf8, ColumnUnit::Utf16] {
+        let before = Text::new("alpha beta", unit);
+        let after = Text::new("中😀alpha beta", unit);
+        let mut values = vec![
+            json!({"range":{"start":before.position(0).unwrap(),"end":before.position(5).unwrap()},"message":"finding","code":7}),
+        ];
+        results::rebase_diagnostics(
+            &mut values,
+            &before,
+            &after,
+            &before.diff(&after.value).unwrap(),
+        )
+        .unwrap();
+        let converted = results::diagnostics(&values, &after);
+        assert_eq!(converted[0].range.start, 7);
+        assert_eq!(converted[0].range.end, 12);
+        assert_eq!(values[0]["code"], 7);
+        let replaced = Text::new("中😀X beta", unit);
+        results::rebase_diagnostics(
+            &mut values,
+            &after,
+            &replaced,
+            &after.diff(&replaced.value).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            values.is_empty(),
+            "a finding wholly replaced by typing expires"
+        );
+    }
+}

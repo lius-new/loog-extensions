@@ -471,3 +471,46 @@ pub fn semantic(
     }
     Ok(out)
 }
+
+/// Map cached push diagnostics through the same replacement sent to the server.
+pub fn rebase_diagnostics(
+    values: &mut Vec<Value>,
+    before: &Text,
+    after: &Text,
+    change: &Value,
+) -> Result<()> {
+    let replaced = before.range(&change["range"])?;
+    let inserted = change["text"]
+        .as_str()
+        .ok_or("invalid document change")?
+        .len() as u64;
+    let shift = |offset: u64| offset - replaced.end + replaced.start + inserted;
+    values.retain_mut(|value| {
+        let Ok(range) = before.range(&value["range"]) else {
+            return false;
+        };
+        let start = if range.start >= replaced.end {
+            shift(range.start)
+        } else if range.start >= replaced.start {
+            replaced.start + inserted
+        } else {
+            range.start
+        };
+        let end = if range.end > replaced.end {
+            shift(range.end)
+        } else if range.end > replaced.start {
+            replaced.start
+        } else {
+            range.end
+        };
+        if start > end {
+            return false;
+        }
+        let (Ok(start), Ok(end)) = (after.position(start), after.position(end)) else {
+            return false;
+        };
+        value["range"] = json!({"start":start,"end":end});
+        true
+    });
+    Ok(())
+}

@@ -12,7 +12,7 @@ License: MIT OR Apache-2.0. Platform: every supported platform.
 
 The extension's Rust WASM owns the language client, protocol, document
 synchronization and server lifecycle. Loom supplies general process, document,
-provider and UI APIs. The TypeScript SDK does not contain this language client.
+provider and UI APIs. The language client stays inside this plugin; Loom supplies the general WIT contract.
 Opening a Rust document activates the extension; execution uses existing project
 trust. The extension uses Loom 0.1.10's general UI tree API to place its colored
 status block before the cursor-position component.
