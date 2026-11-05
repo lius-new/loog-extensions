@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Report how the service is doing to Loom (`loom:service/status`) instead of drawing a status item; Loom shows it and lists the service in its language services panel.
+- Name the service in `contributes.language_service.name`.
+
 ## 0.2.4
 
 - Add release-side authenticated AOT for supported platforms, eliminating local compilation on matching AOT-capable Loom hosts.
