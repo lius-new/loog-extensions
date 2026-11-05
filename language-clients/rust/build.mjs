@@ -6,7 +6,13 @@ import {execFileSync} from 'node:child_process';
 export function buildClient(directory, {checkOnly = false} = {}) {
   const loom=path.resolve(process.env.LOOM_SOURCE??path.join(directory,'../../../..'));
   if(!fs.existsSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit')))
-    throw new Error('These clients require the Loom 0.1.10 UI tree contract; set LOOM_SOURCE to a matching checkout');
+    throw new Error('These clients require the Loom UI tree and motion contracts; set LOOM_SOURCE to a matching checkout');
+  if(!fs.readFileSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit'),'utf8').includes('interface motion') ||
+     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:ui/motion@0.1.0;'))
+    throw new Error('Status motion requires loom:ui/motion@0.1.0; set LOOM_SOURCE to the motion-capable Loom checkout');
+  if(!fs.readFileSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit'),'utf8').includes('interface shared') ||
+     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:ui/shared@0.1.0;'))
+    throw new Error('Shared status requires loom:ui/shared@0.1.0; set LOOM_SOURCE to the shared-UI Loom checkout');
   const crate=path.join(directory,'rust'),manifest=path.join(crate,'Cargo.toml');
   const name=/^name\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(manifest,'utf8'))?.[1];
   if(!name)throw new Error('Missing Rust package name');
@@ -37,5 +43,6 @@ export function clientNotices(folder,directory,{source=path.resolve(directory,'.
   }
   fs.writeFileSync(path.join(licenses,'CLIENT-NOTICES.txt'),
     'Private Rust language client: MIT OR Apache-2.0.\nSource: https://github.com/lius-new/loom-extensions/tree/main/language-clients/rust\n'+
-    'The component contains no JavaScript engine. Rust dependency licenses are included below licenses/rust.\n\n'+notices.sort().join('\n')+'\n');
+    'The component contains no JavaScript engine. Rust dependency licenses are included below licenses/rust.\n'+
+    'Status icons: Material Design Icons by Pictogrammers (https://github.com/Templarian/MaterialDesign), Apache-2.0; see loom-client-LICENSE-APACHE.\n\n'+notices.sort().join('\n')+'\n');
 }

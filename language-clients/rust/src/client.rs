@@ -4,7 +4,7 @@ use crate::{
     loom::extension::types::*,
     protocol::*,
     results,
-    status::{Status, Widget},
+    status::{Status, Widgets},
 };
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -223,7 +223,7 @@ pub struct Client {
     operations: BTreeMap<u64, Operation>,
     symbols: BTreeMap<u64, SymbolGroup>,
     measurements: BTreeMap<String, Vec<f64>>,
-    widget: Widget,
+    widget: Widgets,
     shutting_down: bool,
     configuration_dirty: bool,
     completion_sets: BTreeMap<u64, CompletionSet>,
@@ -491,14 +491,19 @@ impl Client {
         self.refresh_status();
     }
     fn refresh_status(&mut self) {
-        let status = self
-            .statuses
-            .values()
-            .max_by_key(|s| s.rank)
-            .cloned()
-            .unwrap_or_default();
         if !self.shutting_down {
-            self.widget.update(&status);
+            let mut states = BTreeMap::<String, (Status, Vec<String>)>::new();
+            for document in self.documents.values() {
+                if let Some((_, key)) = self.owners.get(&document.process) {
+                    let status = self.statuses.get(key).cloned().unwrap_or_default();
+                    states
+                        .entry(key.clone())
+                        .or_insert_with(|| (status, Vec::new()))
+                        .1
+                        .push(document.reference.path.clone());
+                }
+            }
+            self.widget.update(states);
         }
     }
     fn configure(&self, extra: Option<&Session>) {
@@ -1023,6 +1028,7 @@ impl Client {
         }
         self.unused(process);
         self.owners.remove(&old);
+        self.refresh_status();
         Ok(())
     }
     pub fn message(&mut self, message: Inbound) -> Result<()> {
@@ -1054,6 +1060,7 @@ impl Client {
                             dirty: true,
                         },
                     );
+                    self.refresh_status();
                 }
                 let process = self.documents[&id].process;
                 self.with_session(process, |c, s| c.synchronize(s, id, None))?;
@@ -1293,6 +1300,7 @@ impl Client {
             })?;
             self.unused(doc.process);
         }
+        self.refresh_status();
         Ok(())
     }
 }

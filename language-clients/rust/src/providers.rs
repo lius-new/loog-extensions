@@ -78,6 +78,7 @@ impl Client {
                     dirty: true,
                 },
             );
+            self.refresh_status();
         }
         let process = self.documents[&id].process;
         let result = self.with_session(process, |c, s| {

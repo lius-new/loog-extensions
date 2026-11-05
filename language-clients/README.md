@@ -4,7 +4,7 @@ The three official clients compile private Rust sources from `rust/` into
 independent WASM components. Each extension has its own Cargo manifest and lock
 file; `rust/clients.json` retains its language IDs, program, arguments and root
 selection policy. JavaScript/TypeScript includes JSX/TSX. Each installed extension owns its
-RPC connection, documents, capability registrations, processes and status block.
+RPC connection, documents, capability registrations, processes and private UI contributions.
 The 0.2.4 clients require Loom 0.1.10 and its independent `loom:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific
@@ -13,20 +13,27 @@ The workflow's pinned Loom SDK source has been updated
 to a committed revision containing that interface; builders reject older SDKs.
 The general Loom SDK contains none of this language-specific behavior.
 
-Each plugin takes its display name from its own manifest at build time. Its
-status is a passive, content-sized row with horizontal padding and no click,
-hover, tooltip, or details UI. The shared client owns four presentation states:
-ready (green, plugin name), busy (purple, startup or task text), stopped (gray),
-and error (red, a bounded single-line reason). Errors take priority over busy
-and ready sessions across roots; initialization progress cannot prematurely
-report ready. No download or installation state is delegated to Loom.
+The development clients contribute one shared status entry, with generic
+`Language Services` text and no independent colored background or server name.
+They provide the shared key, document contexts, priorities, tree descriptions
+and state-driven motion; Loom only supplies general UI capabilities. States from
+other documents/projects cannot override the active document. Busy icons rotate
+continuously; ready, error and stopped icons stay static. Progress does not
+restart motion, republish membership or display changing percentages.
+The entry is passive, with no new click, hover or details UI. Detailed failures
+remain in plugin logs. See [plugin-owned shared UI](../docs/shared-ui.md) for the
+required application/plugin boundary and lifecycle contract.
 
 Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT
 and locked Rust component toolchain. CI obtains those from `lius-new/loom` at
-`7f5116eeecf06cb8b86d5196dff77fd443245730`; the production validator is pinned independently in tools/validator-source.toml, rather than sharing this
-source revision. The host contract is committed and pushed before these clients.
-No SDK is
-downloaded or installed into the user's editor at runtime.
+`f32d37cb91e2bc430d047a7db3cf6c02bf7b398b` for the last motion contract. The current
+development sources additionally require `loom:ui/shared@0.1.0`; build them with
+`LOOM_SOURCE` pointing to the matching local checkout. The release SDK pin and
+the independently pinned production validator/AOT compiler must be aligned to
+the shared-capable host before a future release. Release builds intentionally
+reject older SDKs rather than silently producing per-server status blocks.
+No versions are bumped by local staging. No SDK is downloaded or installed into
+the user's editor at runtime.
 
 Each extension also contributes metadata-only language identities and file
 associations. Syntax extensions remain independent and retain their own parser
@@ -100,3 +107,19 @@ Version 0.2.4 keeps these Rust WASM clients and adds authenticated native AOT in
 the trusted publication stage. A matching AOT-capable Loom host skips local
 compilation. Old hosts and incompatible profiles retain the portable WASM path.
 See `rust/AOT.md` for the authority boundary, native CI gate and measured costs.
+
+
+### Local status-motion preview
+
+The unreleased clients use `loom:ui/motion@0.1.0`. CI's WIT snapshot includes
+that interface; publication compiler and validator pins remain independent.
+A future motion-enabled release must align those publication tools with the
+motion-capable host. Current local staging keeps package versions unchanged and
+does not publish or replace registry artifacts.
+
+`node language-clients/stage.mjs` prepares the three updated WASM clients and
+their existing servers under `language-clients/.work/packages`. Launch the
+motion-capable Loom with `LOOM_EXTENSIONS_DIR` pointing there, and open Go, Rust
+and TypeScript files in a trusted workspace. Startup/indexing rotates the icon;
+ready, error and stopped states stay static. The four plugin-owned Material
+Design Icons use the matching host's generic filled-path icon capability.

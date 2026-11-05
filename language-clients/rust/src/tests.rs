@@ -857,7 +857,7 @@ fn status_progress_idle_shutdown_and_workspace_changes_follow_the_contract() {
     assert!(state(|s| s.nodes.values().any(|n| n
         .text
         .as_deref()
-        .is_some_and(|v| v.contains("Index Loading 50%")))));
+        .is_some_and(|v| v == "Language Services: Working"))));
     server(
         &mut c,
         p,
@@ -948,4 +948,197 @@ fn cached_push_diagnostics_follow_unicode_edits_until_the_next_publication() {
             "a finding wholly replaced by typing expires"
         );
     }
+}
+
+#[test]
+fn status_motion_starts_once_per_transition_and_stops_for_errors_and_disposal() {
+    use crate::loom::ui::motion::Property;
+    state(|s| *s = Default::default());
+    let mut widget = crate::status::Widget::default();
+    let update = |widget: &mut crate::status::Widget, rank, detail: &str| {
+        widget.update(
+            &Status {
+                rank,
+                detail: detail.into(),
+            },
+            &["C:/project/main.go".into()],
+        )
+    };
+    update(&mut widget, 2, "Starting");
+    let icon = state(|s| {
+        *s.nodes
+            .iter()
+            .find(|(_, n)| n.id == "language-status-icon")
+            .unwrap()
+            .0
+    });
+    state(|s| {
+        assert_eq!(
+            s.nodes[&icon].icon.as_deref(),
+            Some(crate::status::LOADING_ICON)
+        );
+        assert_eq!(s.animations[&icon].iterations, None);
+        assert!(matches!(
+            s.animations[&icon].tracks[0].property,
+            Property::Rotation
+        ));
+    });
+    let started = state(|s| s.motion_requests.len());
+    let published = state(|s| s.shared_requests.len());
+    state(|s| {
+        let contribution = s.shared.values().next().unwrap();
+        assert_eq!(contribution.key, crate::status::SHARED_KEY);
+        assert_eq!(
+            contribution.contexts.as_ref().unwrap(),
+            &["C:/project/main.go"]
+        );
+        assert!(s.nodes.values().all(|node| node.background.is_none()));
+        assert!(
+            s.nodes.values().all(|node| !node.id.ends_with("trailing")),
+            "the native layout owns the trailing gap"
+        );
+    });
+    let text = state(|s| {
+        *s.nodes
+            .iter()
+            .find(|(_, n)| n.id == "language-status-text")
+            .unwrap()
+            .0
+    });
+    state(|s| s.ui_updates.clear());
+    update(&mut widget, 2, "Indexing 50%");
+    assert_eq!(
+        state(|s| s.shared_requests.len()),
+        published,
+        "progress does not republish the shared contribution"
+    );
+    assert_eq!(
+        state(|s| s.ui_updates.clone()),
+        vec![text],
+        "progress must update only the text, leaving the row and icon intact"
+    );
+    assert_eq!(
+        state(|s| s.motion_requests.len()),
+        started,
+        "progress text must not restart the spin"
+    );
+    state(|s| s.ui_updates.clear());
+    update(&mut widget, 2, "Indexing 50%");
+    assert!(
+        state(|s| s.ui_updates.is_empty()),
+        "identical progress needs no UI update"
+    );
+    update(&mut widget, 1, "");
+    state(|s| {
+        assert!(s.animations.is_empty(), "ready must remain static");
+        assert_eq!(
+            s.nodes[&icon].icon.as_deref(),
+            Some(crate::status::READY_ICON)
+        );
+    });
+    let ready = state(|s| s.motion_requests.len());
+    state(|s| s.ui_updates.clear());
+    update(&mut widget, 1, "");
+    assert!(
+        state(|s| s.ui_updates.is_empty()),
+        "unchanged ready needs no UI update"
+    );
+    assert_eq!(
+        state(|s| s.motion_requests.len()),
+        ready,
+        "ready updates must not request motion"
+    );
+    update(&mut widget, 3, "failed");
+    assert!(state(|s| s.animations.is_empty()));
+    assert_eq!(
+        state(|s| s.nodes[&icon].icon.clone()).as_deref(),
+        Some(crate::status::ERROR_ICON)
+    );
+    update(&mut widget, 2, "Restarting");
+    assert_eq!(state(|s| s.animations.len()), 1);
+    update(&mut widget, 0, "");
+    assert!(state(|s| s.animations.is_empty()));
+    assert_eq!(
+        state(|s| s.nodes[&icon].icon.clone()).as_deref(),
+        Some(crate::status::STOPPED_ICON)
+    );
+    update(&mut widget, 2, "Starting");
+    widget.dispose();
+    assert!(state(|s| s.animations.is_empty()
+        && s.nodes.is_empty()
+        && s.shared.is_empty()));
+}
+
+#[test]
+fn shared_status_keeps_roots_independent_and_releases_only_closed_documents() {
+    let (mut client, first) = setup();
+    state(|s| s.roots.push(root(2, "C:/other")));
+    let reference = doc(2, "C:/other/other.go", "package other\n");
+    client.message(Inbound::DocumentOpened(reference)).unwrap();
+    state(|s| {
+        assert_eq!(s.shared.len(), 2);
+        assert!(
+            s.shared
+                .values()
+                .all(|entry| entry.key == crate::status::SHARED_KEY)
+        );
+        assert!(
+            s.shared
+                .values()
+                .any(
+                    |entry| entry.contexts.as_ref().unwrap() == &["C:/project/main.go"]
+                        && entry.priority == 1
+                )
+        );
+        assert!(
+            s.shared
+                .values()
+                .any(
+                    |entry| entry.contexts.as_ref().unwrap() == &["C:/other/other.go"]
+                        && entry.priority == 2
+                )
+        );
+    });
+    client
+        .message(Inbound::ProcessExited(ProcessExit {
+            process: first,
+            code: Some(1),
+            killed: false,
+            error: None,
+        }))
+        .unwrap();
+    state(|s| {
+        assert!(
+            s.shared
+                .values()
+                .any(
+                    |entry| entry.contexts.as_ref().unwrap() == &["C:/project/main.go"]
+                        && entry.priority == 3
+                )
+        );
+        assert!(
+            s.shared
+                .values()
+                .any(
+                    |entry| entry.contexts.as_ref().unwrap() == &["C:/other/other.go"]
+                        && entry.priority == 2
+                )
+        );
+    });
+    client.close(1).unwrap();
+    state(|s| {
+        assert_eq!(s.shared.len(), 1);
+        assert_eq!(
+            s.shared.values().next().unwrap().contexts.as_ref().unwrap(),
+            &["C:/other/other.go"]
+        );
+        assert!(
+            s.nodes
+                .values()
+                .filter_map(|node| node.text.as_ref())
+                .all(|text| !text.contains(crate::NAME))
+        );
+    });
+    client.message(Inbound::Shutdown).unwrap();
+    assert!(state(|s| s.shared.is_empty() && s.nodes.is_empty()));
 }

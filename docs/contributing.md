@@ -1,5 +1,12 @@
 # Contributing
 
+## Application and plugin boundary
+
+Plugins own their UI, shared keys and business/state rules. Loom supplies generic
+capabilities and MUST NOT gain an adapter or named container for each plugin.
+Using existing capabilities must not require changing or releasing Loom. Follow
+[the shared UI contract](shared-ui.md) for contributions and lifecycle rules.
+
 Only official extensions live here; there is no third-party submission.
 
 ## Adding or changing an extension
@@ -9,9 +16,11 @@ build tools: `build.mjs` can use Node, Go, Rust or shell commands. CI installs t
 project with `npm ci` and invokes `node build.mjs`. The result, for every supported
 platform, must be a package named
 `<id>-<version>-<platform>.loomext` that Loom can import ([Packages](package-format.md)).
-It depends on nothing else in this repository; code shared between extensions is not
-allowed, only what is published elsewhere (npm, PyPI, crates.io, …), pinned and locked
-in the extension's own folder.
+Normally an extension depends only on its own folder or pinned external packages.
+The official Rust language clients intentionally compile the private common
+source under `language-clients/rust` independently into each component. Their
+individual Cargo manifests and lock files remain authoritative. This shared
+source owns their common UI policy; it must not be moved into Loom.
 
 1. Change the project. Pin what it downloads by hash, and commit the lock files.
 2. Bump the version in the extension's manifest. A published version never changes: if
