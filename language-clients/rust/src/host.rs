@@ -22,13 +22,9 @@ pub struct State {
     pub messages: Vec<(u64, Value)>,
     pub answers: Vec<Answer>,
     pub configurations: BTreeMap<String, ProviderConfiguration>,
-    pub nodes: BTreeMap<u64, UiDescription>,
-    pub node_parents: BTreeMap<u64, UiParent>,
-    pub animations: BTreeMap<u64, crate::loom::ui::motion::Animation>,
-    pub motion_requests: Vec<(u64, bool)>,
-    pub ui_updates: Vec<u64>,
-    pub shared: BTreeMap<u64, crate::loom::ui::shared::Contribution>,
-    pub shared_requests: Vec<u64>,
+    /// What the client reports about its service, by key, and each report in order.
+    pub reports: BTreeMap<String, crate::loom::service::status::Report>,
+    pub report_requests: Vec<crate::loom::service::status::Report>,
     pub ready_hover: Vec<bool>,
     pub spawned: Vec<(u64, ProcessRequest)>,
     pub killed: Vec<u64>,
@@ -225,90 +221,27 @@ pub fn provide_language(request: u64, value: &LanguageAnswer) -> Result<(), Host
     state(|s| s.answers.push(Answer::Language(request, value.clone())));
     Ok(())
 }
-pub fn ui_create(parent: &UiParent, value: &UiDescription) -> Result<u64, HostError> {
-    Ok(state(|s| {
-        let id = next(s);
-        s.nodes.insert(id, value.clone());
-        s.node_parents.insert(id, parent.clone());
-        id
-    }))
-}
-pub fn ui_update(id: u64, value: &UiDescription) -> Result<(), HostError> {
-    state(|s| {
-        s.ui_updates.push(id);
-        if value.text.as_deref() == Some("Language Services: Ready") {
-            s.ready_hover.push(
-                s.configurations
-                    .get(&format!("{}.hover", crate::ID))
-                    .is_some_and(|c| c.enabled),
-            );
-        }
-        s.nodes.insert(id, value.clone());
-    });
-    Ok(())
-}
-pub fn ui_remove(id: u64) -> Result<(), HostError> {
-    state(|s| {
-        let mut gone = std::collections::BTreeSet::from([id]);
-        loop {
-            let before = gone.len();
-            for (&child, parent) in &s.node_parents {
-                if matches!(parent, UiParent::Node(parent) if gone.contains(parent)) {
-                    gone.insert(child);
-                }
-            }
-            if gone.len() == before {
-                break;
-            }
-        }
-        for node in gone {
-            s.nodes.remove(&node);
-            s.node_parents.remove(&node);
-            s.animations.remove(&node);
-            s.shared.remove(&node);
-        }
-    });
-    Ok(())
-}
-pub mod tree {
-    pub use crate::loom::ui::tree::{Placement, Relation, Target};
-    pub fn place(_: u64, _: &Placement) -> Result<(), String> {
-        Ok(())
-    }
-}
-
-pub mod shared {
+pub mod status {
     use super::state;
-    pub use crate::loom::ui::shared::Contribution;
-    pub fn publish(node: u64, contribution: &Contribution) -> Result<(), String> {
+    pub use crate::loom::service::status::{Report, State};
+    pub fn publish(report: &Report) -> Result<(), String> {
         state(|s| {
-            if !s.nodes.contains_key(&node) {
-                return Err("unknown UI root".into());
+            if report.state == State::Ready {
+                // Whether hover was already available when the service said it was ready.
+                s.ready_hover.push(
+                    s.configurations
+                        .get(&format!("{}.hover", crate::ID))
+                        .is_some_and(|c| c.enabled),
+                );
             }
-            s.shared.insert(node, contribution.clone());
-            s.shared_requests.push(node);
+            s.reports.insert(report.key.clone(), report.clone());
+            s.report_requests.push(report.clone());
             Ok(())
         })
     }
-}
-
-pub mod motion {
-    use super::state;
-    pub use crate::loom::ui::motion::{Animation, Direction, Easing, Keyframe, Property, Track};
-    pub fn animate(node: u64, animation: &Animation) -> Result<(), String> {
+    pub fn withdraw(key: &str) -> Result<(), String> {
         state(|s| {
-            if !s.nodes.contains_key(&node) {
-                return Err("unknown UI node".into());
-            }
-            s.animations.insert(node, animation.clone());
-            s.motion_requests.push((node, true));
-            Ok(())
-        })
-    }
-    pub fn stop(node: u64) -> Result<(), String> {
-        state(|s| {
-            s.animations.remove(&node);
-            s.motion_requests.push((node, false));
+            s.reports.remove(key);
         });
         Ok(())
     }

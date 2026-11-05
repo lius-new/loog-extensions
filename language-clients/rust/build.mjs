@@ -5,14 +5,10 @@ import {execFileSync} from 'node:child_process';
 
 export function buildClient(directory, {checkOnly = false} = {}) {
   const loom=path.resolve(process.env.LOOM_SOURCE??path.join(directory,'../../../..'));
-  if(!fs.existsSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit')))
-    throw new Error('These clients require the Loom UI tree and motion contracts; set LOOM_SOURCE to a matching checkout');
-  if(!fs.readFileSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit'),'utf8').includes('interface motion') ||
-     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:ui/motion@0.1.0;'))
-    throw new Error('Status motion requires loom:ui/motion@0.1.0; set LOOM_SOURCE to the motion-capable Loom checkout');
-  if(!fs.readFileSync(path.join(loom,'wit/loom-extension/deps/ui/world.wit'),'utf8').includes('interface shared') ||
-     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:ui/shared@0.1.0;'))
-    throw new Error('Shared status requires loom:ui/shared@0.1.0; set LOOM_SOURCE to the shared-UI Loom checkout');
+  // The clients say how their service is doing; Loom draws it (loom:service/status).
+  if(!fs.existsSync(path.join(loom,'wit/loom-extension/deps/service/world.wit')) ||
+     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:service/status@0.1.0;'))
+    throw new Error('These clients require loom:service/status@0.1.0; set LOOM_SOURCE to a Loom checkout that has it');
   const crate=path.join(directory,'rust'),manifest=path.join(crate,'Cargo.toml');
   const name=/^name\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(manifest,'utf8'))?.[1];
   if(!name)throw new Error('Missing Rust package name');

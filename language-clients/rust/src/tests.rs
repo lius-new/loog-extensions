@@ -854,10 +854,9 @@ fn status_progress_idle_shutdown_and_workspace_changes_follow_the_contract() {
         "$/progress",
         json!({"token":1,"value":{"kind":"report","percentage":50}}),
     );
-    assert!(state(|s| s.nodes.values().any(|n| n
-        .text
-        .as_deref()
-        .is_some_and(|v| v == "Language Services: Working"))));
+    assert!(state(|s| s.reports.values().any(|report| {
+        report.state == crate::loom::service::status::State::Working
+    })));
     server(
         &mut c,
         p,
@@ -951,153 +950,70 @@ fn cached_push_diagnostics_follow_unicode_edits_until_the_next_publication() {
 }
 
 #[test]
-fn status_motion_starts_once_per_transition_and_stops_for_errors_and_disposal() {
-    use crate::loom::ui::motion::Property;
+fn a_session_reports_its_state_and_one_line_and_is_withdrawn_with_the_client() {
+    use crate::loom::service::status::State;
     state(|s| *s = Default::default());
-    let mut widget = crate::status::Widget::default();
-    let update = |widget: &mut crate::status::Widget, rank, detail: &str| {
-        widget.update(
-            &Status {
-                rank,
-                detail: detail.into(),
-            },
-            &["C:/project/main.go".into()],
-        )
+    let mut widgets = crate::status::Widgets::default();
+    let update = |widgets: &mut crate::status::Widgets, rank, detail: &str| {
+        widgets.update(std::collections::BTreeMap::from([(
+            "1:".to_owned(),
+            (
+                Status {
+                    rank,
+                    detail: detail.into(),
+                },
+                vec!["C:/project/main.go".to_owned()],
+            ),
+        )]))
     };
-    update(&mut widget, 2, "Starting");
-    let icon = state(|s| {
-        *s.nodes
-            .iter()
-            .find(|(_, n)| n.id == "language-status-icon")
-            .unwrap()
-            .0
-    });
+    for (rank, detail, expected, line) in [
+        (2, "Starting", State::Starting, Some("Starting")),
+        (2, "Indexing 50%", State::Working, Some("Indexing 50%")),
+        (1, "", State::Ready, None),
+        (3, "failed", State::Error, Some("failed")),
+        (2, "Restarting", State::Starting, Some("Restarting")),
+        (0, "", State::Stopped, None),
+    ] {
+        update(&mut widgets, rank, detail);
+        state(|s| {
+            assert_eq!(s.reports.len(), 1, "one session is one report");
+            let report = s.reports.values().next().unwrap();
+            assert_eq!(report.state, expected, "rank {rank}, {detail:?}");
+            assert_eq!(report.detail.as_deref(), line);
+            assert_eq!(
+                report.contexts.as_ref().unwrap(),
+                &["C:/project/main.go"],
+                "the report is about the document the session serves"
+            );
+        });
+    }
+    // A long, spread-out line is one short line.
+    update(&mut widgets, 2, &format!("a   b\n{}", "x".repeat(200)));
     state(|s| {
-        assert_eq!(
-            s.nodes[&icon].icon.as_deref(),
-            Some(crate::status::LOADING_ICON)
-        );
-        assert_eq!(s.animations[&icon].iterations, None);
-        assert!(matches!(
-            s.animations[&icon].tracks[0].property,
-            Property::Rotation
-        ));
+        let detail = s.reports.values().next().unwrap().detail.clone().unwrap();
+        assert!(detail.chars().count() <= 80 && !detail.contains('\n'));
     });
-    let started = state(|s| s.motion_requests.len());
-    let published = state(|s| s.shared_requests.len());
-    state(|s| {
-        let contribution = s.shared.values().next().unwrap();
-        assert_eq!(contribution.key, crate::status::SHARED_KEY);
-        assert_eq!(
-            contribution.contexts.as_ref().unwrap(),
-            &["C:/project/main.go"]
-        );
-        assert!(s.nodes.values().all(|node| node.background.is_none()));
-        assert!(
-            s.nodes.values().all(|node| !node.id.ends_with("trailing")),
-            "the native layout owns the trailing gap"
-        );
-    });
-    let text = state(|s| {
-        *s.nodes
-            .iter()
-            .find(|(_, n)| n.id == "language-status-text")
-            .unwrap()
-            .0
-    });
-    state(|s| s.ui_updates.clear());
-    update(&mut widget, 2, "Indexing 50%");
-    assert_eq!(
-        state(|s| s.shared_requests.len()),
-        published,
-        "progress does not republish the shared contribution"
-    );
-    assert_eq!(
-        state(|s| s.ui_updates.clone()),
-        vec![text],
-        "progress must update only the text, leaving the row and icon intact"
-    );
-    assert_eq!(
-        state(|s| s.motion_requests.len()),
-        started,
-        "progress text must not restart the spin"
-    );
-    state(|s| s.ui_updates.clear());
-    update(&mut widget, 2, "Indexing 50%");
-    assert!(
-        state(|s| s.ui_updates.is_empty()),
-        "identical progress needs no UI update"
-    );
-    update(&mut widget, 1, "");
-    state(|s| {
-        assert!(s.animations.is_empty(), "ready must remain static");
-        assert_eq!(
-            s.nodes[&icon].icon.as_deref(),
-            Some(crate::status::READY_ICON)
-        );
-    });
-    let ready = state(|s| s.motion_requests.len());
-    state(|s| s.ui_updates.clear());
-    update(&mut widget, 1, "");
-    assert!(
-        state(|s| s.ui_updates.is_empty()),
-        "unchanged ready needs no UI update"
-    );
-    assert_eq!(
-        state(|s| s.motion_requests.len()),
-        ready,
-        "ready updates must not request motion"
-    );
-    update(&mut widget, 3, "failed");
-    assert!(state(|s| s.animations.is_empty()));
-    assert_eq!(
-        state(|s| s.nodes[&icon].icon.clone()).as_deref(),
-        Some(crate::status::ERROR_ICON)
-    );
-    update(&mut widget, 2, "Restarting");
-    assert_eq!(state(|s| s.animations.len()), 1);
-    update(&mut widget, 0, "");
-    assert!(state(|s| s.animations.is_empty()));
-    assert_eq!(
-        state(|s| s.nodes[&icon].icon.clone()).as_deref(),
-        Some(crate::status::STOPPED_ICON)
-    );
-    update(&mut widget, 2, "Starting");
-    widget.dispose();
-    assert!(state(|s| s.animations.is_empty()
-        && s.nodes.is_empty()
-        && s.shared.is_empty()));
+    widgets.dispose();
+    assert!(state(|s| s.reports.is_empty()));
 }
 
 #[test]
-fn shared_status_keeps_roots_independent_and_releases_only_closed_documents() {
+fn status_keeps_roots_independent_and_releases_only_closed_documents() {
+    use crate::loom::service::status::State;
     let (mut client, first) = setup();
     state(|s| s.roots.push(root(2, "C:/other")));
     let reference = doc(2, "C:/other/other.go", "package other\n");
     client.message(Inbound::DocumentOpened(reference)).unwrap();
     state(|s| {
-        assert_eq!(s.shared.len(), 2);
-        assert!(
-            s.shared
-                .values()
-                .all(|entry| entry.key == crate::status::SHARED_KEY)
-        );
-        assert!(
-            s.shared
-                .values()
-                .any(
-                    |entry| entry.contexts.as_ref().unwrap() == &["C:/project/main.go"]
-                        && entry.priority == 1
-                )
-        );
-        assert!(
-            s.shared
-                .values()
-                .any(
-                    |entry| entry.contexts.as_ref().unwrap() == &["C:/other/other.go"]
-                        && entry.priority == 2
-                )
-        );
+        assert_eq!(s.reports.len(), 2);
+        assert!(s.reports.values().any(|report| {
+            report.contexts.as_ref().unwrap() == &["C:/project/main.go"]
+                && report.state == State::Ready
+        }));
+        assert!(s.reports.values().any(|report| {
+            report.contexts.as_ref().unwrap() == &["C:/other/other.go"]
+                && matches!(report.state, State::Starting | State::Working)
+        }));
     });
     client
         .message(Inbound::ProcessExited(ProcessExit {
@@ -1108,37 +1024,23 @@ fn shared_status_keeps_roots_independent_and_releases_only_closed_documents() {
         }))
         .unwrap();
     state(|s| {
-        assert!(
-            s.shared
-                .values()
-                .any(
-                    |entry| entry.contexts.as_ref().unwrap() == &["C:/project/main.go"]
-                        && entry.priority == 3
-                )
-        );
-        assert!(
-            s.shared
-                .values()
-                .any(
-                    |entry| entry.contexts.as_ref().unwrap() == &["C:/other/other.go"]
-                        && entry.priority == 2
-                )
-        );
+        assert!(s.reports.values().any(|report| {
+            report.contexts.as_ref().unwrap() == &["C:/project/main.go"]
+                && report.state == State::Error
+        }));
+        assert!(s.reports.values().any(|report| {
+            report.contexts.as_ref().unwrap() == &["C:/other/other.go"]
+                && matches!(report.state, State::Starting | State::Working)
+        }));
     });
     client.close(1).unwrap();
     state(|s| {
-        assert_eq!(s.shared.len(), 1);
+        assert_eq!(s.reports.len(), 1);
         assert_eq!(
-            s.shared.values().next().unwrap().contexts.as_ref().unwrap(),
+            s.reports.values().next().unwrap().contexts.as_ref().unwrap(),
             &["C:/other/other.go"]
-        );
-        assert!(
-            s.nodes
-                .values()
-                .filter_map(|node| node.text.as_ref())
-                .all(|text| !text.contains(crate::NAME))
         );
     });
     client.message(Inbound::Shutdown).unwrap();
-    assert!(state(|s| s.shared.is_empty() && s.nodes.is_empty()));
+    assert!(state(|s| s.reports.is_empty()));
 }
