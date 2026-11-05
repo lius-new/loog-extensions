@@ -26,11 +26,10 @@ required application/plugin boundary and lifecycle contract.
 
 Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT
 and locked Rust component toolchain. CI obtains those from `lius-new/loom` at
-`f32d37cb91e2bc430d047a7db3cf6c02bf7b398b` for the last motion contract. The current
-development sources additionally require `loom:ui/shared@0.1.0`; build them with
-`LOOM_SOURCE` pointing to the matching local checkout. The release SDK pin and
-the independently pinned production validator/AOT compiler must be aligned to
-the shared-capable host before a future release. Release builds intentionally
+`4fa27222bb8bb543309f71c3e7d9787521e8e454`, the Loom `main` commit that provides both
+`loom:ui/motion@0.1.0` and `loom:ui/shared@0.1.0`. The independently pinned
+production validator/AOT compiler must be aligned to the same shared-capable
+host before a release. Release builds intentionally
 reject older SDKs rather than silently producing per-server status blocks.
 No versions are bumped by local staging. No SDK is downloaded or installed into
 the user's editor at runtime.

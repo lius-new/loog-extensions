@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lius-new/loom
-          ref: f32d37cb91e2bc430d047a7db3cf6c02bf7b398b
+          ref: 4fa27222bb8bb543309f71c3e7d9787521e8e454
           path: .work/loom-sdk
           persist-credentials: false
       - name: Install the Rust language-client toolchain
