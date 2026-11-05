@@ -83,7 +83,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: lius-new/loom
-          ref: 7f5116eeecf06cb8b86d5196dff77fd443245730
+          ref: 4fa27222bb8bb543309f71c3e7d9787521e8e454
           path: .work/loom-sdk
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
