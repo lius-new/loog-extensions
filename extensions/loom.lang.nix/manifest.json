@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.nix",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "Nix Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Nix.",

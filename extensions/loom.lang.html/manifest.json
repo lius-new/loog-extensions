@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.html",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "HTML Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for HTML.",

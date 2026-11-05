@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lang.bash",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "Bash Language",
   "publisher": "Loom",
   "description": "Syntax highlighting for Bash.",

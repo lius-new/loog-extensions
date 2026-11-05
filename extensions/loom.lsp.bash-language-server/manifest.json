@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.bash-language-server",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "Bash Language Server Language Server",
   "publisher": "Loom",
   "description": "The Bash Language Server language server.",

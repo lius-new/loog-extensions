@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.vscode-langservers-extracted",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "Vscode Langservers Extracted Language Server",
   "publisher": "Loom",
   "description": "The Vscode Langservers Extracted language server.",

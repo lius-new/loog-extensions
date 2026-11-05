@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.runtime.node",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "name": "Node.js Runtime",
   "publisher": "Loom",
   "description": "The Node.js runtime that JavaScript language servers run on.",

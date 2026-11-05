@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loom.lsp.lua-language-server",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "name": "Lua Language Server Language Server",
   "publisher": "Loom",
   "description": "The Lua Language Server language server.",
