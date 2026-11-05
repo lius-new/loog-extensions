@@ -39,6 +39,18 @@ function required(id) {
   return requires.map(spec => String(spec).split('@')[0]);
 }
 
+/**
+ * Loom reads the extensions bundled beside its executable. Nothing in a debug build
+ * refreshes them, so a copy left by an older Loom shows up as an installed extension
+ * at a version that no longer exists. Only build output of the checkout `cargo run` uses.
+ */
+export function dropStaleBundle(source) {
+  const bundled = path.join(source, 'target', 'debug', 'extensions');
+  if (!fs.existsSync(bundled)) return;
+  fs.rmSync(bundled, {recursive: true, force: true});
+  console.log(`Removed the stale bundled extensions in ${bundled}`);
+}
+
 export async function run(argv) {
   const {options, ids} = parseArgs(argv, {to: 'string', run: 'string', source: 'string', 'no-run': 'boolean'});
   assert(ids.length, 'Name the extensions to try, such as loom.theme.aura');
@@ -73,5 +85,6 @@ export async function run(argv) {
   console.log(`LOOM_EXTENSIONS_DIR=${destination}\n> ${command}`);
   // `cargo run` belongs in the checkout; a command of your own runs where you are.
   const cwd = source && !options.run && !process.env.LOOM_EXT_RUN ? source : undefined;
+  if (cwd) dropStaleBundle(source);
   process.exitCode = execute(command, [], {shell: true, cwd, env: {...env, LOOM_EXTENSIONS_DIR: destination}});
 }

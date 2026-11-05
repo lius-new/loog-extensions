@@ -105,6 +105,29 @@ test('try takes the Loom checkout from --source, for the build and for running',
   assert.equal(fs.readFileSync(path.join(repo.extensions, 'loom.theme.demo/source.txt'), 'utf8'), loom);
 });
 
+test('try removes the stale bundled extensions of the Loom checkout it runs with cargo', async t => {
+  const repo = checkout(t); populate(repo, ['theme']);
+  buildable(repo, 'loom.theme.demo');
+  const loom = path.join(repo.root, 'elsewhere/loom');
+  write(loom, 'Cargo.toml', '[package]\n');
+  const bundled = path.join(loom, 'target/debug/extensions');
+  write(bundled, 'loom.lang.json/manifest.json', '{}');
+  const target = path.join(repo.root, 'dev-dir');
+  // A command of your own runs elsewhere, and leaves the checkout's build output alone.
+  const custom = cli(repo.root, ['try', 'loom.theme.demo', '--source', loom, '--to', target, '--run', 'node -e 1'], {LOOM_SOURCE: ''});
+  assert.equal(custom.status, 0, custom.all);
+  assert.ok(fs.existsSync(bundled));
+  const bare = cli(repo.root, ['try', 'loom.theme.demo', '--source', loom, '--to', target, '--no-run'], {LOOM_SOURCE: ''});
+  assert.equal(bare.status, 0, bare.all);
+  assert.ok(fs.existsSync(bundled));
+  // `cargo run` is not started in a test, so the cleanup it precedes is checked directly.
+  const {dropStaleBundle} = await import('../commands/try.mjs');
+  dropStaleBundle(loom);
+  assert.ok(!fs.existsSync(bundled));
+  assert.ok(fs.existsSync(path.join(loom, 'Cargo.toml')));
+  dropStaleBundle(loom);
+});
+
 test('try builds what an extension requires unless it is already installed', async t => {
   const repo = checkout(t); populate(repo, ['theme']);
   theme(repo.extensions, 'loom.theme.base');
