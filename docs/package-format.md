@@ -62,6 +62,11 @@ description, with each grammar's WebAssembly module (`tree-sitter-<name>.wasm`) 
 
 ### Language service components
 
+`contributes.language_service.name` is what the service is called wherever Loom lists
+it, such as `Rust Analyzer`: one line of 1 to 40 characters. The package `name` says what is
+installed; this says what answers for a language. The index carries it as
+`language_service.name`.
+
 `contributes.language_service.providers` lists typed providers:
 
 ```json

@@ -29,7 +29,7 @@ const QUERY_FILES = ['highlights.scm', 'injections.scm'];
  * src/features/extensions/manifest.rs, which refuses any other name.
  */
 export const CONTRIBUTIONS = ['commands', 'themes', 'snippets', 'languages', 'highlight', 'highlight_queries', 'language_service', 'settings'];
-export const LANGUAGE_SERVICE = ['servers', 'providers'];
+export const LANGUAGE_SERVICE = ['name', 'servers', 'providers'];
 export const PROVIDER_KINDS = ['completion', 'diagnostics', 'formatting', 'code-actions', 'save-participant', 'hover', 'definition', 'document-symbols', 'signature-help', 'inlay-hints', 'references', 'workspace-symbols', 'document-highlights', 'rename', 'folding-ranges', 'selection-ranges', 'call-hierarchy', 'type-hierarchy', 'code-lens', 'format-on-type', 'execute-command', 'highlights'];
 
 /** What a package of this id must contribute, by the naming scheme. */
@@ -224,6 +224,9 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
       } catch (error) { add(error.message); }
     }
   }
+  // What the service is called wherever it is listed, one short line.
+  const serviceName = contributes.language_service?.name;
+  if (serviceName !== undefined && (typeof serviceName !== 'string' || !serviceName.trim() || serviceName.length > 40 || /[\r\n\0]/.test(serviceName))) add('contributes.language_service.name must be one line of 1 to 40 characters');
   for (const provider of contributes.language_service?.providers ?? []) {
     namespaced(provider.id, 'provider');
     if (!PROVIDER_KINDS.includes(provider.kind)) add(`provider ${provider.id}: unknown kind ${provider.kind}`);

@@ -35,6 +35,7 @@
       { "key": "loom.lsp.gopls.performance", "kind": "boolean", "default": false }
     ],
     "language_service": {
+      "name": "gopls",
       "providers": [
         { "id": "loom.lsp.gopls.diagnostics", "kind": "diagnostics", "selector": { "languages": ["go"] } },
         { "id": "loom.lsp.gopls.completion", "kind": "completion", "selector": { "languages": ["go"] } },

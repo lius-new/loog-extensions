@@ -41,6 +41,7 @@
       { "key": "loom.lsp.typescript-language-server.performance", "kind": "boolean", "default": false }
     ],
     "language_service": {
+      "name": "TypeScript Language Server",
       "providers": [
         { "id": "loom.lsp.typescript-language-server.diagnostics", "kind": "diagnostics", "selector": { "languages": ["javascript", "typescript"] } },
         { "id": "loom.lsp.typescript-language-server.completion", "kind": "completion", "selector": { "languages": ["javascript", "typescript"] } },

@@ -35,6 +35,7 @@
       { "key": "loom.lsp.rust-analyzer.performance", "kind": "boolean", "default": false }
     ],
     "language_service": {
+      "name": "Rust Analyzer",
       "providers": [
         { "id": "loom.lsp.rust-analyzer.diagnostics", "kind": "diagnostics", "selector": { "languages": ["rust"] } },
         { "id": "loom.lsp.rust-analyzer.completion", "kind": "completion", "selector": { "languages": ["rust"] } },

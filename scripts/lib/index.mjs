@@ -77,7 +77,11 @@ export function describe(id, dist = DIST) {
     ...(manifest.contributes?.language_service?.providers ?? []).flatMap(provider => provider.selector?.languages ?? []),
     ...(manifest.contributes?.language_service?.servers ?? []).flatMap(server => server.languages),
   ];
-  if (served.length) entry.language_service = {languages: [...new Set(served)].sort()};
+  if (served.length) {
+    entry.language_service = {languages: [...new Set(served)].sort()};
+    const name = manifest.contributes?.language_service?.name;
+    if (name) entry.language_service.name = name;
+  }
   return {entry, manifest};
 }
 

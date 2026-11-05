@@ -110,6 +110,20 @@ test('contribution points are named by what they are for, and an old or unknown 
   assert.match(problems(dir).join('\n'), /contributes\.language_service\.language_servers is not part of the language service/);
 });
 
+test('a language service name is one short line', t => {
+  const root = workspace(t);
+  const dir = server(root);
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  manifest.contributes.language_service.name = 'Demo Language Service';
+  write(dir, 'manifest.json', manifest);
+  assert.deepEqual(problems(dir, {built: true}), []);
+  for (const bad of ['', '  ', 'two\nlines', 'x'.repeat(41), 7]) {
+    manifest.contributes.language_service.name = bad;
+    write(dir, 'manifest.json', manifest);
+    assert.match(problems(dir, {built: true}).join('\n'), /language_service\.name must be one line/, JSON.stringify(bad));
+  }
+});
+
 test('native libraries are refused in highlight and theme extensions but allowed in language servers', t => {
   const root = workspace(t);
   const dir = language(root);
