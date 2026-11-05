@@ -1,6 +1,0 @@
-# Bootstrap until tools/validator.lock contains a published Linux validator.
-# Supports purpose-named contributions and specific language extension categories.
-# This commit must be pushed to the Loom repository before enabling publication.
-schema = 1
-repository = "lius-new/loom"
-revision = "20722d73bc3f068ca60f4a2f608b9542d54c261f"

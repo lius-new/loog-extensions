@@ -57,12 +57,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Read the pinned Loom source
+        id: loom
+        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
       - name: Check out the general Loom SDK
         if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
         uses: actions/checkout@v4
         with:
-          repository: lius-new/loom
-          ref: 4fa27222bb8bb543309f71c3e7d9787521e8e454
+          repository: ${{ steps.loom.outputs.repository }}
+          ref: ${{ steps.loom.outputs.revision }}
           path: .work/loom-sdk
           persist-credentials: false
       - name: Install the Rust language-client toolchain

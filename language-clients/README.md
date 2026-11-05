@@ -25,11 +25,10 @@ remain in plugin logs. See [plugin-owned shared UI](../docs/shared-ui.md) for th
 required application/plugin boundary and lifecycle contract.
 
 Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT
-and locked Rust component toolchain. CI obtains those from `lius-new/loom` at
-`4fa27222bb8bb543309f71c3e7d9787521e8e454`, the Loom `main` commit that provides both
-`loom:ui/motion@0.1.0` and `loom:ui/shared@0.1.0`. The independently pinned
-production validator/AOT compiler must be aligned to the same shared-capable
-host before a release. Release builds intentionally
+and locked Rust component toolchain. CI obtains those from the single Loom commit
+pinned in `tools/loom-source.toml`, which the AOT verification and the validator
+use as well; move it forward when Loom changes its extension interface. Release
+builds intentionally
 reject older SDKs rather than silently producing per-server status blocks.
 No versions are bumped by local staging. No SDK is downloaded or installed into
 the user's editor at runtime.

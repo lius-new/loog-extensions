@@ -23,7 +23,7 @@ test('shared build and publication inputs select every extension', () => {
   for (const file of [
     '.github/workflows/extensions.yml', '.github/workflows/publish.yml',
     '.github/workflows/ext-loom.lang.removed.yml', 'scripts/ci/select-extensions.mjs',
-    'scripts/lib/intake.mjs', 'tools/validator.lock', 'tools/validator-source.toml',
+    'scripts/lib/intake.mjs', 'tools/validator.lock', 'tools/loom-source.toml',
     'package.json', 'package-lock.json', 'loom-ext.toml',
   ]) assert.deepEqual(selectExtensions(ids, [file]), sorted, file);
   assert.deepEqual(selectExtensions(ids, [], {all: true}), sorted);

@@ -1,0 +1,10 @@
+# The one Loom commit this repository builds against. Every workflow reads it:
+# the Rust language clients take their WIT from it, the AOT verification builds its
+# host from it, and until tools/validator.lock names a published validator the
+# production validator is built from it. When Loom changes its extension interface,
+# move this commit forward in the same change that adapts the extensions.
+# The commit must be reachable on Loom's main branch; never point it at a branch that
+# may be deleted.
+schema = 1
+repository = "lius-new/loom"
+revision = "4fa27222bb8bb543309f71c3e7d9787521e8e454"

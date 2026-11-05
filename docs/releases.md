@@ -110,9 +110,10 @@ the selection and build jobs have read-only repository access and no signing sec
 
 Prefer a published Linux x64 validator pinned by URL and SHA-256 in
 `tools/validator.lock`. Until one exists, CI builds the exact production source commit
-in `tools/validator-source.toml` with its locked dependencies. The commit must stay
-reachable in the Loom repository (it is on `main`); the workflow uses the immutable
-commit SHA. Do not replace it with an arbitrary moving branch or silently bypass
+in `tools/loom-source.toml` with its locked dependencies. That file is the one Loom
+pin of this repository: the Rust language clients, the native AOT verification and the
+validator all use the same commit. The commit must stay reachable in the Loom
+repository (it is on `main`); the workflow uses the immutable commit SHA. Do not replace it with an arbitrary moving branch or silently bypass
 validation. Once validator binaries are published, update `tools/validator.lock`; the
 binary takes precedence.
 

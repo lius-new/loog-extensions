@@ -225,7 +225,7 @@ test('a mismatched remote upload stays a draft and never enters the index', asyn
 
 test('the validator bootstrap runs against the configured root and emits a pinned source or binary', t => {
   const repo = checkout(t);
-  write(repo.root, 'tools/validator-source.toml', 'schema = 1\nrepository = "acme/loom"\nrevision = "' + commit + '"\n');
+  write(repo.root, 'tools/loom-source.toml', 'schema = 1\nrepository = "acme/loom"\nrevision = "' + commit + '"\n');
   const output = path.join(repo.root, 'outputs');
   const run = extra => spawnSync(process.execPath, [fileURLToPath(new URL('../validator-source.mjs', import.meta.url))], {
     cwd: repo.root, encoding: 'utf8', env: {...process.env, LOOM_EXT_ROOT: repo.root, LOOM_EXT_VALIDATE: '', GITHUB_OUTPUT: output, ...extra}

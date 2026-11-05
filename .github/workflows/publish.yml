@@ -82,8 +82,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: lius-new/loom
-          ref: 4fa27222bb8bb543309f71c3e7d9787521e8e454
+          persist-credentials: false
+      - name: Read the pinned Loom source
+        id: loom
+        shell: bash
+        run: |
+          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.loom.outputs.repository }}
+          ref: ${{ steps.loom.outputs.revision }}
           path: .work/loom-sdk
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
@@ -158,7 +167,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .work/validator-source/tools/ext-validate/target
-          key: validator-${{ runner.os }}-${{ hashFiles('tools/validator-source.toml', 'tools/validator.lock') }}
+          key: validator-${{ runner.os }}-${{ hashFiles('tools/loom-source.toml', 'tools/validator.lock') }}
       - name: Build the production validator
         if: steps.validator.outputs.source == 'true'
         run: |
