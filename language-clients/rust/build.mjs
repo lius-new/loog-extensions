@@ -5,10 +5,12 @@ import {execFileSync} from 'node:child_process';
 
 export function buildClient(directory, {checkOnly = false} = {}) {
   const loom=path.resolve(process.env.LOOM_SOURCE??path.join(directory,'../../../..'));
-  // The clients say how their service is doing; Loom draws it (loom:service/status).
+  // The clients say how their service is doing (loom:service/status) and what it
+  // found in files that are not open (loom:service/findings); Loom draws both.
+  const world=fs.existsSync(path.join(loom,'wit/loom-extension/world.wit'))?fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8'):'';
   if(!fs.existsSync(path.join(loom,'wit/loom-extension/deps/service/world.wit')) ||
-     !fs.readFileSync(path.join(loom,'wit/loom-extension/world.wit'),'utf8').includes('import loom:service/status@0.1.0;'))
-    throw new Error('These clients require loom:service/status@0.1.0; set LOOM_SOURCE to a Loom checkout that has it');
+     !world.includes('import loom:service/status@0.1.0;') || !world.includes('import loom:service/findings@0.1.0;'))
+    throw new Error('These clients require loom:service/status@0.1.0 and loom:service/findings@0.1.0; set LOOM_SOURCE to a Loom checkout that has them');
   const crate=path.join(directory,'rust'),manifest=path.join(crate,'Cargo.toml');
   const name=/^name\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(manifest,'utf8'))?.[1];
   if(!name)throw new Error('Missing Rust package name');

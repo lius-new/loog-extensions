@@ -32,6 +32,10 @@ pub struct State {
     pub timers: BTreeMap<u64, u32>,
     pub operations: Vec<(u64, WorkspaceOperation)>,
     pub diagnostics: Vec<(String, u64, Vec<Diagnostic>)>,
+    /// What the client told Loom about files that are not open: (key, path) to
+    /// the unit and the findings, and the keys it took back.
+    pub findings: BTreeMap<(String, String), (crate::loom::service::findings::Encoding, Vec<crate::loom::service::findings::Finding>)>,
+    pub finding_withdrawals: Vec<String>,
     pub logs: Vec<(u8, String)>,
     pub blocked: bool,
     pub fail_watch: bool,
@@ -220,6 +224,33 @@ pub fn provide_inlay_hints(request: u64, items: &[InlayHint]) -> Result<(), Host
 pub fn provide_language(request: u64, value: &LanguageAnswer) -> Result<(), HostError> {
     state(|s| s.answers.push(Answer::Language(request, value.clone())));
     Ok(())
+}
+pub mod findings {
+    use super::state;
+    pub use crate::loom::service::findings::{Encoding, Finding, Position};
+    pub fn publish(
+        key: &str,
+        path: &str,
+        encoding: Encoding,
+        items: &[Finding],
+    ) -> Result<(), String> {
+        state(|s| {
+            let id = (key.to_owned(), path.to_owned());
+            if items.is_empty() {
+                s.findings.remove(&id);
+            } else {
+                s.findings.insert(id, (encoding, items.to_vec()));
+            }
+        });
+        Ok(())
+    }
+    pub fn withdraw(key: &str) -> Result<(), String> {
+        state(|s| {
+            s.findings.retain(|(owner, _), _| owner != key);
+            s.finding_withdrawals.push(key.to_owned());
+        });
+        Ok(())
+    }
 }
 pub mod status {
     use super::state;

@@ -180,23 +180,31 @@ impl Client {
         let coordinates = Text::new("", s.unit);
         match method {
             "textDocument/publishDiagnostics" => {
-                if let Ok(path) = path(&string(&params["uri"]))
-                    && let Some(doc) = self.documents.values_mut().find(|d| {
+                if let Ok(path) = path(&string(&params["uri"])) {
+                    if let Some(doc) = self.documents.values_mut().find(|d| {
                         key(&d.reference.path) == key(&path)
                             && d.process == s.process
                             && d.server_version.is_some()
                             && (params["version"].is_null()
                                 || params["version"].as_u64() == d.server_version)
-                    })
-                {
-                    doc.diagnostics = array(&params["diagnostics"]).to_vec();
-                    host::publish_diagnostics(
-                        &format!("{ID}.diagnostics"),
-                        &doc.reference.path,
-                        doc.reference.version,
-                        &results::diagnostics(&doc.diagnostics, &doc.text),
-                    )
-                    .map_err(|e| e.message)?;
+                    }) {
+                        doc.diagnostics = array(&params["diagnostics"]).to_vec();
+                        host::publish_diagnostics(
+                            &format!("{ID}.diagnostics"),
+                            &doc.reference.path,
+                            doc.reference.version,
+                            &results::diagnostics(&doc.diagnostics, &doc.text),
+                        )
+                        .map_err(|e| e.message)?;
+                    } else if !self
+                        .documents
+                        .values()
+                        .any(|d| key(&d.reference.path) == key(&path))
+                    {
+                        // A file nobody has open: the server knows it from the workspace,
+                        // such as the output of a build. Loom lists it with the problems.
+                        crate::findings::publish(&s.key, &path, s.unit, array(&params["diagnostics"]));
+                    }
                 }
             }
             "workspace/configuration" => {

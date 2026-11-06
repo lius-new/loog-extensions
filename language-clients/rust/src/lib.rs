@@ -7,6 +7,7 @@ use loom::extension::host;
 use loom::extension::types::*;
 mod client;
 mod config;
+mod findings;
 #[cfg(test)]
 mod host;
 mod protocol;

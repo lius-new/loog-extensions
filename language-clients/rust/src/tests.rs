@@ -949,6 +949,116 @@ fn cached_push_diagnostics_follow_unicode_edits_until_the_next_publication() {
     }
 }
 
+fn publish_for(c: &mut Client, process: u64, id: u64, uri: &str, line: u64) {
+    server(
+        c,
+        process,
+        id,
+        "textDocument/publishDiagnostics",
+        json!({"uri":uri,"diagnostics":[
+            {"range":{"start":{"line":line,"character":3},"end":{"line":line,"character":9}},
+             "severity":2,"message":"unused","source":"rustc","code":"E0599"}
+        ]}),
+    );
+}
+
+#[test]
+fn a_file_nobody_has_open_is_told_to_loom_as_a_finding_in_the_servers_units() {
+    use crate::loom::service::findings::Encoding;
+    let (mut c, p) = setup();
+    publish_for(&mut c, p, 1, "file:///C:/project/other.go", 4);
+    let key = c.sessions[&p].key.clone();
+    state(|s| {
+        assert!(s.diagnostics.is_empty(), "nothing goes the document way");
+        let (encoding, items) = &s.findings[&(key.clone(), "C:/project/other.go".to_owned())];
+        assert_eq!(*encoding, Encoding::Utf16);
+        assert_eq!(items.len(), 1);
+        assert_eq!((items[0].start.line, items[0].start.character), (4, 3));
+        assert_eq!((items[0].end.line, items[0].end.character), (4, 9));
+        assert_eq!(items[0].severity, 2);
+        assert_eq!(items[0].code.as_deref(), Some("E0599"));
+    });
+    // The server clearing the file takes it out.
+    server(
+        &mut c,
+        p,
+        2,
+        "textDocument/publishDiagnostics",
+        json!({"uri":"file:///C:/project/other.go","diagnostics":[]}),
+    );
+    state(|s| assert!(s.findings.is_empty()));
+}
+
+#[test]
+fn an_open_file_keeps_its_findings_with_its_document() {
+    let (mut c, p) = setup();
+    let version = c.documents[&1].server_version.unwrap();
+    server(
+        &mut c,
+        p,
+        1,
+        "textDocument/publishDiagnostics",
+        json!({"uri":"file:///C:/project/main.go","version":version,"diagnostics":[{"range":span(),"message":"mine"}]}),
+    );
+    state(|s| {
+        assert_eq!(s.diagnostics.len(), 1);
+        assert!(s.findings.is_empty());
+    });
+    // A publication for an older state of the open file is dropped, not listed.
+    server(
+        &mut c,
+        p,
+        2,
+        "textDocument/publishDiagnostics",
+        json!({"uri":"file:///C:/project/main.go","version":version+9,"diagnostics":[{"range":span(),"message":"stale"}]}),
+    );
+    state(|s| assert!(s.findings.is_empty()));
+}
+
+#[test]
+fn closing_a_file_keeps_its_problems_and_stopping_the_server_takes_them_back() {
+    let (mut c, p) = setup();
+    let version = c.documents[&1].server_version.unwrap();
+    server(
+        &mut c,
+        p,
+        1,
+        "textDocument/publishDiagnostics",
+        json!({"uri":"file:///C:/project/main.go","version":version,"diagnostics":[{"range":span(),"message":"kept"}]}),
+    );
+    c.close(1).unwrap();
+    let key = c.sessions[&p].key.clone();
+    state(|s| {
+        let (_, items) = &s.findings[&(key.clone(), "C:/project/main.go".to_owned())];
+        assert_eq!(items[0].message, "kept");
+    });
+    c.message(Inbound::RootsChanged(vec![])).unwrap();
+    state(|s| {
+        assert!(s.findings.is_empty());
+        assert!(s.finding_withdrawals.contains(&key));
+    });
+}
+
+#[test]
+fn findings_respect_loom_bounds_and_skip_what_cannot_be_placed() {
+    let long = "é".repeat(2000);
+    let mut values = vec![
+        json!({"range":span(),"message":long,"code":{"x":1},"severity":9}),
+        json!({"message":"no range"}),
+        json!({"range":{"start":{"line":-1,"character":0},"end":{"line":0,"character":0}},"message":"negative"}),
+    ];
+    let found = crate::findings::convert(&values);
+    assert_eq!(found.len(), 1, "an unplaceable finding is left out");
+    assert!(found[0].message.len() <= 2000 && found[0].message.chars().all(|c| c == 'é'));
+    assert_eq!(found[0].severity, 1, "a severity outside 1 to 4 is an error");
+    assert_eq!(found[0].code.as_deref(), Some("{\"x\":1}"));
+    assert_eq!(found[0].source.as_deref(), Some(crate::NAME));
+    values = (0..600)
+        .map(|n| json!({"range":span(),"message":format!("m{n}")}))
+        .collect();
+    assert_eq!(crate::findings::convert(&values).len(), 500);
+}
+
 #[test]
 fn a_session_reports_its_state_and_one_line_and_is_withdrawn_with_the_client() {
     use crate::loom::service::status::State;

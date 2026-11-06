@@ -784,6 +784,8 @@ impl Client {
             return;
         }
         s.stopped = true;
+        // What a stopped server found is no longer current.
+        crate::findings::withdraw(&s.key);
         if !self.documents.values().any(|d| d.process == s.process) {
             self.owners.remove(&s.process);
         }
@@ -1295,6 +1297,11 @@ impl Client {
                         "textDocument/didClose",
                         json!({"textDocument":{"uri":uri(&doc.reference.path)}}),
                     )?;
+                }
+                // The file is no longer open, but its problems are still the server's
+                // findings: Loom lists them with the rest of the workspace.
+                if !s.stopped && !doc.diagnostics.is_empty() {
+                    crate::findings::publish(&s.key, &doc.reference.path, s.unit, &doc.diagnostics);
                 }
                 Ok(())
             })?;
