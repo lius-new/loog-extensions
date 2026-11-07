@@ -1,13 +1,13 @@
-# The loom-ext-validate builds this repository downloads (see docs/tools.md).
+# The loog-ext-validate builds this repository downloads (see docs/tools.md).
 #
-# Loom's repository builds the validator from the loader and query compilers the
-# application itself uses, and attaches it to each Loom release. When one is
+# Loog's repository builds the validator from the loader and query compilers the
+# application itself uses, and attaches it to each Loog release. When one is
 # published, list the build for each platform here with its SHA-256:
 #
 #   [platforms.windows-x86_64]
-#   url = "https://github.com/lius-new/loom/releases/download/v0.2.0/loom-ext-validate-windows-x86_64.exe"
+#   url = "https://github.com/lius-new/loog/releases/download/v0.2.0/loog-ext-validate-windows-x86_64.exe"
 #   sha256 = "…"
 #
 # Until then `validate` checks the structure of the packages only, or uses the binary
-# named by LOOM_EXT_VALIDATE.
+# named by LOOG_EXT_VALIDATE.
 schema = 1

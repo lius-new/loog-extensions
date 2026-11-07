@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.dockerfile",
+  "version": "0.1.0",
+  "name": "Dockerfile Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Dockerfile.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "dockerfile",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.dockerfile.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

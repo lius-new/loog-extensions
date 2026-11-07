@@ -13,12 +13,12 @@ export const TARGETS={
  'linux-x86_64':'x86_64-unknown-linux-gnu','linux-aarch64':'aarch64-unknown-linux-gnu',
  'macos-x86_64':'x86_64-apple-darwin','macos-aarch64':'aarch64-apple-darwin',
 };
-const CLIENTS=new Set(['loom.lsp.gopls','loom.lsp.rust-analyzer','loom.lsp.typescript-language-server']);
-const DOMAIN=Buffer.from('loom.extension.aot.v1\0');
+const CLIENTS=new Set(['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server']);
+const DOMAIN=Buffer.from('loog.extension.aot.v1\0');
 export async function prepareAot(files,{compiler,privatePem,keyId,keys,out,work,compile}={}){
  assert(publicKeyOf(privatePem)===keys[keyId],'The AOT compiler signing key is not the configured publication authority');
  fs.mkdirSync(out,{recursive:true});fs.mkdirSync(work,{recursive:true});
- const env={...process.env};delete env.LOOM_INDEX_KEY;
+ const env={...process.env};delete env.LOOG_INDEX_KEY;
  compile??=((wasm,target,code,metadata)=>execFileSync(compiler,[wasm,target,code,metadata],{env,encoding:'utf8',windowsHide:true}));
  const records=[];
  for(const [number,file]of files.entries()){
@@ -36,7 +36,7 @@ export async function prepareAot(files,{compiler,privatePem,keyId,keys,out,work,
    const metadata=path.join(dir,'manifest.json');
    compile(path.join(folder,'extension.wasm'),target,path.join(dir,'component.cwasm'),metadata);
    const value={...JSON.parse(fs.readFileSync(metadata,'utf8')),schema:1,id:manifest.id,version:manifest.version};
-   assert(value.profile==='loom-wasmtime-50.0.1-portable-v1'&&value.target===target,'Unexpected AOT compiler profile or target');
+   assert(value.profile==='loog-wasmtime-50.0.1-portable-v1'&&value.target===target,'Unexpected AOT compiler profile or target');
    assert(value.wasm_sha256===fileHash(path.join(folder,'extension.wasm'))&&value.code_sha256===fileHash(path.join(dir,'component.cwasm')),'AOT compiler output digests do not match');
    const bytes=Buffer.from(JSON.stringify(value,null,2)+'\n');
    fs.writeFileSync(metadata,bytes);fs.writeFileSync(path.join(dir,'manifest.sig'),signIndex(Buffer.concat([DOMAIN,bytes]),privatePem,keyId));
@@ -44,17 +44,17 @@ export async function prepareAot(files,{compiler,privatePem,keyId,keys,out,work,
   }
   await createPackage(folder,output,manifest.id);
  }
- fs.writeFileSync(path.join(out,'aot-provenance.json'),JSON.stringify({schema:1,authority:keyId,profile:'loom-wasmtime-50.0.1-portable-v1',artifacts:records},null,2)+'\n');
+ fs.writeFileSync(path.join(out,'aot-provenance.json'),JSON.stringify({schema:1,authority:keyId,profile:'loog-wasmtime-50.0.1-portable-v1',artifacts:records},null,2)+'\n');
  return records;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=process.argv.slice(2),testAt=args.indexOf('--test-key');
- let privatePem=process.env.LOOM_INDEX_KEY,keyId,keys;
+ let privatePem=process.env.LOOG_INDEX_KEY,keyId,keys;
  if(testAt>=0){const file=args.splice(testAt,2)[1];privatePem=fs.readFileSync(file,'utf8');keyId='benchmark-only';keys={[keyId]:publicKeyOf(privatePem)};}
- else {const config=readToml(path.join(ROOT,'loom-ext.toml'));keyId=config.index['key-id'];keys=config.index.keys;}
- assert(privatePem,'LOOM_INDEX_KEY is required in the trusted publisher');
+ else {const config=readToml(path.join(ROOT,'loog-ext.toml'));keyId=config.index['key-id'];keys=config.index.keys;}
+ assert(privatePem,'LOOG_INDEX_KEY is required in the trusted publisher');
  const outAt=args.indexOf('--out');assert(outAt>=0,'--out is required');const out=path.resolve(args.splice(outAt,2)[1]);
- const compiler=process.env.LOOM_AOT_COMPILER??path.join(ROOT,'tools/aot-compiler/target/release/loom-aot-compiler'+(process.platform==='win32'?'.exe':''));
+ const compiler=process.env.LOOG_AOT_COMPILER??path.join(ROOT,'tools/aot-compiler/target/release/loog-aot-compiler'+(process.platform==='win32'?'.exe':''));
  const records=await prepareAot(packageFiles(args),{compiler,privatePem,keyId,keys,out,work:path.join(ROOT,'.work/aot-publication')});
  console.log(`Prepared ${records.length} signed AOT components`);
 }

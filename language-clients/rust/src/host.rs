@@ -1,5 +1,5 @@
 //! In-memory host for protocol/lifecycle tests; production uses the WIT imports.
-use crate::loom::extension::types::*;
+use crate::loog::extension::types::*;
 use serde_json::Value;
 use std::{cell::RefCell, collections::BTreeMap};
 #[derive(Debug)]
@@ -23,8 +23,8 @@ pub struct State {
     pub answers: Vec<Answer>,
     pub configurations: BTreeMap<String, ProviderConfiguration>,
     /// What the client reports about its service, by key, and each report in order.
-    pub reports: BTreeMap<String, crate::loom::service::status::Report>,
-    pub report_requests: Vec<crate::loom::service::status::Report>,
+    pub reports: BTreeMap<String, crate::loog::service::status::Report>,
+    pub report_requests: Vec<crate::loog::service::status::Report>,
     pub ready_hover: Vec<bool>,
     pub spawned: Vec<(u64, ProcessRequest)>,
     pub killed: Vec<u64>,
@@ -32,9 +32,9 @@ pub struct State {
     pub timers: BTreeMap<u64, u32>,
     pub operations: Vec<(u64, WorkspaceOperation)>,
     pub diagnostics: Vec<(String, u64, Vec<Diagnostic>)>,
-    /// What the client told Loom about files that are not open: (key, path) to
+    /// What the client told Loog about files that are not open: (key, path) to
     /// the unit and the findings, and the keys it took back.
-    pub findings: BTreeMap<(String, String), (crate::loom::service::findings::Encoding, Vec<crate::loom::service::findings::Finding>)>,
+    pub findings: BTreeMap<(String, String), (crate::loog::service::findings::Encoding, Vec<crate::loog::service::findings::Finding>)>,
     pub finding_withdrawals: Vec<String>,
     pub logs: Vec<(u8, String)>,
     pub blocked: bool,
@@ -227,7 +227,7 @@ pub fn provide_language(request: u64, value: &LanguageAnswer) -> Result<(), Host
 }
 pub mod findings {
     use super::state;
-    pub use crate::loom::service::findings::{Encoding, Finding, Position};
+    pub use crate::loog::service::findings::{Encoding, Finding, Position};
     pub fn publish(
         key: &str,
         path: &str,
@@ -254,7 +254,7 @@ pub mod findings {
 }
 pub mod status {
     use super::state;
-    pub use crate::loom::service::status::{Report, State};
+    pub use crate::loog::service::status::{Report, State};
     pub fn publish(report: &Report) -> Result<(), String> {
         state(|s| {
             if report.state == State::Ready {

@@ -1,14 +1,14 @@
 {
-  "name": "loom-extensions",
+  "name": "loog-extensions",
   "private": true,
   "type": "module",
-  "description": "The official extensions for Loom: their sources, recipes and the tools that build, sign and publish them.",
+  "description": "The official extensions for Loog: their sources, recipes and the tools that build, sign and publish them.",
   "engines": { "node": ">=22" },
-  "bin": { "loom-ext": "scripts/loom-ext.mjs" },
+  "bin": { "loog-ext": "scripts/loog-ext.mjs" },
   "scripts": {
     "test": "node --test \"scripts/test/*.test.mjs\"",
-    "check": "node scripts/loom-ext.mjs check",
-    "try": "node scripts/loom-ext.mjs try"
+    "check": "node scripts/loog-ext.mjs check",
+    "try": "node scripts/loog-ext.mjs try"
   },
   "dependencies": {
     "smol-toml": "1.6.0",

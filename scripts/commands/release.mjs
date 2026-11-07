@@ -22,7 +22,7 @@ async function takeIn(argv, config) {
   const dryRun = argv.includes('--dry-run');
   const files = packageFiles(argv.filter(item => item !== '--dry-run'));
   const validator = findValidator();
-  assert(validator, 'Intake requires loom-ext-validate');
+  assert(validator, 'Intake requires loog-ext-validate');
   const current = dryRun ? null : await readRegistry(config);
   const results = await intake(files, {validator, index: current?.index ?? null, repository: dryRun ? null : config.repository});
   for (const result of results) {
@@ -43,13 +43,13 @@ export async function run(argv) {
   assert(argv[0] === 'intake' ? argv.length > 1 : argv.length === 1 && ['preflight', 'publish'].includes(argv[0]), usage);
   const config = loadConfig();
   if (argv[0] === 'intake') { await takeIn(argv.slice(1), config); return; }
-  if (argv[0] === 'preflight') { checkSigningKey(config, process.env.LOOM_INDEX_KEY); return; }
+  if (argv[0] === 'preflight') { checkSigningKey(config, process.env.LOOG_INDEX_KEY); return; }
   const plan = readJson(planFile);
   assert(plan.schema === 1 && plan.revision === revision(), 'The intake is not for this checkout');
   if (!plan.pending.length && !plan.repair) { summary('Nothing to publish; nothing was changed.'); return; }
   const {execFileSync} = await import('node:child_process');
   assert(!execFileSync('git', ['status', '--porcelain', '--untracked-files=normal'], {cwd: ROOT, encoding: 'utf8'}).trim(), 'Commit the working tree before publishing; release tags must describe the tested source');
-  const report = await finishRelease(plan, readJson(outcomesFile), {config, privateKey: process.env.LOOM_INDEX_KEY, sourceRevision: revision()});
+  const report = await finishRelease(plan, readJson(outcomesFile), {config, privateKey: process.env.LOOG_INDEX_KEY, sourceRevision: revision()});
   summary(`Indexed: ${report.indexed.length}; failures: ${report.failures.length}; sequence: ${report.sequence}.\n\n` + report.failures.map(e => `- ${e.id}: ${e.error}`).join('\n'));
   assert(!report.failures.length, 'Some extensions were not delivered; see the release report. Rerun to complete them.');
   await lock([]);

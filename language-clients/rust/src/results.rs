@@ -1,4 +1,4 @@
-use crate::{loom::extension::types::*, protocol::*};
+use crate::{loog::extension::types::*, protocol::*};
 use serde_json::{Value, json};
 pub fn opaque(session: &str, value: &Value) -> String {
     json!({"session":session,"value":value}).to_string()
@@ -18,7 +18,7 @@ pub fn original(data: Option<&str>, session: &str) -> Result<Value> {
     Ok(value["value"].take())
 }
 pub fn command(value: &Value, session: &str) -> Option<ProviderCommand> {
-    value["command"].as_str().map(|name|ProviderCommand{name:name.to_owned(),arguments:json!([{"$loomSession":session,"arguments":value.get("arguments").unwrap_or(&json!([]))}]).to_string()})
+    value["command"].as_str().map(|name|ProviderCommand{name:name.to_owned(),arguments:json!([{"$loogSession":session,"arguments":value.get("arguments").unwrap_or(&json!([]))}]).to_string()})
 }
 pub fn location(value: &Value, text: &Text) -> Result<FileLocation> {
     Ok(FileLocation {

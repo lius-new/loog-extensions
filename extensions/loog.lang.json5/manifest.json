@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.json5",
+  "version": "0.1.0",
+  "name": "JSON5 Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for JSON5.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "json5",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.json5.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

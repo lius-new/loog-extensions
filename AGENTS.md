@@ -1,8 +1,8 @@
 # Repository instructions
 
 Follow [plugin-owned shared UI](docs/shared-ui.md). Plugin-specific UI keys,
-presentation and state policy belong here, never in Loom. Reuse general host
-capabilities; adding a plugin that uses them must not require a Loom release.
+presentation and state policy belong here, never in Loog. Reuse general host
+capabilities; adding a plugin that uses them must not require a Loog release.
 
 Prefer focused checks for affected plugins. Do not run full regression suites on
 each iteration; explain the need before expanding coverage.

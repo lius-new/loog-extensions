@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.ruff",
+  "version": "0.1.0",
+  "name": "Ruff Language Server",
+  "publisher": "Loog",
+  "description": "The Ruff language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "ruff",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_service": {
+      "servers": [
+        {
+          "id": "loog.lsp.ruff.ruff",
+          "name": "Ruff",
+          "languages": [
+            "python"
+          ],
+          "command": "${extension}/ruff",
+          "args": [
+            "server"
+          ],
+          "root_markers": [
+            "ruff.toml",
+            ".ruff.toml",
+            "pyproject.toml"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "python",
+              "language_id": "python"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

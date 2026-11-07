@@ -1,0 +1,11 @@
+{
+  "name": "build-loog-lsp-taplo",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loog.lsp.taplo package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22",
+    "adm-zip": "0.6.1",
+    "xz-decompress": "0.2.3"
+  }
+}

@@ -24,16 +24,16 @@ export async function run(argv) {
   const config = loadConfig();
   const keyId = config.index['key-id'];
   const privatePem = fs.readFileSync(path.resolve(options.key), 'utf8');
-  assert(publicKeyOf(privatePem) === config.index.keys?.[keyId], `The key is not the one Loom trusts for ${keyId}; check loom-ext.toml index.keys`);
+  assert(publicKeyOf(privatePem) === config.index.keys?.[keyId], `The key is not the one Loog trusts for ${keyId}; check loog-ext.toml index.keys`);
 
   const registry = await readRegistry(config);
-  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'loom-reindex-'));
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'loog-reindex-'));
   try {
     const extensions = [];
     for (const extension of registry.index.extensions) {
       const {version, artifacts} = extension.versions[0];
       const artifact = artifacts[0];
-      const file = path.join(work, `${extension.id}.loomext`);
+      const file = path.join(work, `${extension.id}.loogext`);
       await downloadVerified({url: artifact.url, destination: file, sha256: artifact.sha256});
       const directory = await extractPackage(file, path.join(work, extension.id), extension.id);
       const manifest = readJson(path.join(directory, 'manifest.json'));

@@ -26,14 +26,14 @@ async function takeIn(repo, id, version = '1.0.0', change = () => {}) {
   change(folder);
   const named = path.join(repo.root, 'out', id, `${version}-package`, id);
   fs.cpSync(folder, named, {recursive: true});
-  const file = path.join(repo.root, 'handed-over', `${id}-${version}-any.loomext`);
+  const file = path.join(repo.root, 'handed-over', `${id}-${version}-any.loogext`);
   await createPackage(named, file, id);
   const [result] = await intake([file], {root: repo.root, dist: repo.dist, work: path.join(repo.root, '.work'), validator: null});
   assert.equal(result.error, undefined);
   return result;
 }
 
-async function packaged(t, {bundled = ['loom.theme.demo'], what = ['theme', 'language']} = {}) {
+async function packaged(t, {bundled = ['loog.theme.demo'], what = ['theme', 'language']} = {}) {
   const repo = checkout(t, {bundled}); populate(repo, what);
   execFileSync('git', ['init', '-q'], {cwd: repo.root});
   repo.dist = path.join(repo.root, 'dist');
@@ -69,7 +69,7 @@ test('a signature verifies only the bytes it was made for, with the key it names
   assert.throws(() => signIndex(bytes, privatePem, 'bad id'), /Invalid key id/);
 });
 
-test('the index lists each extension with its packages and what Loom needs to choose', async t => {
+test('the index lists each extension with its packages and what Loog needs to choose', async t => {
   const repo = await packaged(t);
   const index = indexOf(repo.results);
   assert.deepEqual(validateIndex(index), []);
@@ -77,7 +77,7 @@ test('the index lists each extension with its packages and what Loom needs to ch
   assert.equal(index.generated, NOW);
   assert.equal(index.expires, '2026-12-01T00:00:00.000Z');
   assert.equal(index.keyId, 'test-1');
-  assert.deepEqual(index.extensions.map(extension => extension.id), ['loom.lang.demo', 'loom.theme.demo']);
+  assert.deepEqual(index.extensions.map(extension => extension.id), ['loog.lang.demo', 'loog.theme.demo']);
   const language = index.extensions[0];
   assert.deepEqual(language.highlight, [{name: 'demo', fileTypes: ['demo']}]);
   assert.equal(language.languages, undefined, 'the index does not carry the old name');
@@ -88,9 +88,9 @@ test('the index lists each extension with its packages and what Loom needs to ch
   assert.equal(typeof language.changelog, 'string');
   const version = language.versions[0];
   assert.equal(version.version, '1.0.0');
-  assert.deepEqual(version.engines, {loom: '>=0.1.8 <0.3'});
+  assert.deepEqual(version.engines, {loog: '>=0.1.8 <0.3'});
   assert.deepEqual(version.artifacts.map(artifact => artifact.platform), ['any']);
-  assert.equal(version.artifacts[0].url, 'https://github.com/acme/extensions/releases/download/loom.lang.demo-1.0.0/loom.lang.demo-1.0.0-any.loomext');
+  assert.equal(version.artifacts[0].url, 'https://github.com/acme/extensions/releases/download/loog.lang.demo-1.0.0/loog.lang.demo-1.0.0-any.loogext');
 });
 
 test('a changelog over the limit keeps its newest part, cut at a paragraph', () => {
@@ -104,11 +104,11 @@ test('a changelog over the limit keeps its newest part, cut at a paragraph', () 
 });
 
 test('component versions retain their ABI so newer hosts can exclude historical declarations', () => {
-  const id = 'loom.lsp.component';
-  const result = buildIndex({packages:[{id, version:'0.2.0', platform:'any', file:'client.loomext', sha256:'a'.repeat(64), size:4}],
+  const id = 'loog.lsp.component';
+  const result = buildIndex({packages:[{id, version:'0.2.0', platform:'any', file:'client.loogext', sha256:'a'.repeat(64), size:4}],
     repository:'acme/extensions', keyId:'test', validityDays:30,
-    descriptions:{[id]:{entry:{id, name:'Client', language_service:{languages:['rust']}}, manifest:{api:'loom:extension@0.1.0'}}}});
-  assert.equal(result.extensions[0].versions[0].api, 'loom:extension@0.1.0');
+    descriptions:{[id]:{entry:{id, name:'Client', language_service:{languages:['rust']}}, manifest:{api:'loog:extension@0.1.0'}}}});
+  assert.equal(result.extensions[0].versions[0].api, 'loog:extension@0.1.0');
   assert.deepEqual(result.extensions[0].language_service.languages, ['rust']);
 });
 
@@ -129,15 +129,15 @@ test('each index continues the last: the sequence grows and a published version 
   const first = indexOf(repo.results);
 
   // A new version of one extension is added; the old one stays listed.
-  const newer = await takeIn(repo, 'loom.theme.demo', '1.1.0');
+  const newer = await takeIn(repo, 'loog.theme.demo', '1.1.0');
   const next = indexOf([newer], {previous: first});
   assert.equal(next.sequence, 2);
-  const versions = next.extensions.find(extension => extension.id === 'loom.theme.demo').versions.map(version => version.version);
+  const versions = next.extensions.find(extension => extension.id === 'loog.theme.demo').versions.map(version => version.version);
   assert.deepEqual(versions, ['1.1.0', '1.0.0']);
   assert.deepEqual(validateIndex(next), []);
 
   // The same version with other contents is refused.
-  const changed = await takeIn(repo, 'loom.lang.demo', '1.0.0', folder => write(folder, 'queries/highlights.scm', '(identifier) @function'));
+  const changed = await takeIn(repo, 'loog.lang.demo', '1.0.0', folder => write(folder, 'queries/highlights.scm', '(identifier) @function'));
   assert.throws(() => indexOf([changed], {previous: first}), /already published with different contents/);
 });
 
@@ -157,7 +157,7 @@ test('an index with the wrong shape is described problem by problem', () => {
 function buildIndexForTest() {
   return {
     schema: 1, sequence: 1, generated: NOW, expires: '2026-12-01T00:00:00.000Z', keyId: 'k',
-    extensions: [{id: 'loom.lang.x', versions: [{version: '1.0.0', engines: {loom: '*'}, artifacts: [{platform: 'any', url: 'https://x', sha256: 'a'.repeat(64), size: 1}]}]}],
+    extensions: [{id: 'loog.lang.x', versions: [{version: '1.0.0', engines: {loog: '*'}, artifacts: [{platform: 'any', url: 'https://x', sha256: 'a'.repeat(64), size: 1}]}]}],
   };
 }
 
@@ -171,7 +171,7 @@ test('lock pins the bundled extensions to the signed index and keeps a copy of i
   assert.equal(locked.status, 0, locked.all);
   const lock = read(repo, 'dist/lock/extensions.lock');
   assert.equal(lock.schema, 1);
-  assert.deepEqual(lock.extensions.map(extension => `${extension.id}@${extension.version}`), ['loom.theme.demo@1.0.0']);
+  assert.deepEqual(lock.extensions.map(extension => `${extension.id}@${extension.version}`), ['loog.theme.demo@1.0.0']);
   assert.equal(lock.extensions[0].artifacts[0].platform, 'any');
   assert.equal(lock.index.sequence, 1);
   const snapshot = fs.readFileSync(path.join(repo.root, 'dist/lock/index.snapshot.json'));
@@ -180,9 +180,9 @@ test('lock pins the bundled extensions to the signed index and keeps a copy of i
 });
 
 test('a bundled extension that is not in the index stops the lock', async t => {
-  const repo = await packaged(t, {bundled: ['loom.theme.demo', 'loom.lang.ghost']});
+  const repo = await packaged(t, {bundled: ['loog.theme.demo', 'loog.lang.ghost']});
   leaveIndex(repo, indexOf(repo.results), generateKeyPair().privatePem);
-  assert.match(cli(repo.root, ['lock']).err, /loom\.lang\.ghost is bundled but not in the index/);
+  assert.match(cli(repo.root, ['lock']).err, /loog\.lang\.ghost is bundled but not in the index/);
 });
 
 test('the validator output is read as one object per grammar, and its failure is reported', () => {
@@ -190,17 +190,17 @@ test('the validator output is read as one object per grammar, and its failure is
   assert.deepEqual(runValidator('v', 'dir', null, exec('{"grammar":"a","colored":3}\n{"grammar":"b","colored":0}\n')),
     [{grammar: 'a', colored: 3}, {grammar: 'b', colored: 0}]);
   const failing = () => { const error = new Error('x'); error.stderr = 'query error in highlights.scm'; throw error; };
-  assert.throws(() => runValidator('v', path.join('x', 'loom.lang.a'), null, failing), /loom\.lang\.a: query error in highlights\.scm/);
+  assert.throws(() => runValidator('v', path.join('x', 'loog.lang.a'), null, failing), /loog\.lang\.a: query error in highlights\.scm/);
 });
 
 test('the index builder accepts previous data without packages of the same extension', () => {
   const index = buildIndex({packages: [], repository: 'acme/x', keyId: 'k', validityDays: 1, now: new Date(NOW), previous: buildIndexForTest()});
   assert.equal(index.sequence, 2);
-  assert.deepEqual(index.extensions.map(extension => extension.id), ['loom.lang.x']);
+  assert.deepEqual(index.extensions.map(extension => extension.id), ['loog.lang.x']);
 });
 
 test('draft creation keeps its returned ID and ID publication does not rediscover a tag', () => {
-  const calls = []; const draft = {id:123,tag_name:'loom.lang.demo-0.1.0',draft:true,assets:[]};
+  const calls = []; const draft = {id:123,tag_name:'loog.lang.demo-0.1.0',draft:true,assets:[]};
   const github = new GitHubReleases('acme/extensions',args=>{
     calls.push(args);
     if(args.includes('POST')) {

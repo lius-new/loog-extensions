@@ -8,13 +8,13 @@ import {language, server, theme, workspace, write} from './fixtures.mjs';
 const problems = (dir, options) => checkExtension(dir, options).problems;
 
 test('ids need two or more lowercase segments', () => {
-  for (const id of ['loom.lang.rust', 'a.b', 'loom.lang.c-sharp']) assert.ok(validId(id), id);
-  for (const id of ['loom', 'Loom.lang', 'loom..x', 'loom.-x', '', 'a.b_c']) assert.ok(!validId(id), id);
+  for (const id of ['loog.lang.rust', 'a.b', 'loog.lang.c-sharp']) assert.ok(validId(id), id);
+  for (const id of ['loog', 'Loog.lang', 'loog..x', 'loog.-x', '', 'a.b_c']) assert.ok(!validId(id), id);
 });
 
 test('requirements are an id and a range', () => {
-  assert.deepEqual(parseRequirement('loom.runtime.node@^22'), {id: 'loom.runtime.node', range: '^22'});
-  for (const bad of ['loom.runtime.node', '@^22', 'node@^22', 'loom.runtime.node@>=a.b']) assert.equal(parseRequirement(bad), null, bad);
+  assert.deepEqual(parseRequirement('loog.runtime.node@^22'), {id: 'loog.runtime.node', range: '^22'});
+  for (const bad of ['loog.runtime.node', '@^22', 'node@^22', 'loog.runtime.node@>=a.b']) assert.equal(parseRequirement(bad), null, bad);
 });
 
 test('valid theme, language and server extensions have no problems', t => {
@@ -52,19 +52,19 @@ test('language categories describe a specific function and reject Languages', t 
 test('the id must match the folder and use the naming scheme', t => {
   const root = workspace(t);
   const dir = theme(root);
-  write(dir, 'manifest.json', {...JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8')), id: 'loom.theme.other'});
-  assert.match(problems(dir).join('\n'), /folder is named loom\.theme\.demo but the id is loom\.theme\.other/);
+  write(dir, 'manifest.json', {...JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8')), id: 'loog.theme.other'});
+  assert.match(problems(dir).join('\n'), /folder is named loog\.theme\.demo but the id is loog\.theme\.other/);
   const lang = language(root);
-  write(lang, 'manifest.json', {schema: 1, id: 'loom.lang.demo', version: '1.0.0', name: 'x', publisher: 'x', description: 'x', categories: ['x'], license: 'MIT', engines: {loom: '*'}});
+  write(lang, 'manifest.json', {schema: 1, id: 'loog.lang.demo', version: '1.0.0', name: 'x', publisher: 'x', description: 'x', categories: ['x'], license: 'MIT', engines: {loog: '*'}});
   assert.match(problems(lang).join('\n'), /must contribute highlight/);
 });
 
 test('publishing needs what people see; development does not', t => {
   const root = workspace(t);
   const dir = theme(root);
-  write(dir, 'manifest.json', {schema: 1, id: 'loom.theme.demo', version: '1.0.0', contributes: {themes: [{id: 'loom.theme.demo.dark', path: 'themes/dark.json'}]}});
+  write(dir, 'manifest.json', {schema: 1, id: 'loog.theme.demo', version: '1.0.0', contributes: {themes: [{id: 'loog.theme.demo.dark', path: 'themes/dark.json'}]}});
   const published = problems(dir).join('\n');
-  for (const field of ['name', 'publisher', 'description', 'license', 'categories', 'engines.loom']) assert.match(published, new RegExp(field));
+  for (const field of ['name', 'publisher', 'description', 'license', 'categories', 'engines.loog']) assert.match(published, new RegExp(field));
   assert.deepEqual(problems(dir, {publishing: false}), []);
 });
 
@@ -72,10 +72,10 @@ test('resource paths stay inside, exist, and are namespaced', t => {
   const root = workspace(t);
   const dir = theme(root);
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-  manifest.contributes.themes = [{id: 'other.dark', path: 'themes/dark.json'}, {id: 'loom.theme.demo.x', path: '../escape.json'}, {id: 'loom.theme.demo.y', path: 'themes/missing.json'}];
+  manifest.contributes.themes = [{id: 'other.dark', path: 'themes/dark.json'}, {id: 'loog.theme.demo.x', path: '../escape.json'}, {id: 'loog.theme.demo.y', path: 'themes/missing.json'}];
   write(dir, 'manifest.json', manifest);
   const text = problems(dir).join('\n');
-  assert.match(text, /must start with loom\.theme\.demo\./);
+  assert.match(text, /must start with loog\.theme\.demo\./);
   assert.match(text, /Invalid theme path/);
   assert.match(text, /themes\/missing\.json does not exist/);
 });
@@ -87,7 +87,7 @@ test('a grammar must come with a real WebAssembly module and its queries', t => 
   assert.match(problems(dir).join('\n'), /missing WebAssembly module for demo/);
   write(dir, 'tree-sitter-demo.wasm', 'not wasm at all');
   assert.match(problems(dir).join('\n'), /is not a WebAssembly module/);
-  const other = language(root, 'loom.lang.other', 'other');
+  const other = language(root, 'loog.lang.other', 'other');
   fs.rmSync(path.join(other, 'queries/highlights.scm'));
   assert.match(problems(other).join('\n'), /missing queries\/highlights\.scm/);
 });
@@ -102,7 +102,7 @@ test('contribution points are named by what they are for, and an old or unknown 
   const text = problems(dir).join('\n');
   assert.match(text, /language identity .*must name language\.json/);
   assert.match(text, /must contribute highlight/);
-  manifest.contributes = {highlight: [{id: 'loom.lang.demo.grammar', path: 'tree-sitter.json'}], language_service: {servers: []}, themes: []};
+  manifest.contributes = {highlight: [{id: 'loog.lang.demo.grammar', path: 'tree-sitter.json'}], language_service: {servers: []}, themes: []};
   write(dir, 'manifest.json', manifest);
   assert.deepEqual(problems(dir), []);
   manifest.contributes.language_service = {language_servers: []};
@@ -158,7 +158,7 @@ test('requires, recommends and capabilities are checked', t => {
   const root = workspace(t);
   const dir = language(root);
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-  Object.assign(manifest, {requires: ['bad'], recommends: ['loom.theme.x'], capabilities: ['teleport']});
+  Object.assign(manifest, {requires: ['bad'], recommends: ['loog.theme.x'], capabilities: ['teleport']});
   write(dir, 'manifest.json', manifest);
   const text = problems(dir).join('\n');
   assert.match(text, /invalid requirement/);

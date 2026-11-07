@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.scss",
+  "version": "0.1.0",
+  "name": "SCSS Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for SCSS.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "scss",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.scss.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

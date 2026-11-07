@@ -730,7 +730,7 @@ impl Client {
             .as_array()
             .ok_or("command arguments must be an array")?;
         let origin = if args.len() == 1 {
-            args[0]["$loomSession"].as_str()
+            args[0]["$loogSession"].as_str()
         } else {
             None
         };

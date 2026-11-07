@@ -5,18 +5,18 @@ independent WASM components. Each extension has its own Cargo manifest and lock
 file; `rust/clients.json` retains its language IDs, program, arguments and root
 selection policy. JavaScript/TypeScript includes JSX/TSX. Each installed extension owns its
 RPC connection, documents, capability registrations, processes and private UI contributions.
-The 0.2.4 clients require Loom 0.1.10 and its independent `loom:ui/tree@0.1.0`
+The 0.2.4 clients require Loog 0.1.10 and its independent `loog:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific
 host layout branch. Missing targets keep the indicator hidden until it returns.
-The workflow's pinned Loom SDK source has been updated
+The workflow's pinned Loog SDK source has been updated
 to a committed revision containing that interface; builders reject older SDKs.
-The general Loom SDK contains none of this language-specific behavior.
+The general Loog SDK contains none of this language-specific behavior.
 
 The development clients contribute one shared status entry, with generic
 `Language Services` text and no independent colored background or server name.
 They provide the shared key, document contexts, priorities, tree descriptions
-and state-driven motion; Loom only supplies general UI capabilities. States from
+and state-driven motion; Loog only supplies general UI capabilities. States from
 other documents/projects cannot override the active document. Busy icons rotate
 continuously; ready, error and stopped icons stay static. Progress does not
 restart motion, republish membership or display changing percentages.
@@ -24,10 +24,10 @@ The entry is passive, with no new click, hover or details UI. Detailed failures
 remain in plugin logs. See [plugin-owned shared UI](../docs/shared-ui.md) for the
 required application/plugin boundary and lifecycle contract.
 
-Set `LOOM_SOURCE` to the matching Loom source checkout. Builders use its WIT
-and locked Rust component toolchain. CI obtains those from the single Loom commit
-pinned in `tools/loom-source.toml`, which the AOT verification and the validator
-use as well; move it forward when Loom changes its extension interface. Release
+Set `LOOG_SOURCE` to the matching Loog source checkout. Builders use its WIT
+and locked Rust component toolchain. CI obtains those from the single Loog commit
+pinned in `tools/loog-source.toml`, which the AOT verification and the validator
+use as well; move it forward when Loog changes its extension interface. Release
 builds intentionally
 reject older SDKs rather than silently producing per-server status blocks.
 No versions are bumped by local staging. No SDK is downloaded or installed into
@@ -35,7 +35,7 @@ the user's editor at runtime.
 
 Each extension also contributes metadata-only language identities and file
 associations. Syntax extensions remain independent and retain their own parser
-bindings. Language metadata follows Loom's existing restart requirement when
+bindings. Language metadata follows Loog's existing restart requirement when
 installed or changed.
 
 `configuration` and `initialization` settings accept JSON text. Initialization
@@ -47,7 +47,7 @@ on the next activation.
 Rust checks (run for each extension ID):
 
 ```sh
-LOOM_SOURCE=/path/to/loom cargo test --manifest-path extensions/loom.lsp.rust-analyzer/rust/Cargo.toml --locked --lib
+LOOG_SOURCE=/path/to/loog cargo test --manifest-path extensions/loog.lsp.rust-analyzer/rust/Cargo.toml --locked --lib
 ```
 
 The previous TypeScript client sources and SDK have been removed. Release
@@ -64,18 +64,18 @@ node language-clients/stage.mjs
 `stage.mjs` prepares local acceptance artifacts under `.work/packages`. It uses
 versioned `<id>/<version>` folders and updates `extensions.json`, preserving
 other installed packages and disabled choices while pinning the staged versions.
-Loom loads the versions named in that index, not flat folders next to it.
-Set `LOOM_EXTENSIONS_DIR` to the absolute `.work/packages` path and launch Loom
+Loog loads the versions named in that index, not flat folders next to it.
+Set `LOOG_EXTENSIONS_DIR` to the absolute `.work/packages` path and launch Loog
 from the same terminal so the test process inherits the override. The script uses
 the built pinned gopls (falling back to the available local binary), pinned
 downloaded rust-analyzer and locked TypeScript
 payload. Release packaging uses each extension's `build.mjs` and pinned server
 toolchain; the local staging command is not a release or an installation.
 
-The ignored native Loom acceptance uses these packages through the real WASM
-executor and native provider consumers. `LOOM_MIGRATION_BYTES=1048576` or
+The ignored native Loog acceptance uses these packages through the real WASM
+executor and native provider consumers. `LOOG_MIGRATION_BYTES=1048576` or
 `8388608` selects exact Unicode document sizes. The optional
-`LOOM_MIGRATION_LANGUAGE` filter and `LOOM_MIGRATION_TRACE` are diagnostic aids;
+`LOOG_MIGRATION_LANGUAGE` filter and `LOOG_MIGRATION_TRACE` are diagnostic aids;
 formal comparison runs all languages with tracing disabled. Failed requests must
 not be omitted from performance results.
 
@@ -86,7 +86,7 @@ resolve indices; broadening the pattern requests the full applicable list again.
 
 Historical Windows verification of the 0.2.2 TypeScript implementation: 29 client unit tests, four real-server
 functional/two-root cases, and all twelve native WASM performance cohorts passed.
-Loom's post-removal suite passed 1700 tests with 28 ignores. Its retained
+Loog's post-removal suite passed 1700 tests with 28 ignores. Its retained
 `docs/architecture/language-migration-evidence` has paired old-host/component
 reports: 100 samples per operation, three document sizes and all four languages;
 all 36 p95 comparisons passed the unchanged budget. Components are below 16 MiB.
@@ -94,7 +94,7 @@ The three final package builds also passed the updated production importer.
 Manual desktop QA and Linux/macOS execution are not claimed by these Windows runs.
 
 The Rust migration comparison is documented in `rust/BENCHMARKS.md`. It uses
-identical server payloads, the native Loom WASM executor, isolated cold caches,
+identical server payloads, the native Loog WASM executor, isolated cold caches,
 and three repeats of 100 requests per operation for small, 1 MiB and 8 MiB
 Unicode documents. Host memory excludes separate language-server processes.
 Migrating the TypeScript client does not remove its Node server dependency.
@@ -102,14 +102,14 @@ Migrating the TypeScript client does not remove its Node server dependency.
 ## Authenticated release AOT
 
 Version 0.2.4 keeps these Rust WASM clients and adds authenticated native AOT in
-the trusted publication stage. A matching AOT-capable Loom host skips local
+the trusted publication stage. A matching AOT-capable Loog host skips local
 compilation. Old hosts and incompatible profiles retain the portable WASM path.
 See `rust/AOT.md` for the authority boundary, native CI gate and measured costs.
 
 
 ### Local status-motion preview
 
-The unreleased clients use `loom:ui/motion@0.1.0`. CI's WIT snapshot includes
+The unreleased clients use `loog:ui/motion@0.1.0`. CI's WIT snapshot includes
 that interface; publication compiler and validator pins remain independent.
 A future motion-enabled release must align those publication tools with the
 motion-capable host. Current local staging keeps package versions unchanged and
@@ -117,7 +117,7 @@ does not publish or replace registry artifacts.
 
 `node language-clients/stage.mjs` prepares the three updated WASM clients and
 their existing servers under `language-clients/.work/packages`. Launch the
-motion-capable Loom with `LOOM_EXTENSIONS_DIR` pointing there, and open Go, Rust
+motion-capable Loog with `LOOG_EXTENSIONS_DIR` pointing there, and open Go, Rust
 and TypeScript files in a trusted workspace. Startup/indexing rotates the icon;
 ready, error and stopped states stay static. The four plugin-owned Material
 Design Icons use the matching host's generic filled-path icon capability.

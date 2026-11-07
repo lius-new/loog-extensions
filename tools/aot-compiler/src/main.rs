@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 4 {
         return Err("expected WASM TARGET CODE_OUTPUT METADATA_OUTPUT".into());
     }
-    // Versioned policy shared with loom-extension-host::aot::portable_engine.
+    // Versioned policy shared with loog-extension-host::aot::portable_engine.
     // Explicit targets use baseline CPU features, independent of the build worker.
     let mut config = wasmtime::Config::new();
     config.epoch_interruption(true);
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .ok_or("output requires a parent")?,
     )?;
     std::fs::write(&args[2], &code)?;
-    let metadata = serde_json::json!({"profile":"loom-wasmtime-50.0.1-portable-v1","target":args[1],"compatibility":format!("{:016x}",hash.finish()),"wasm_sha256":sha(&wasm),"code_sha256":sha(&code)});
+    let metadata = serde_json::json!({"profile":"loog-wasmtime-50.0.1-portable-v1","target":args[1],"compatibility":format!("{:016x}",hash.finish()),"wasm_sha256":sha(&wasm),"code_sha256":sha(&code)});
     std::fs::write(&args[3], serde_json::to_vec_pretty(&metadata)?)?;
     println!("{}", metadata);
     Ok(())

@@ -25,7 +25,7 @@ export function nodeKey(platform) {
 
 export const artifactName = (id, version, platform) => {
   assert(validPlatform(platform), `Not a platform: ${platform}`);
-  return `${id}-${version}-${platform}.loomext`;
+  return `${id}-${version}-${platform}.loogext`;
 };
 
 /** Which of the artifacts of a version this machine should install, if any. */

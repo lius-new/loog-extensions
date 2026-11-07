@@ -1,5 +1,5 @@
-// dev <package…> [--to dir]: unpack finished packages into a folder Loom loads extensions
-// from, to try them without publishing. Point Loom at the folder with LOOM_EXTENSIONS_DIR.
+// dev <package…> [--to dir]: unpack finished packages into a folder Loog loads extensions
+// from, to try them without publishing. Point Loog at the folder with LOOG_EXTENSIONS_DIR.
 // Build the packages however the extension's project builds them.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,13 +11,13 @@ import {ANY, hostPlatform} from '../lib/platform.mjs';
 import {packageFiles, platformOf} from '../lib/intake.mjs';
 import {parseArgs} from '../lib/cli.mjs';
 
-export const usage = 'dev <package or folder…> [--to dir]    Unpack finished packages into a folder Loom loads extensions from';
+export const usage = 'dev <package or folder…> [--to dir]    Unpack finished packages into a folder Loog loads extensions from';
 
 export async function run(argv) {
   const {options, ids: paths} = parseArgs(argv, {to: 'string'});
-  assert(paths.length, 'Name the .loomext packages, or the folders holding them');
-  const target = options.to ?? process.env.LOOM_EXTENSIONS_DIR;
-  assert(target, 'Say where to put them: --to <dir>, or set LOOM_EXTENSIONS_DIR');
+  assert(paths.length, 'Name the .loogext packages, or the folders holding them');
+  const target = options.to ?? process.env.LOOG_EXTENSIONS_DIR;
+  assert(target, 'Say where to put them: --to <dir>, or set LOOG_EXTENSIONS_DIR');
   const destination = path.resolve(target);
   fs.mkdirSync(destination, {recursive: true});
   const host = hostPlatform(), scratch = path.join(WORK, 'dev');

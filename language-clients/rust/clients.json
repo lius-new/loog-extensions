@@ -1,5 +1,5 @@
 {
-  "loom.lsp.gopls": {
+  "loog.lsp.gopls": {
     "languages": ["go"],
     "program": "${extension}/gopls",
     "args": [],
@@ -7,7 +7,7 @@
     "outermost": false,
     "fileFallback": false
   },
-  "loom.lsp.rust-analyzer": {
+  "loog.lsp.rust-analyzer": {
     "languages": ["rust"],
     "program": "${extension}/rust-analyzer",
     "args": [],
@@ -15,7 +15,7 @@
     "outermost": true,
     "fileFallback": true
   },
-  "loom.lsp.typescript-language-server": {
+  "loog.lsp.typescript-language-server": {
     "languages": ["javascript", "typescript"],
     "program": "${runtime.node}/node",
     "args": ["${extension}/node_modules/typescript-language-server/lib/cli.mjs", "--stdio"],

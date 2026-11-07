@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "loog.runtime.node",
+  "version": "0.1.0",
+  "name": "Node.js Runtime",
+  "publisher": "Loog",
+  "description": "The Node.js runtime that JavaScript language servers run on.",
+  "categories": ["Other"],
+  "keywords": ["node.js", "runtime"],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": { "loog": ">=0.1.8 <0.3" },
+  "contributes": {}
+}

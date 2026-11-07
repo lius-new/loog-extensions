@@ -1,5 +1,5 @@
 // The registry index: every published extension with its versions and, for each
-// version, the package per platform. Loom fetches this one file (and its signature)
+// version, the package per platform. Loog fetches this one file (and its signature)
 // and decides from it what to offer and which package to download.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -65,7 +65,7 @@ export function describe(id, dist = DIST) {
   };
   // What the extension is for is said by the field it has: `highlight` for syntax
   // colouring (with the file types it recognizes), `language_service` for hints and
-  // diagnostics (with the languages it serves). Loom decides nothing from ids.
+  // diagnostics (with the languages it serves). Loog decides nothing from ids.
   const highlight = [];
   for (const resource of manifest.contributes?.highlight ?? []) {
     const pack = path.join(directory, ...resource.path.split('/'));
@@ -146,7 +146,7 @@ export function validateIndex(index) {
       if (!validVersion(version.version)) here(`invalid version ${version.version}`);
       if (versions.has(version.version)) here(`version ${version.version} listed twice`);
       versions.add(version.version);
-      if (version.engines?.loom !== undefined && !validRange(version.engines.loom)) here(`${version.version}: invalid engines.loom`);
+      if (version.engines?.loog !== undefined && !validRange(version.engines.loog)) here(`${version.version}: invalid engines.loog`);
       if (!version.artifacts?.length) here(`${version.version}: no packages`);
       const platforms = new Set();
       for (const artifact of version.artifacts ?? []) {

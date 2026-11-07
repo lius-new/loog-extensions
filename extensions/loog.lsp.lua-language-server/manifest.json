@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.lua-language-server",
+  "version": "0.1.0",
+  "name": "Lua Language Server Language Server",
+  "publisher": "Loog",
+  "description": "The Lua Language Server language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "lua language server",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_service": {
+      "servers": [
+        {
+          "id": "loog.lsp.lua-language-server.lua-language-server",
+          "name": "Lua Language Server",
+          "languages": [
+            "lua"
+          ],
+          "command": "${extension}/bin/lua-language-server",
+          "root_markers": [
+            ".luarc.json",
+            ".luarc.jsonc"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "lua",
+              "language_id": "lua"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

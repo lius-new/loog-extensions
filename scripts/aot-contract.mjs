@@ -8,7 +8,7 @@ import {extractPackage,createPackage} from './lib/archive.mjs';
 import {packageFiles,platformOf} from './lib/intake.mjs';
 import {generateKeyPair} from './lib/sign.mjs';
 import {prepareAot} from './prepare-aot.mjs';
-const clients=['loom.lsp.gopls','loom.lsp.rust-analyzer','loom.lsp.typescript-language-server'];
+const clients=['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server'];
 export function officialInputs(paths){return packageFiles(paths).filter(file=>clients.some(id=>path.basename(file).startsWith(id+'-')));}
 const output=value=>{if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,value+'\n');};
 export async function emitCorpus(files,destination,{compiler,work=path.join(ROOT,'.work/aot-contract')}={}){
@@ -23,7 +23,7 @@ export async function emitCorpus(files,destination,{compiler,work=path.join(ROOT
   const thin=path.join(work,'thin',manifest.id);fs.mkdirSync(thin,{recursive:true});
   fs.writeFileSync(path.join(thin,'manifest.json'),JSON.stringify({id:manifest.id,version:manifest.version,component:'extension.wasm'})+'\n');
   fs.copyFileSync(path.join(dir,'extension.wasm'),path.join(thin,'extension.wasm'));
-  const archive=path.join(work,'inputs',`${manifest.id}-${manifest.version}-any.loomext`);await createPackage(thin,archive,manifest.id);
+  const archive=path.join(work,'inputs',`${manifest.id}-${manifest.version}-any.loogext`);await createPackage(thin,archive,manifest.id);
   components.set(manifest.id,{digest,version:manifest.version,archive});
  }
  const keys=generateKeyPair();
@@ -33,7 +33,7 @@ export async function emitCorpus(files,destination,{compiler,work=path.join(ROOT
   for(const [id,item]of components)await extractPackage(path.join(ready,path.basename(item.archive)),destination,id);
  }
  fs.writeFileSync(path.join(destination,'public-key.txt'),keys.publicRaw+'\n');
- fs.writeFileSync(path.join(destination,'corpus.json'),JSON.stringify({schema:1,profile:'loom-wasmtime-50.0.1-portable-v1',plugins:[...components.keys()],production_installable:false},null,2)+'\n');
+ fs.writeFileSync(path.join(destination,'corpus.json'),JSON.stringify({schema:1,profile:'loog-wasmtime-50.0.1-portable-v1',plugins:[...components.keys()],production_installable:false},null,2)+'\n');
  output('count='+components.size);console.log(`Conformance corpus: ${components.size} clients, six targets each`);
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
@@ -41,7 +41,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
  if(mode==='plan'){output('has-clients='+Boolean(officialInputs(args).length));}
  else if(mode==='emit'){
   const [destination,...inputs]=args;assert(destination&&inputs.length,'expected emit DEST INPUTS...');
-  const compiler=process.env.LOOM_AOT_COMPILER??path.join(ROOT,'tools/aot-compiler/target/release/loom-aot-compiler'+(process.platform==='win32'?'.exe':''));
+  const compiler=process.env.LOOG_AOT_COMPILER??path.join(ROOT,'tools/aot-compiler/target/release/loog-aot-compiler'+(process.platform==='win32'?'.exe':''));
   await emitCorpus(officialInputs(inputs),path.resolve(destination),{compiler});
  }else throw new Error('expected plan INPUTS... or emit DEST INPUTS...');
 }

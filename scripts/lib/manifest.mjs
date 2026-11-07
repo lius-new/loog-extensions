@@ -1,4 +1,4 @@
-// Checks an extension folder with the rules Loom applies when it loads one, and
+// Checks an extension folder with the rules Loog applies when it loads one, and
 // the stricter ones a package must meet to be published. Problems are collected,
 // not thrown, so one run reports everything wrong.
 import fs from 'node:fs';
@@ -6,7 +6,7 @@ import path from 'node:path';
 import {files, readJson, relative} from './util.mjs';
 import {validRange, validVersion} from './semver.mjs';
 
-// Keep in step with `CAPABILITIES` and `EVENTS` in Loom's src/features/extensions/manifest.rs.
+// Keep in step with `CAPABILITIES` and `EVENTS` in Loog's src/features/extensions/manifest.rs.
 export const CAPABILITIES = ['documents.read', 'workspace.edit', 'workspace.files.read', 'workspace.files.write',
   'events', 'settings', 'languages', 'storage', 'network', 'tasks', 'process.execute-local'];
 // The categories an extension may list, at most three; and the size limits for its documents.
@@ -25,7 +25,7 @@ const QUERY_FILES = ['highlights.scm', 'injections.scm'];
 /**
  * The contribution points of a manifest, each named by what it is for: highlight
  * and highlight_queries colour syntax, language_service answers hints and
- * diagnostics, themes are colour themes. Keep in step with `Contributes` in Loom's
+ * diagnostics, themes are colour themes. Keep in step with `Contributes` in Loog's
  * src/features/extensions/manifest.rs, which refuses any other name.
  */
 export const CONTRIBUTIONS = ['commands', 'themes', 'snippets', 'languages', 'highlight', 'highlight_queries', 'language_service', 'settings'];
@@ -34,11 +34,11 @@ export const PROVIDER_KINDS = ['completion', 'diagnostics', 'formatting', 'code-
 
 /** What a package of this id must contribute, by the naming scheme. */
 export const KINDS = [
-  {prefix: 'loom.lang.', name: 'highlight', need: c => c.highlight?.length, message: 'contribute highlight'},
-  {prefix: 'loom.lsp.', name: 'language service', need: c => c.language_service?.providers?.length || c.language_service?.servers?.length, message: 'declare language service providers'},
-  {prefix: 'loom.theme.', name: 'theme', need: c => c.themes?.length, message: 'contribute a theme'},
-  {prefix: 'loom.queries.', name: 'highlight queries', need: c => c.highlight_queries?.length, message: 'contribute highlight queries'},
-  {prefix: 'loom.runtime.', name: 'runtime', need: () => true, message: ''},
+  {prefix: 'loog.lang.', name: 'highlight', need: c => c.highlight?.length, message: 'contribute highlight'},
+  {prefix: 'loog.lsp.', name: 'language service', need: c => c.language_service?.providers?.length || c.language_service?.servers?.length, message: 'declare language service providers'},
+  {prefix: 'loog.theme.', name: 'theme', need: c => c.themes?.length, message: 'contribute a theme'},
+  {prefix: 'loog.queries.', name: 'highlight queries', need: c => c.highlight_queries?.length, message: 'contribute highlight queries'},
+  {prefix: 'loog.runtime.', name: 'runtime', need: () => true, message: ''},
 ];
 export const kindOf = id => KINDS.find(kind => id.startsWith(kind.prefix));
 
@@ -112,9 +112,9 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   if (!validId(id)) add(`invalid extension id ${JSON.stringify(id)}`);
   else if (path.basename(dir) !== id && !built) add(`the folder is named ${path.basename(dir)} but the id is ${id}`);
   if (!validVersion(manifest.version)) add(`invalid version ${JSON.stringify(manifest.version)}`);
-  if (manifest.engines?.loom !== undefined && !validRange(manifest.engines.loom)) add(`invalid engines.loom range ${JSON.stringify(manifest.engines.loom)}`);
-  else if (publishing && manifest.engines?.loom === undefined) add('engines.loom is required');
-  // What people see. Loom checks these when it loads a package; publishing also needs them all.
+  if (manifest.engines?.loog !== undefined && !validRange(manifest.engines.loog)) add(`invalid engines.loog range ${JSON.stringify(manifest.engines.loog)}`);
+  else if (publishing && manifest.engines?.loog === undefined) add('engines.loog is required');
+  // What people see. Loog checks these when it loads a package; publishing also needs them all.
   for (const [field, max] of [['name', 60], ['publisher', 60], ['description', 200], ['license', 100]]) {
     const value = manifest[field];
     if (value === undefined) continue;
@@ -163,7 +163,7 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   for (const text of manifest.recommends ?? []) if (!validId(text)) add(`invalid recommendation ${JSON.stringify(text)}`);
 
   const contributes = manifest.contributes ?? {};
-  // Loom refuses a manifest with a contribution point it does not know, so a package
+  // Loog refuses a manifest with a contribution point it does not know, so a package
   // written with an old or misspelled name is caught before it is published.
   for (const key of Object.keys(contributes)) {
     if (!CONTRIBUTIONS.includes(key)) add(`contributes.${key} is not a contribution point; use one of ${CONTRIBUTIONS.join(', ')}`);
@@ -260,7 +260,7 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
   }
   const kind = validId(id) ? kindOf(id) : null;
   if (kind && !kind.need(contributes)) add(`an extension named ${kind.prefix}* must ${kind.message}`);
-  if (kind?.name === 'highlight' && !(manifest.recommends ?? []).every(item => item.startsWith('loom.lsp.'))) add('a highlight extension recommends only language service extensions (loom.lsp.*)');
+  if (kind?.name === 'highlight' && !(manifest.recommends ?? []).every(item => item.startsWith('loog.lsp.'))) add('a highlight extension recommends only language service extensions (loog.lsp.*)');
 
   // Grammars run in a sandbox; a native library would not.
   try { for (const name of files(dir)) if (NATIVE.test(name) && kind?.name !== 'language service' && kind?.name !== 'runtime') add(`${name}: native libraries are not allowed in this kind of extension`); }

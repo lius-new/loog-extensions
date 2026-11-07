@@ -10,7 +10,7 @@ const repository = path.resolve(import.meta.dirname, '..');
 const output = path.join(import.meta.dirname, '.work/packages');
 fs.mkdirSync(output, { recursive: true });
 const staged = [];
-for (const id of ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server']) {
+for (const id of ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server']) {
   const source = path.join(repository, 'extensions', id);
   const manifest = JSON.parse(fs.readFileSync(path.join(source, 'manifest.json'), 'utf8'));
   const component = buildClient(source);
@@ -29,10 +29,10 @@ for (const id of ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescri
   console.log(`${id}: ${fs.statSync(path.join(target, 'extension.wasm')).size} WASM bytes`);
   staged.push({directory: target});
 }
-const runtimeManifest = JSON.parse(fs.readFileSync(path.join(repository, 'extensions/loom.runtime.node/manifest.json'), 'utf8'));
+const runtimeManifest = JSON.parse(fs.readFileSync(path.join(repository, 'extensions/loog.runtime.node/manifest.json'), 'utf8'));
 const runtime = developmentDirectory(output, runtimeManifest);
 fs.mkdirSync(runtime, { recursive: true });
-for (const name of ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg']) fs.copyFileSync(path.join(repository, 'extensions/loom.runtime.node', name), path.join(runtime, name));
+for (const name of ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg']) fs.copyFileSync(path.join(repository, 'extensions/loog.runtime.node', name), path.join(runtime, name));
 fs.copyFileSync(process.execPath, path.join(runtime, 'node.exe'));
 staged.push({directory: runtime});
 registerDevelopment(output, staged);

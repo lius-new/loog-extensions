@@ -7,7 +7,7 @@ import {loadConfig} from '../lib/config.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const shared = file => file.startsWith('.github/workflows/') || file.startsWith('scripts/') ||
-  file.startsWith('tools/') || ['package.json', 'package-lock.json', 'loom-ext.toml'].includes(file);
+  file.startsWith('tools/') || ['package.json', 'package-lock.json', 'loog-ext.toml'].includes(file);
 
 export function selectExtensions(available, files, {all = false, requested = ''} = {}) {
   const ids = [...new Set(available)].sort();
@@ -19,7 +19,7 @@ export function selectExtensions(available, files, {all = false, requested = ''}
   if (all || files.some(shared)) return ids;
   const changed = new Set(files.filter(file => file.startsWith('extensions/')).map(file => file.split('/')[1]));
   if (files.some(file => file.startsWith('language-clients/'))) {
-    for (const id of ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server']) changed.add(id);
+    for (const id of ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server']) changed.add(id);
   }
   return ids.filter(id => changed.has(id));
 }
@@ -42,9 +42,9 @@ export function changedFiles(eventName, event, root = ROOT) {
 }
 
 export function run(env = process.env, root = ROOT) {
-  const deferred = fs.existsSync(path.join(root, 'loom-ext.toml')) ? loadConfig(root).deferred : [];
+  const deferred = fs.existsSync(path.join(root, 'loog-ext.toml')) ? loadConfig(root).deferred : [];
   const available = fs.readdirSync(path.join(root, 'extensions'), {withFileTypes: true})
-    .filter(entry => entry.isDirectory() && /^loom\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(entry.name))
+    .filter(entry => entry.isDirectory() && /^loog\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(entry.name))
     .map(entry => entry.name).filter(id => !deferred.includes(id));
   const event = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf8'));
   const changes = changedFiles(env.GITHUB_EVENT_NAME, event, root);

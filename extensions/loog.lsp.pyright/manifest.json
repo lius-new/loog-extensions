@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.pyright",
+  "version": "0.1.0",
+  "name": "Pyright Language Server",
+  "publisher": "Loog",
+  "description": "The Pyright language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "pyright",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "requires": [
+    "loog.runtime.node@^0.1.0"
+  ],
+  "contributes": {
+    "language_service": {
+      "servers": [
+        {
+          "id": "loog.lsp.pyright.pyright",
+          "name": "Pyright",
+          "languages": [
+            "python"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/pyright/langserver.index.js",
+            "--stdio"
+          ],
+          "root_markers": [
+            "pyrightconfig.json",
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "requirements.txt"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "priority": 10,
+          "bindings": [
+            {
+              "language": "python",
+              "language_id": "python"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

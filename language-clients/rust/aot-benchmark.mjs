@@ -4,16 +4,16 @@ import path from 'node:path';
 import os from 'node:os';
 import {spawnSync,execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-const usage='node language-clients/rust/aot-benchmark.mjs --loom <checkout> --host <release-test-executable> --baseline <extensions-root> --candidate <extensions-root> --out <empty-directory> [--language rust|javascript|typescript|go] [--runs 3] [--cost <component_cost-executable>] [--test-authority <benchmark-public-key-file>]';
+const usage='node language-clients/rust/aot-benchmark.mjs --loog <checkout> --host <release-test-executable> --baseline <extensions-root> --candidate <extensions-root> --out <empty-directory> [--language rust|javascript|typescript|go] [--runs 3] [--cost <component_cost-executable>] [--test-authority <benchmark-public-key-file>]';
 const argv=process.argv.slice(2);
 if(argv.includes('--help')){console.log(usage);process.exit(0);}
 const options={};
-for(let at=0;at<argv.length;at+=2){const key=argv[at];if(!['--loom','--host','--baseline','--candidate','--out','--runs','--cost','--language','--test-authority'].includes(key)||!argv[at+1])throw new Error(usage);options[key.slice(2)]=argv[at+1];}
+for(let at=0;at<argv.length;at+=2){const key=argv[at];if(!['--loog','--host','--baseline','--candidate','--out','--runs','--cost','--language','--test-authority'].includes(key)||!argv[at+1])throw new Error(usage);options[key.slice(2)]=argv[at+1];}
 for(const key of ['host','baseline','candidate','out'])if(!options[key])throw new Error('Missing --'+key+'; '+usage);
-const loom=path.resolve(options.loom??process.env.LOOM_SOURCE??path.join(import.meta.dirname,'../../../..'));
+const loog=path.resolve(options.loog??process.env.LOOG_SOURCE??path.join(import.meta.dirname,'../../../..'));
 const extensions=path.resolve(import.meta.dirname,'../..');
 const executable=path.resolve(options.host);
-const cost=path.resolve(options.cost??path.join(loom,'target/release/examples/component_cost'+(process.platform==='win32'?'.exe':'')));
+const cost=path.resolve(options.cost??path.join(loog,'target/release/examples/component_cost'+(process.platform==='win32'?'.exe':'')));
 const destination=path.resolve(options.out);
 if(fs.existsSync(destination)&&fs.readdirSync(destination).length)throw new Error('--out must be empty so cold-cache measurements cannot reuse old artifacts');
 fs.mkdirSync(destination,{recursive:true});
@@ -24,7 +24,7 @@ const packages={wasm:path.resolve(options.baseline),aot:path.resolve(options.can
 const publicKeyFile=options['test-authority']?path.resolve(options['test-authority']):null;
 const publicKey=publicKeyFile?fs.readFileSync(publicKeyFile,'utf8').trim():null;
 const language=options.language??'rust';
-const ids={rust:'loom.lsp.rust-analyzer',javascript:'loom.lsp.typescript-language-server',typescript:'loom.lsp.typescript-language-server',go:'loom.lsp.gopls'};
+const ids={rust:'loog.lsp.rust-analyzer',javascript:'loog.lsp.typescript-language-server',typescript:'loog.lsp.typescript-language-server',go:'loog.lsp.gopls'};
 const id=ids[language];if(!id)throw new Error('Unsupported --language');
 const versions=Object.fromEntries(['wasm','aot'].map(route=>[route,JSON.parse(fs.readFileSync(path.join(packages[route],'extensions.json'),'utf8')).extensions[id].version]));
 const components=Object.fromEntries(['wasm','aot'].map(route=>[route,path.join(packages[route],id,versions[route],'extension.wasm')]));
@@ -40,33 +40,33 @@ const serverDigest=route=>language==='javascript'||language==='typescript'
  ?treeDigest(path.join(packages[route],id,versions[route],'node_modules')):digest(server(route));
 if(digest(components.wasm)!==digest(components.aot))throw new Error('WASM inputs differ; this is an AOT-only comparison');
 if(serverDigest('wasm')!==serverDigest('aot'))throw new Error('Server payloads differ');
-const runtime=route=>{const index=JSON.parse(fs.readFileSync(path.join(packages[route],'extensions.json'),'utf8'));const version=index.extensions['loom.runtime.node']?.version;return version?path.join(packages[route],'loom.runtime.node',version,'node'+(process.platform==='win32'?'.exe':'')):null;};
+const runtime=route=>{const index=JSON.parse(fs.readFileSync(path.join(packages[route],'extensions.json'),'utf8'));const version=index.extensions['loog.runtime.node']?.version;return version?path.join(packages[route],'loog.runtime.node',version,'node'+(process.platform==='win32'?'.exe':'')):null;};
 if((language==='javascript'||language==='typescript')&&digest(runtime('wasm'))!==digest(runtime('aot')))throw new Error('Node runtimes differ');
 function run(command,args,env,label){
-  const result=spawnSync(command,args,{cwd:loom,env:{...process.env,...env},encoding:'utf8',windowsHide:true,maxBuffer:16*1024*1024,timeout:180000});
+  const result=spawnSync(command,args,{cwd:loog,env:{...process.env,...env},encoding:'utf8',windowsHide:true,maxBuffer:16*1024*1024,timeout:180000});
   fs.writeFileSync(path.join(destination,label+'.log'),(result.stdout??'')+(result.stderr??''));
   if(result.status!==0)throw new Error(`${label} failed (${result.status}): ${result.error??''}\n${result.stderr??''}\n${result.stdout??''}`);
   return result.stdout;
 }
 function native(route,bytes,label,cache,checks=false){
-  const env={LOOM_MIGRATION_LANGUAGE:language,LOOM_MIGRATION_BYTES:String(bytes),LOOM_MIGRATION_PACKAGES:packages[route],LOOM_MIGRATION_CACHE:cache};
+  const env={LOOG_MIGRATION_LANGUAGE:language,LOOG_MIGRATION_BYTES:String(bytes),LOOG_MIGRATION_PACKAGES:packages[route],LOOG_MIGRATION_CACHE:cache};
   // Empty values count as present for var_os, so remove unrelated inherited switches.
   const inherited=process.env;
-  delete inherited.LOOM_MIGRATION_COMPARE;delete inherited.LOOM_MIGRATION_FULL_CHECKS;delete inherited.LOOM_MIGRATION_VARIANTS;delete inherited.LOOM_MIGRATION_TRACE;delete inherited.LOOM_MIGRATION_REQUIRE_AOT;delete inherited.LOOM_MIGRATION_AOT_PUBLIC_KEY;
-  if(publicKey)env.LOOM_MIGRATION_AOT_PUBLIC_KEY=publicKey;
-  if(route==='aot')env.LOOM_MIGRATION_REQUIRE_AOT='1';
-  if(checks)env.LOOM_MIGRATION_FULL_CHECKS='1';
+  delete inherited.LOOG_MIGRATION_COMPARE;delete inherited.LOOG_MIGRATION_FULL_CHECKS;delete inherited.LOOG_MIGRATION_VARIANTS;delete inherited.LOOG_MIGRATION_TRACE;delete inherited.LOOG_MIGRATION_REQUIRE_AOT;delete inherited.LOOG_MIGRATION_AOT_PUBLIC_KEY;
+  if(publicKey)env.LOOG_MIGRATION_AOT_PUBLIC_KEY=publicKey;
+  if(route==='aot')env.LOOG_MIGRATION_REQUIRE_AOT='1';
+  if(checks)env.LOOG_MIGRATION_FULL_CHECKS='1';
   run(executable,['--ignored','--exact','app::extensions::tests::official_language_components_reach_native_consumers_without_host_servers','--nocapture','--test-threads=1'],env,label);
-  const root=path.join(loom,'target/language-migration/projects',bytes===0?language:`${language}-${bytes}`);
+  const root=path.join(loog,'target/language-migration/projects',bytes===0?language:`${language}-${bytes}`);
   const report=JSON.parse(fs.readFileSync(path.join(root,'native-observed.json'),'utf8'));
   if(report.code_source!==(route==='aot'?'published-aot':label.includes('cold')?'compiled':'local-cache'))throw new Error(label+': unexpected code source '+report.code_source);
   for(const item of Object.values(report.small_document)){if(item.count!==100||item.samples_ms.length!==100)throw new Error(`${label}: incomplete cohort`);}
   fs.writeFileSync(path.join(destination,label+'.json'),JSON.stringify({route,cache_mode:label.includes('cold')?'cold':'warm',...report},null,2)+'\n');
   console.log(`${label}: initialized=${report.initialized_ms.toFixed(1)} ms, usable=${report.first_usable_ms.toFixed(1)} ms; completion p95=${report.small_document.Completion.p95_ms.toFixed(3)} ms`);
 }
-const metadata={aot_profile:'loom-wasmtime-50.0.1-portable-v1',benchmark_authority:publicKey?'temporary test key; not a production trust override':'official',language,plugin:id,versions,started_utc:new Date().toISOString(),timezone:'Asia/Shanghai',os:`${os.platform()} ${os.release()} ${os.arch()}`,cpu:os.cpus()[0].model,total_memory_bytes:os.totalmem(),
+const metadata={aot_profile:'loog-wasmtime-50.0.1-portable-v1',benchmark_authority:publicKey?'temporary test key; not a production trust override':'official',language,plugin:id,versions,started_utc:new Date().toISOString(),timezone:'Asia/Shanghai',os:`${os.platform()} ${os.release()} ${os.arch()}`,cpu:os.cpus()[0].model,total_memory_bytes:os.totalmem(),
   rust:execFileSync('rustc',['--version'],{encoding:'utf8'}).trim(),node:process.version,
-  loom_commit:execFileSync('git',['-c','safe.directory='+loom,'rev-parse','HEAD'],{cwd:loom,encoding:'utf8'}).trim(),
+  loog_commit:execFileSync('git',['-c','safe.directory='+loog,'rev-parse','HEAD'],{cwd:loog,encoding:'utf8'}).trim(),
   extensions_commit:execFileSync('git',['-c','safe.directory='+extensions,'rev-parse','HEAD'],{cwd:extensions,encoding:'utf8'}).trim(),
   component_sha256:Object.fromEntries(['wasm','aot'].map(route=>[route,digest(components[route])])),
   component_bytes:Object.fromEntries(['wasm','aot'].map(route=>[route,fs.statSync(components[route]).size])),
@@ -74,7 +74,7 @@ const metadata={aot_profile:'loom-wasmtime-50.0.1-portable-v1',benchmark_authori
   server_version:language==='rust'?execFileSync(server('wasm'),['--version'],{encoding:'utf8'}).trim():language==='go'?execFileSync(server('wasm'),['version'],{encoding:'utf8'}).trim():JSON.parse(fs.readFileSync(path.join(packages.wasm,id,versions.wasm,'node_modules/typescript-language-server/package.json'),'utf8')).version,
   node_runtime_sha256:runtime('wasm')?digest(runtime('wasm')):null,
   executable_sha256:digest(executable),cost_executable_sha256:digest(cost),
-  methodology:{native_cold_repeats:repeats,native_repeats:repeats,samples_per_operation_per_repeat:100,warmups_per_operation:10,readiness:'10 consecutive usable completion/hover/definition probes and at least 2 seconds; first usable time recorded separately',sizes:[0,1048576,8388608],memory:'Loom process resident/private bytes, excluding separately running language servers and their child processes; TS server still uses Node; pre-activation snapshots retained',component_repeats:repeats,builds_during_measurement:false},
+  methodology:{native_cold_repeats:repeats,native_repeats:repeats,samples_per_operation_per_repeat:100,warmups_per_operation:10,readiness:'10 consecutive usable completion/hover/definition probes and at least 2 seconds; first usable time recorded separately',sizes:[0,1048576,8388608],memory:'Loog process resident/private bytes, excluding separately running language servers and their child processes; TS server still uses Node; pre-activation snapshots retained',component_repeats:repeats,builds_during_measurement:false},
 };
 fs.writeFileSync(path.join(destination,'metadata.json'),JSON.stringify(metadata,null,2)+'\n');
 // Separate cold end-to-end measurements also exercise the full negotiated surface.

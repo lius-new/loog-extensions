@@ -9,7 +9,7 @@ import {fingerprint} from '../lib/release.mjs';
 import {language, theme, workspace, write} from './fixtures.mjs';
 
 /** A repository holding extensions/<id>, and the packages of it built "elsewhere". */
-function setup(t, {make = theme, id = 'loom.theme.demo', platforms = ['any']} = {}) {
+function setup(t, {make = theme, id = 'loog.theme.demo', platforms = ['any']} = {}) {
   const root = workspace(t);
   make(path.join(root, 'extensions'), id);
   execFileSync('git', ['init', '-q'], {cwd: root});
@@ -25,7 +25,7 @@ function setup(t, {make = theme, id = 'loom.theme.demo', platforms = ['any']} = 
         const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
         write(folder, 'manifest.json', {...manifest, version});
         for (const [file, content] of Object.entries(extra)) write(folder, file, content);
-        const output = path.join(packages, `${id}-${version}-${platform}.loomext`);
+        const output = path.join(packages, `${id}-${version}-${platform}.loogext`);
         await createPackage(folder, output, id);
         files.push(output);
       }
@@ -46,15 +46,15 @@ test('packages are taken in by what they are, whatever project made them', async
   assert.equal(result.source.fingerprint, fingerprint(s.root, s.id));
 });
 
-test('a package Loom cannot import is rejected, and so is one named for something else', async t => {
-  const s = setup(t, {make: language, id: 'loom.lang.demo'});
+test('a package Loog cannot import is rejected, and so is one named for something else', async t => {
+  const s = setup(t, {make: language, id: 'loog.lang.demo'});
   const [file] = await s.build();
   const [bad] = await intake([file], {...s, validator: 'validator', validate: () => { throw new Error('grammar does not load'); }});
   assert.match(bad.error, /grammar does not load/);
-  const renamed = path.join(s.packages, 'something-else.loomext');
+  const renamed = path.join(s.packages, 'something-else.loogext');
   fs.copyFileSync(file, renamed);
-  await assert.rejects(intake([renamed], {...s, ...accepts()}), /is named loom\.lang\.demo-1\.0\.0-<platform>\.loomext/);
-  assert.throws(() => platformOf('x/loom.lang.demo-1.0.0-plan9.loomext', {id: 'loom.lang.demo', version: '1.0.0'}), /not a platform/);
+  await assert.rejects(intake([renamed], {...s, ...accepts()}), /is named loog\.lang\.demo-1\.0\.0-<platform>\.loogext/);
+  assert.throws(() => platformOf('x/loog.lang.demo-1.0.0-plan9.loogext', {id: 'loog.lang.demo', version: '1.0.0'}), /not a platform/);
 });
 
 test('a published version is skipped when unchanged, and refused when the extension changed under it', async t => {

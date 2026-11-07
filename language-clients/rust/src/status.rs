@@ -1,9 +1,9 @@
 //! What the client says about its language service: a state and a line, per session.
-//! Loom draws the icon, the words and the list; nothing here describes a widget.
+//! Loog draws the icon, the words and the list; nothing here describes a widget.
 #[cfg(test)]
 use crate::host::status as service;
 #[cfg(not(test))]
-use crate::loom::service::status as service;
+use crate::loog::service::status as service;
 use std::collections::BTreeMap;
 
 /// How a session is doing: `rank` 0 stopped, 1 ready, 2 working, 3 error.
@@ -13,7 +13,7 @@ pub struct Status {
     pub detail: String,
 }
 
-/// The sessions reported to Loom, each under a short key of its own.
+/// The sessions reported to Loog, each under a short key of its own.
 #[derive(Default)]
 pub struct Widgets {
     keys: BTreeMap<String, String>,

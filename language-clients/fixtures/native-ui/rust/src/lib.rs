@@ -1,16 +1,16 @@
 //! Native UI fixture using the production Rust language client.
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-use exports::loom::extension::guest::Guest;
+use exports::loog::extension::guest::Guest;
 
-use loom::extension::types::*;
+use loog::extension::types::*;
 #[path = "../../../../rust/src/client.rs"]
 mod client;
 #[path = "../../../../rust/src/config.rs"]
 mod config;
 mod host {
-    pub use crate::loom::extension::host::*;
-    use crate::loom::extension::types::{HostError, ProcessRequest};
+    pub use crate::loog::extension::host::*;
+    use crate::loog::extension::types::{HostError, ProcessRequest};
 
     // Test-only launch options exercise delayed and failed fake-server replies.
     pub fn process_spawn(request: &ProcessRequest) -> Result<u64, HostError> {
@@ -28,7 +28,7 @@ mod host {
                     .collect()
             })
             .unwrap_or_default();
-        crate::loom::extension::host::process_spawn(&request)
+        crate::loog::extension::host::process_spawn(&request)
     }
 }
 #[path = "../../../../rust/src/protocol.rs"]

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 export function workspace(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'loom-ext-test-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'loog-ext-test-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
   return root;
 }
@@ -19,10 +19,10 @@ export function write(root, file, content) {
 export const WASM = Buffer.from([0, 0x61, 0x73, 0x6d, 1, 0, 0, 0, 0, 0]);
 
 const base = (id, extra = {}) => ({
-  schema: 1, id, version: '1.0.0', name: 'Test', publisher: 'Loom', description: 'A test.',
+  schema: 1, id, version: '1.0.0', name: 'Test', publisher: 'Loog', description: 'A test.',
   categories: ['Syntax Highlighting'], license: 'MIT', repository: 'https://github.com/acme/extensions',
   icon: 'icon.svg', readme: 'README.md', changelog: 'CHANGELOG.md',
-  engines: {loom: '>=0.1.8 <0.3'}, ...extra,
+  engines: {loog: '>=0.1.8 <0.3'}, ...extra,
 });
 
 /** The files every published extension carries beside its manifest. */
@@ -33,7 +33,7 @@ function documents(dir) {
 }
 
 /** A folder `extensions/<id>` holding a valid theme extension. */
-export function theme(root, id = 'loom.theme.demo') {
+export function theme(root, id = 'loog.theme.demo') {
   const dir = path.join(root, id);
   write(dir, 'manifest.json', base(id, {categories: ['Themes'], contributes: {themes: [{id: `${id}.dark`, path: 'themes/dark.json'}]}}));
   write(dir, 'themes/dark.json', {name: 'Dark', base: 'aura-dark'});
@@ -42,7 +42,7 @@ export function theme(root, id = 'loom.theme.demo') {
 }
 
 /** A valid language extension with one grammar. */
-export function language(root, id = 'loom.lang.demo', name = 'demo') {
+export function language(root, id = 'loog.lang.demo', name = 'demo') {
   const dir = path.join(root, id);
   write(dir, 'manifest.json', base(id, {contributes: {highlight: [{id: `${id}.grammar`, path: 'tree-sitter.json'}]}}));
   write(dir, 'tree-sitter.json', {grammars: [{name, 'file-types': [name]}]});
@@ -53,7 +53,7 @@ export function language(root, id = 'loom.lang.demo', name = 'demo') {
 }
 
 /** A valid language server extension whose binary is in the folder. */
-export function server(root, id = 'loom.lsp.demo') {
+export function server(root, id = 'loog.lsp.demo') {
   const dir = path.join(root, id);
   write(dir, 'manifest.json', base(id, {
     categories: ['Language Services'],

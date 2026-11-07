@@ -1,0 +1,22 @@
+# Settings for the loog-ext tools. See docs/tools.md.
+schema = 1
+
+# Where releases are published and downloaded from.
+repository = "lius-new/loog-extensions"
+
+# The extensions Loog ships inside its installer. `lock` pins exactly these.
+bundled = ["loog.theme.aura", "loog.lang.json", "loog.lang.markdown"]
+
+# Historical host-LSP recipes retained until their component migration. They are
+# excluded from new builds/publication; published releases remain available.
+deferred = ["loog.lsp.bash-language-server", "loog.lsp.biome", "loog.lsp.clangd", "loog.lsp.lua-language-server", "loog.lsp.marksman", "loog.lsp.pyright", "loog.lsp.ruff", "loog.lsp.taplo", "loog.lsp.vscode-langservers-extracted", "loog.lsp.yaml-language-server", "loog.lsp.zls"]
+
+[index]
+# Names the public key the application uses to check the index signature.
+key-id = "index-2026-1"
+# How long a signed index stays valid, in days.
+validity-days = 30
+
+# Trusted index public keys; private keys remain in Actions secrets.
+[index.keys]
+index-2026-1 = "rB3b9rxiXnaM5RDpE4QYDT5M3aJxWBByg7XePFL5ORo="

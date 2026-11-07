@@ -1,6 +1,6 @@
-// `loom-ext-validate` is built by Loom's own repository, from the same loader and
-// query compilers the application uses, and published with each Loom release. This
-// repository only runs it: `loom-ext-validate <extension-folder> [--samples file]`
+// `loog-ext-validate` is built by Loog's own repository, from the same loader and
+// query compilers the application uses, and published with each Loog release. This
+// repository only runs it: `loog-ext-validate <extension-folder> [--samples file]`
 // prints one JSON object per grammar (`{"grammar": "rust", "colored": 42}`) and exits
 // with 0 when the folder loads and every sample is colored.
 import fs from 'node:fs';
@@ -13,14 +13,14 @@ import {hostPlatform} from './platform.mjs';
 const exe = process.platform === 'win32' ? '.exe' : '';
 export const validatorLock = (root = ROOT) => path.join(root, 'tools', 'validator.lock');
 
-/** The validator binary to use: LOOM_EXT_VALIDATE, or the one fetched into tools/bin. */
+/** The validator binary to use: LOOG_EXT_VALIDATE, or the one fetched into tools/bin. */
 export function findValidator(root = ROOT) {
-  const given = process.env.LOOM_EXT_VALIDATE;
+  const given = process.env.LOOG_EXT_VALIDATE;
   if (given) {
-    assert(fs.existsSync(given), `LOOM_EXT_VALIDATE points at ${given}, which does not exist`);
+    assert(fs.existsSync(given), `LOOG_EXT_VALIDATE points at ${given}, which does not exist`);
     return path.resolve(given);
   }
-  const local = path.join(root, 'tools', 'bin', `loom-ext-validate${exe}`);
+  const local = path.join(root, 'tools', 'bin', `loog-ext-validate${exe}`);
   return fs.existsSync(local) ? local : null;
 }
 
@@ -32,7 +32,7 @@ export async function fetchValidator({root = ROOT, offline = false} = {}) {
   assert(lock.schema === 1, 'tools/validator.lock: schema must be 1');
   const pin = lock.platforms?.[hostPlatform()];
   if (!pin) return null;
-  const target = path.join(root, 'tools', 'bin', `loom-ext-validate${exe}`);
+  const target = path.join(root, 'tools', 'bin', `loog-ext-validate${exe}`);
   await fetchPinned(pin.url, pin.sha256, target, {offline});
   if (process.platform !== 'win32') fs.chmodSync(target, 0o755);
   return target;

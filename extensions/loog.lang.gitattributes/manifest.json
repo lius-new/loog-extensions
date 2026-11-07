@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "loog.lang.gitattributes",
+  "version": "0.1.0",
+  "name": "Git Attributes Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Git Attributes.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "git attributes",
+    "syntax",
+    "tree-sitter",
+    "gitattributes"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.gitattributes.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

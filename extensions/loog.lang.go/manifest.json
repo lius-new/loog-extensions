@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.go",
+  "version": "0.1.0",
+  "name": "Go Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Go.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "go",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.go.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

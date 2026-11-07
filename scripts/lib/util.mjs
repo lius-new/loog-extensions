@@ -7,8 +7,8 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {parse, stringify} from 'smol-toml';
 
-// LOOM_EXT_ROOT points the tools at another checkout (the tests use a temporary one).
-export const ROOT = path.resolve(process.env.LOOM_EXT_ROOT ?? fileURLToPath(new URL('../../', import.meta.url)));
+// LOOG_EXT_ROOT points the tools at another checkout (the tests use a temporary one).
+export const ROOT = path.resolve(process.env.LOOG_EXT_ROOT ?? fileURLToPath(new URL('../../', import.meta.url)));
 export const EXTENSIONS = path.join(ROOT, 'extensions');
 export const DIST = path.join(ROOT, 'dist');
 export const WORK = path.join(ROOT, '.work');

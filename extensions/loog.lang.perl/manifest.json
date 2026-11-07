@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.perl",
+  "version": "0.1.0",
+  "name": "Perl Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Perl.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "perl",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "NOASSERTION",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.perl.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

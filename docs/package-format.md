@@ -1,21 +1,21 @@
 # Packages
 
-A package is a `.loomext` file: a gzip-compressed tar archive with one root folder
+A package is a `.loogext` file: a gzip-compressed tar archive with one root folder
 named after the extension id, holding `manifest.json` and the extension's files.
-File names are `<id>-<version>-<platform>.loomext`.
+File names are `<id>-<version>-<platform>.loogext`.
 
 - Only files and folders; no links, devices or duplicate paths; at most 16,384 entries.
 - At most 256 MiB compressed and 512 MiB of expanded file data. These limits
-  match the current Loom importer; large servers keep their required type stubs.
+  match the current Loog importer; large servers keep their required type stubs.
 - Entries are sorted and carry fixed times, so packing the same files gives the same
   bytes and the same SHA-256.
 - Grammars are WebAssembly only. A native library is refused in language, theme and
-  queries extensions; Loom would run it without a sandbox.
+  queries extensions; Loog would run it without a sandbox.
 
 ## The manifest
 
-`manifest.json` follows the rules Loom applies when it loads an extension, plus what a
-published one must have (`loom-ext check` reports each problem):
+`manifest.json` follows the rules Loog applies when it loads an extension, plus what a
+published one must have (`loog-ext check` reports each problem):
 
 | Field | Notes |
 | --- | --- |
@@ -26,8 +26,8 @@ published one must have (`loom-ext check` reports each problem):
 | `categories` | At most three of Themes, Syntax Highlighting, Language Services, Snippets, Linters, Formatters, Editing, Source control, Productivity, Other |
 | `repository` | An `https://` address |
 | `icon`, `readme`, `changelog` | A PNG or SVG (up to 256 KiB), and two Markdown files (up to 512 KiB) |
-| `engines.loom` | A version range, such as `>=0.1.8 <0.3` |
-| `requires` | `["loom.runtime.node@^0.1.0"]`: extensions that must be installed with this one |
+| `engines.loog` | A version range, such as `>=0.1.8 <0.3` |
+| `requires` | `["loog.runtime.node@^0.1.0"]`: extensions that must be installed with this one |
 | `recommends` | Extension ids to suggest; a highlight extension recommends only language service extensions |
 | `capabilities` | A language service server declares `process.execute-local` |
 | `executables` | Paths the application marks executable after unpacking |
@@ -39,7 +39,7 @@ navigation and language server integrations. Use `Linters`, `Formatters` and
 `Snippets` for those functions. An extension can list multiple categories when
 it provides multiple functions. `Languages` is no longer accepted.
 
-Each contribution point is named by what it is for, and Loom refuses a manifest with
+Each contribution point is named by what it is for, and Loog refuses a manifest with
 any other name (`languages` and `language_servers` are not accepted):
 
 | Point | What it is for |
@@ -49,9 +49,9 @@ any other name (`languages` and `language_servers` are not accepted):
 | `language_service` | Typed `providers` implemented by the extension component |
 | `themes` | Colour themes |
 
-Names must follow the scheme: `loom.lang.*` contributes highlight, `loom.lsp.*`
-declares language service providers, `loom.theme.*` a theme, `loom.queries.*` highlight
-queries, `loom.runtime.*` a runtime. The index says what an extension is for by the
+Names must follow the scheme: `loog.lang.*` contributes highlight, `loog.lsp.*`
+declares language service providers, `loog.theme.*` a theme, `loog.queries.*` highlight
+queries, `loog.runtime.*` a runtime. The index says what an extension is for by the
 field it has (`highlight`, `language_service`), never by its id.
 
 ### Highlight
@@ -62,7 +62,7 @@ description, with each grammar's WebAssembly module (`tree-sitter-<name>.wasm`) 
 
 ### Language service components
 
-`contributes.language_service.name` is what the service is called wherever Loom lists
+`contributes.language_service.name` is what the service is called wherever Loog lists
 it, such as `Rust Analyzer`: one line of 1 to 40 characters. The package `name` says what is
 installed; this says what answers for a language. The index carries it as
 `language_service.name`.
@@ -71,21 +71,21 @@ installed; this says what answers for a language. The index carries it as
 
 ```json
 {
-  "id": "loom.lsp.rust-analyzer.completion",
+  "id": "loog.lsp.rust-analyzer.completion",
   "kind": "completion",
   "selector": { "languages": ["rust"] }
 }
 ```
 
-The manifest also declares `api: "loom:extension@0.1.0"`, its `component`,
+The manifest also declares `api: "loog:extension@0.1.0"`, its `component`,
 activation events and capabilities. Private client code owns process launch,
 root selection, protocol language IDs and initialization. Programs are package
 executables or come from declared runtime dependencies; launch still requires
-workspace trust. General SDK APIs wrap Loom services and contain no language client.
+workspace trust. General SDK APIs wrap Loog services and contain no language client.
 
-The first clients support Rust, Go, JavaScript and TypeScript and require Loom
+The first clients support Rust, Go, JavaScript and TypeScript and require Loog
 >=0.1.9. The retired `servers` declaration is rejected by the new host. Historical
-recipes for other languages remain explicitly `deferred` in `loom-ext.toml` until
+recipes for other languages remain explicitly `deferred` in `loog-ext.toml` until
 they are migrated; their already published releases are retained.
 
 ## Platforms

@@ -1,12 +1,12 @@
 // keygen --out file: make an index signing key. The private key goes to the file
-// (keep it secret; CI reads it from a secret); the public key is printed for Loom.
+// (keep it secret; CI reads it from a secret); the public key is printed for Loog.
 import fs from 'node:fs';
 import path from 'node:path';
 import {assert} from '../lib/util.mjs';
 import {generateKeyPair} from '../lib/sign.mjs';
 import {parseArgs} from '../lib/cli.mjs';
 
-export const usage = 'keygen --out file    Make an index signing key (prints the public key to give Loom)';
+export const usage = 'keygen --out file    Make an index signing key (prints the public key to give Loog)';
 
 export async function run(argv) {
   const {options} = parseArgs(argv, {out: 'string'});

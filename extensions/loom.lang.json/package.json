@@ -1,9 +1,0 @@
-{
-  "name": "build-loom-lang-json",
-  "private": true,
-  "type": "module",
-  "description": "Packs the loom.lang.json package. Independent of the rest of the repository.",
-  "dependencies": {
-    "tar": "7.5.22"
-  }
-}

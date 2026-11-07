@@ -1,0 +1,9 @@
+{
+  "name": "build-loog-lsp-gopls",
+  "private": true,
+  "type": "module",
+  "description": "Builds gopls with its private client and the matching general Loog SDK.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

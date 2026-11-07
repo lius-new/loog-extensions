@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.vue",
+  "version": "0.1.0",
+  "name": "Vue Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Vue.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "vue",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.vue.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

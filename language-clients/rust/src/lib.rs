@@ -1,10 +1,10 @@
 //! Private language-client source, compiled independently into each plugin.
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-use exports::loom::extension::guest::Guest;
+use exports::loog::extension::guest::Guest;
 #[cfg(not(test))]
-use loom::extension::host;
-use loom::extension::types::*;
+use loog::extension::host;
+use loog::extension::types::*;
 mod client;
 mod config;
 mod findings;

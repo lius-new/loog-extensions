@@ -1,7 +1,7 @@
 use crate::config::{Configuration, language_id};
 use crate::{
     ID, NAME, host,
-    loom::extension::types::*,
+    loog::extension::types::*,
     protocol::*,
     results,
     status::{Status, Widgets},
@@ -737,7 +737,7 @@ impl Client {
         self.configuration_dirty = true;
         self.owners.insert(process, (s.root.id, s.key.clone()));
         self.status(&s);
-        let params = json!({"processId":null,"clientInfo":{"name":"Loom","version":"0.1.8"},"rootUri":uri(&s.path),"workspaceFolders":[{"uri":uri(&s.path),"name":s.root.name}],"capabilities":serde_json::from_str::<Value>(include_str!("../capabilities.json")).unwrap(),"initializationOptions":initialization});
+        let params = json!({"processId":null,"clientInfo":{"name":"Loog","version":"0.1.8"},"rootUri":uri(&s.path),"workspaceFolders":[{"uri":uri(&s.path),"name":s.root.name}],"capabilities":serde_json::from_str::<Value>(include_str!("../capabilities.json")).unwrap(),"initializationOptions":initialization});
         let result = self.rpc(&mut s, "initialize", params, Purpose::Initialize, 30000);
         if let Err(error) = result {
             self.stop_session(&mut s);
@@ -1299,7 +1299,7 @@ impl Client {
                     )?;
                 }
                 // The file is no longer open, but its problems are still the server's
-                // findings: Loom lists them with the rest of the workspace.
+                // findings: Loog lists them with the rest of the workspace.
                 if !s.stopped && !doc.diagnostics.is_empty() {
                     crate::findings::publish(&s.key, &doc.reference.path, s.unit, &doc.diagnostics);
                 }

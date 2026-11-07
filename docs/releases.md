@@ -9,15 +9,15 @@ and dependencies; there is no release form for normal publication.
 Selection uses the complete git diff: pushes compare the previous tip to the current
 commit, and pull requests compare their merge base to the tested commit. Changes
 under `extensions/<id>/` select that extension. Changes to workflows, scripts,
-validator tools, root package files or `loom-ext.toml` select all extensions. Other
+validator tools, root package files or `loog-ext.toml` select all extensions. Other
 repository documentation does not start extension builds. An initial push or a
 force push whose previous tip is unavailable conservatively builds everything.
 
-"All" means all active recipes. IDs in `loom-ext.toml`'s `deferred` list are
+"All" means all active recipes. IDs in `loog-ext.toml`'s `deferred` list are
 excluded from automatic and manual builds. Their historical sources and existing
 published assets remain intact until component migration. Rust, Go and JS/TS are
 the first component clients; other pure server declarations cannot run in the new
-Loom host. New language-service index versions retain their component ABI.
+Loog host. New language-service index versions retain their component ABI.
 
 For manual recovery, dispatch **Extensions** on `main`. Its optional `extensions`
 input accepts comma-separated IDs; leave it empty to build all extensions. Dispatches
@@ -27,11 +27,11 @@ artifacts from the same run and retries the failed builds and publisher.
 ## Version policy
 
 All current extension packages start at **0.1.0**. Package versions are independent
-of both Loom and the bundled upstream program. Use patch releases for fixes and
+of both Loog and the bundled upstream program. Use patch releases for fixes and
 minor releases for additions or incompatible pre-1.0 changes. Each extension moves
 to 1.0.0 when its behavior and integration are stable; there is no shared release
 number. Runtime requirements refer to the extension package, for example
-`loom.runtime.node@^0.1.0`, not Node's upstream major version.
+`loog.runtime.node@^0.1.0`, not Node's upstream major version.
 
 - A version newer than all of an extension's published versions is new.
 - Published versions are immutable. When the extension's files changed since a version
@@ -52,12 +52,12 @@ number. Runtime requirements refer to the extension package, for example
    The publisher downloads packages from this workflow run only, so commits and PR
    artifacts cannot be mixed into another batch. If no build produced packages,
    publication fails before any release or index is written.
-2. `publish.yml` checks that the signing key is the one Loom trusts, prepares the
+2. `publish.yml` checks that the signing key is the one Loog trusts, prepares the
    production validator (there is no structure-only fallback), and runs
    `release intake`.
 3. Intake unpacks every package and checks it: manifest, files, name, one version for
    all platforms, a version newer than the published ones, the extension unchanged
-   since a published version, and Loom's own loaders importing it. One extension's
+   since a published version, and Loog's own loaders importing it. One extension's
    failure does not stop others.
 4. `release publish` creates each extension's release as a draft, uploads the
    packages, checks every asset's size and GitHub SHA-256, publishes it, then checks
@@ -95,29 +95,29 @@ report, packages, signed index and bundle lock.
 The commands can also be run locally:
 
 ```sh
-node scripts/loom-ext.mjs release intake path/to/packages --dry-run   # checks only
-node scripts/loom-ext.mjs release preflight    # requires LOOM_INDEX_KEY
-node scripts/loom-ext.mjs release intake path/to/packages   # records what to publish
-node scripts/loom-ext.mjs release publish      # requires gh authentication and LOOM_INDEX_KEY
+node scripts/loog-ext.mjs release intake path/to/packages --dry-run   # checks only
+node scripts/loog-ext.mjs release preflight    # requires LOOG_INDEX_KEY
+node scripts/loog-ext.mjs release intake path/to/packages   # records what to publish
+node scripts/loog-ext.mjs release publish      # requires gh authentication and LOOG_INDEX_KEY
 ```
 
 ## Enabling the workflows
 
-The repository must have its `LOOM_INDEX_KEY` Actions secret; its public key must match
-`loom-ext.toml`'s `index.keys`. The key stays separate from Loom's application signing
-key. Only the batch's publish job passes `LOOM_INDEX_KEY` explicitly to `publish.yml`;
+The repository must have its `LOOG_INDEX_KEY` Actions secret; its public key must match
+`loog-ext.toml`'s `index.keys`. The key stays separate from Loog's application signing
+key. Only the batch's publish job passes `LOOG_INDEX_KEY` explicitly to `publish.yml`;
 the selection and build jobs have read-only repository access and no signing secret.
 
 Prefer a published Linux x64 validator pinned by URL and SHA-256 in
 `tools/validator.lock`. Until one exists, CI builds the exact production source commit
-in `tools/loom-source.toml` with its locked dependencies. That file is the one Loom
+in `tools/loog-source.toml` with its locked dependencies. That file is the one Loog
 pin of this repository: the Rust language clients, the native AOT verification and the
-validator all use the same commit. The commit must stay reachable in the Loom
+validator all use the same commit. The commit must stay reachable in the Loog
 repository (it is on `main`); the workflow uses the immutable commit SHA. Do not replace it with an arbitrary moving branch or silently bypass
 validation. Once validator binaries are published, update `tools/validator.lock`; the
 binary takes precedence.
 
-The workflow emits the lock as an artifact; refreshing the copy in Loom's repository
+The workflow emits the lock as an artifact; refreshing the copy in Loog's repository
 for an application release remains a separate task.
 
 ## Early-stage baseline

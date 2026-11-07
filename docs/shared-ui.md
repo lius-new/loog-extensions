@@ -2,12 +2,12 @@
 
 ## Required boundary
 
-Plugins MUST use Loom's general capabilities. They MUST NOT require an
+Plugins MUST use Loog's general capabilities. They MUST NOT require an
 application-owned adapter, container declaration, plugin-ID check, server-name
-check, state mapping or shared-key registration in Loom. A new plugin using the
+check, state mapping or shared-key registration in Loog. A new plugin using the
 existing shared UI contract does not require an application release.
 
-The application owns the generic `loom:ui/shared@0.1.0` mechanism and private node
+The application owns the generic `loog:ui/shared@0.1.0` mechanism and private node
 ownership. Plugins own the chosen key, candidate trees, eligible contexts,
 priorities, state interpretation, text, colors, icons and keyframes. No plugin
 may read or mutate another plugin's raw UI handles. Joining a shared region is
@@ -17,13 +17,13 @@ an opt-in contribution, not cross-plugin write access.
 
 The independently compiled Rust clients share private source in
 `language-clients/rust`. Their status policy uses
-`loom.language-services.status.v1`; this constant exists in plugin code only.
+`loog.language-services.status.v1`; this constant exists in plugin code only.
 Each open project/session contributes a private, passive tree to that key, with
 the exact `DocumentRef.path` values it currently serves as eligible contexts.
 The native statusbar mounts one shared region for the active document, not one
 block per language server or a set of hidden duplicate native widgets.
 
-The common source supplies the following policy; Loom treats the numbers and
+The common source supplies the following policy; Loog treats the numbers and
 strings as opaque input:
 
 | Plugin state | Priority | Presentation |
@@ -54,7 +54,7 @@ Ready, stopped and error states are static.
 The four status icons use Material Design Icons: `Loading`, `CheckCircle`,
 `AlertCircle` and `StopCircleOutline` (Pictogrammers, Apache-2.0). Their path data
 is embedded in this repository's private Rust client and sent with the generic
-`svg-path:24x24:` icon syntax; no icon aliases or paths are added to Loom's
+`svg-path:24x24:` icon syntax; no icon aliases or paths are added to Loog's
 registry. Local acceptance requires a host supporting that syntax. Retain
 14px icon boxes, 900ms linear busy rotation and the surrounding layout spacing.
 
@@ -67,7 +67,7 @@ that is still serving other documents.
 
 ## Build and acceptance constraints
 
-Use `LOOM_SOURCE` pointing to the matching Loom checkout. The builder rejects
+Use `LOOG_SOURCE` pointing to the matching Loog checkout. The builder rejects
 SDKs missing tree, motion or shared imports. Each plugin still has its own Cargo
 manifest, lock file, component, process, capabilities and lifecycle. Sharing
 source or a native UI region does not merge their WASM instances or authority.

@@ -1,5 +1,5 @@
 * text=auto eol=lf
 *.wasm binary
-*.loomext binary
+*.loogext binary
 *.png binary
 *.ico binary

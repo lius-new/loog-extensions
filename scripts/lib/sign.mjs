@@ -1,5 +1,5 @@
 // Ed25519 signatures over the exact bytes of index.json. The private key lives only in
-// CI (or on the maintainer's machine); Loom carries the public keys, each with a
+// CI (or on the maintainer's machine); Loog carries the public keys, each with a
 // key id, so a key can be replaced without breaking installed copies.
 import crypto from 'node:crypto';
 import {assert} from './util.mjs';

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.zls",
+  "version": "0.1.0",
+  "name": "zls Language Server",
+  "publisher": "Loog",
+  "description": "The zls language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "zls",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "contributes": {
+    "language_service": {
+      "servers": [
+        {
+          "id": "loog.lsp.zls.zls",
+          "name": "zls",
+          "languages": [
+            "zig"
+          ],
+          "command": "${extension}/zls",
+          "root_markers": [
+            "build.zig",
+            "build.zig.zon"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "file_directory",
+          "bindings": [
+            {
+              "language": "zig",
+              "language_id": "zig"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

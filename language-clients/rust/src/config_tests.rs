@@ -2,18 +2,18 @@
 fn selected_package_keeps_its_original_startup_configuration() {
     let config = crate::CONFIG;
     match ID {
-        "loom.lsp.gopls" => {
+        "loog.lsp.gopls" => {
             assert_eq!(config.languages, &["go"]);
             assert_eq!(config.program, "${extension}/gopls");
             assert!(!config.outermost);
         }
-        "loom.lsp.rust-analyzer" => {
+        "loog.lsp.rust-analyzer" => {
             assert_eq!(config.languages, &["rust"]);
             assert_eq!(config.program, "${extension}/rust-analyzer");
             assert_eq!(config.markers, &["Cargo.toml", "rust-project.json"]);
             assert!(config.outermost && config.file_fallback);
         }
-        "loom.lsp.typescript-language-server" => {
+        "loog.lsp.typescript-language-server" => {
             assert_eq!(config.languages, &["javascript", "typescript"]);
             assert_eq!(config.program, "${runtime.node}/node");
             assert_eq!(

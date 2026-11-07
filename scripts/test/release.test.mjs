@@ -13,7 +13,7 @@ import {fingerprint, readRegistry, readRelease, checkAssets, checkRecords, finis
 const commit = 'a'.repeat(40);
 const empty = {schema: 1, sequence: 3, keyId: 'test-1', generated: '2026-11-01T00:00:00Z',
   expires: '2026-12-01T00:00:00Z', extensions: []};
-const definition = (id = 'loom.lang.demo', version = '1.0.0') => ({id, version, platforms: ['any'], fingerprint: 'b'.repeat(64)});
+const definition = (id = 'loog.lang.demo', version = '1.0.0') => ({id, version, platforms: ['any'], fingerprint: 'b'.repeat(64)});
 
 function fixture(t) {
   const repo = checkout(t); populate(repo, ['theme']);
@@ -23,10 +23,10 @@ function fixture(t) {
 }
 
 /** The demo theme packaged "elsewhere", taken in, and the plan that goes with it. */
-async function delivery(repo, id = 'loom.theme.demo') {
+async function delivery(repo, id = 'loog.theme.demo') {
   const folder = path.join(repo.root, 'out', id);
   fs.cpSync(path.join(repo.extensions, id), folder, {recursive: true});
-  const file = path.join(repo.root, 'handed-over', `${id}-1.0.0-any.loomext`);
+  const file = path.join(repo.root, 'handed-over', `${id}-1.0.0-any.loogext`);
   await createPackage(folder, file, id);
   const [prepared] = await intake([file], {...repo, validator: 'test-validator', validate: () => []});
   assert.equal(prepared.error, undefined);
@@ -39,26 +39,26 @@ test('a fingerprint follows the files git sees, leaves out Markdown, and notices
   const git = (...args) => execFileSync('git', args, {cwd: repo.root, encoding: 'utf8'}).trim();
   git('config', 'user.name', 'Release test'); git('config', 'user.email', 'release@example.invalid');
   git('add', '.'); git('commit', '-m', 'fixture'); const base = git('rev-parse', 'HEAD');
-  const original = fingerprint(repo.root, 'loom.theme.demo');
-  write(repo.extensions, 'loom.theme.demo/README.md', '# Updated documentation');
-  assert.equal(fingerprint(repo.root, 'loom.theme.demo'), original);
+  const original = fingerprint(repo.root, 'loog.theme.demo');
+  write(repo.extensions, 'loog.theme.demo/README.md', '# Updated documentation');
+  assert.equal(fingerprint(repo.root, 'loog.theme.demo'), original);
   write(repo.root, '.gitignore', 'node_modules/\n');
-  write(repo.extensions, 'loom.theme.demo/node_modules/dependency/index.js', 'ignored');
-  assert.equal(fingerprint(repo.root, 'loom.theme.demo'), original);
-  fs.rmSync(path.join(repo.extensions, 'loom.theme.demo/icon.svg'));
-  assert.equal(fingerprint(repo.root, 'loom.theme.demo', base), original);
-  assert.notEqual(fingerprint(repo.root, 'loom.theme.demo'), original);
+  write(repo.extensions, 'loog.theme.demo/node_modules/dependency/index.js', 'ignored');
+  assert.equal(fingerprint(repo.root, 'loog.theme.demo'), original);
+  fs.rmSync(path.join(repo.extensions, 'loog.theme.demo/icon.svg'));
+  assert.equal(fingerprint(repo.root, 'loog.theme.demo', base), original);
+  assert.notEqual(fingerprint(repo.root, 'loog.theme.demo'), original);
 });
 
 test('private language client sources affect all official client fingerprints only', t => {
   const repo = fixture(t);
-  const theme = fingerprint(repo.root, 'loom.theme.demo');
-  const ids = ['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'];
+  const theme = fingerprint(repo.root, 'loog.theme.demo');
+  const ids = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server'];
   for (const id of ids) write(repo.extensions, `${id}/rust/Cargo.toml`, '[package]\nname = "client"');
   const before = ids.map(id => fingerprint(repo.root, id));
   write(repo.root, 'language-clients/rust/src/client.rs', 'const REVISION: u8 = 1;');
   for (let at = 0; at < ids.length; at++) assert.notEqual(fingerprint(repo.root, ids[at]), before[at]);
-  assert.equal(fingerprint(repo.root, 'loom.theme.demo'), theme);
+  assert.equal(fingerprint(repo.root, 'loog.theme.demo'), theme);
   const source = fingerprint(repo.root, ids[0]);
   write(repo.root, 'language-clients/README.md', '# Documentation');
   assert.equal(fingerprint(repo.root, ids[0]), source);
@@ -93,7 +93,7 @@ test('the package bytes are checked against their records before and after publi
 
 function publication(t) {
   const repo = fixture(t), keys = generateKeyPair();
-  const config = {repository: 'acme/extensions', bundled: ['loom.theme.demo'], index: {'key-id': 'test-1', 'validity-days': 30, keys: {'test-1': keys.publicRaw}}};
+  const config = {repository: 'acme/extensions', bundled: ['loog.theme.demo'], index: {'key-id': 'test-1', 'validity-days': 30, keys: {'test-1': keys.publicRaw}}};
   const remote = new Map(); const calls = [];
   let registry = {index: empty, bytes: Buffer.from(JSON.stringify(empty)), signature: signIndex(Buffer.from(JSON.stringify(empty)), keys.privatePem, 'test-1')};
   const releases = {
@@ -122,7 +122,7 @@ test('publication verifies complete assets before visibility, preserves previous
   const ctx = publication(t), {item, prepared, plan} = await delivery(ctx);
   clearStage(item.id, ctx.dist); // CI frees staging before the publisher starts.
   const options = {...ctx, privateKey: ctx.keys.privatePem, sourceRevision: commit};
-  await assert.rejects(finishRelease(plan, [prepared], {...options, privateKey: null}), /LOOM_INDEX_KEY/);
+  await assert.rejects(finishRelease(plan, [prepared], {...options, privateKey: null}), /LOOG_INDEX_KEY/);
   assert.deepEqual(ctx.calls, []);
   await assert.rejects(finishRelease(plan, [prepared], {...options, privateKey: generateKeyPair().privatePem}), /trusted public key/);
   assert.deepEqual(ctx.calls, []);
@@ -130,7 +130,7 @@ test('publication verifies complete assets before visibility, preserves previous
   let reads = 0;
   const broken = async config => {if (++reads > 3) throw Error('readback interrupted'); return goodRegistry(config);};
   await assert.rejects(finishRelease(plan, [prepared], {...options, registry: broken}), /interrupted/);
-  assert.equal(ctx.remote.get('loom.theme.demo-1.0.0').draft, false);
+  assert.equal(ctx.remote.get('loog.theme.demo-1.0.0').draft, false);
   assert.deepEqual(ctx.calls, ['create', 'packages', 'publish', 'generation', 'index']);
   ctx.calls.length = 0;
   const report = await finishRelease(plan, [prepared], options);
@@ -141,7 +141,7 @@ test('publication verifies complete assets before visibility, preserves previous
 
 test('rejected packages do not hide successful independent extensions, and missing results are failures', async t => {
   const ctx = publication(t), {item, prepared, plan: single} = await delivery(ctx);
-  const missing = definition('loom.lang.missing'), failed = definition('loom.lang.failed');
+  const missing = definition('loog.lang.missing'), failed = definition('loog.lang.failed');
   const plan = {...single, pending: [item, missing, failed]};
   const report = await finishRelease(plan, [prepared, {id: failed.id, error: 'build failed'}], {...ctx, privateKey: ctx.keys.privatePem});
   assert.deepEqual(report.indexed, [item.id]);
@@ -149,10 +149,10 @@ test('rejected packages do not hide successful independent extensions, and missi
 });
 
 test('a dependent version is withheld until a compatible runtime is available', () => {
-  const runtime = {id: 'loom.runtime.node', version: '22.0.0', description: {manifest: {}}};
-  const server = {id: 'loom.lsp.demo', version: '1.0.0', description: {manifest: {requires: ['loom.runtime.node@^22']}}};
+  const runtime = {id: 'loog.runtime.node', version: '22.0.0', description: {manifest: {}}};
+  const server = {id: 'loog.lsp.demo', version: '1.0.0', description: {manifest: {requires: ['loog.runtime.node@^22']}}};
   assert.deepEqual(readyToIndex([server], empty), []);
-  const cyclic = {...runtime, description: {manifest: {requires: ['loom.lsp.demo@^1']}}};
+  const cyclic = {...runtime, description: {manifest: {requires: ['loog.lsp.demo@^1']}}};
   assert.deepEqual(readyToIndex([server, cyclic], empty), [], 'dependency cycles cannot be published');
   assert.deepEqual(readyToIndex([runtime, server], empty), [runtime, server]);
   assert.deepEqual(readyToIndex([server], {extensions: [{id: runtime.id, versions: [{version: '22.1.0'}]}]}), [server]);
@@ -169,7 +169,7 @@ test('publication queues whole batches and reads artifacts only from its own run
   assert.doesNotMatch(text, /gh api|gh run download|workflow_run|github-token:|run-id:|inputs\.artifact/);
   assert.match(text, /release intake \.work\/aot-packages/);
   assert.doesNotMatch(text, /--unsigned|--dry-run/);
-  assert.match(text, /LOOM_INDEX_KEY: \$\{\{ secrets\.LOOM_INDEX_KEY \}\}/);
+  assert.match(text, /LOOG_INDEX_KEY: \$\{\{ secrets\.LOOG_INDEX_KEY \}\}/);
   assert.match(text, /if: always\(\)/);
   assert.match(text, /name: delivery-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/);
 });
@@ -191,8 +191,8 @@ test('one batch waits for all independent builds and publishes only on main outs
   assert.match(build, /run: node build\.mjs/);
   assert.match(build, /if-no-files-found: error/);
   assert.match(build, /overwrite: true/);
-  assert.match(build, /actions\/setup-go@v5[\s\S]*matrix\.extension == 'loom\.lsp\.gopls'/);
-  assert.doesNotMatch(build, /secrets:|LOOM_INDEX_KEY|contents: write|GH_TOKEN/);
+  assert.match(build, /actions\/setup-go@v5[\s\S]*matrix\.extension == 'loog\.lsp\.gopls'/);
+  assert.doesNotMatch(build, /secrets:|LOOG_INDEX_KEY|contents: write|GH_TOKEN/);
   assert.match(publish, /needs: \[plan, build\]/);
   assert.match(publish, /!cancelled\(\)/);
   assert.match(publish, /needs\.plan\.result == 'success'/);
@@ -200,7 +200,7 @@ test('one batch waits for all independent builds and publishes only on main outs
   assert.match(publish, /github\.ref == 'refs\/heads\/main'/);
   assert.match(publish, /github\.event_name != 'pull_request'/);
   assert.equal(text.match(/uses: \.\/\.github\/workflows\/publish\.yml/g)?.length, 1);
-  assert.match(publish, /LOOM_INDEX_KEY: \$\{\{ secrets\.LOOM_INDEX_KEY \}\}/);
+  assert.match(publish, /LOOG_INDEX_KEY: \$\{\{ secrets\.LOOG_INDEX_KEY \}\}/);
   assert.doesNotMatch(publish, /secrets: inherit/);
   for (const entry of fs.readdirSync(new URL('../../extensions/', import.meta.url), {withFileTypes: true})) {
     if (!entry.isDirectory()) continue;
@@ -219,26 +219,26 @@ test('a mismatched remote upload stays a draft and never enters the index', asyn
   };
   const report = await finishRelease(plan, [prepared], {...ctx, privateKey: ctx.keys.privatePem});
   assert.equal(report.failures.length, 1);
-  assert.equal(ctx.remote.get('loom.theme.demo-1.0.0').draft, true);
+  assert.equal(ctx.remote.get('loog.theme.demo-1.0.0').draft, true);
   assert.ok(!ctx.calls.includes('publish') && !ctx.calls.includes('index'));
 });
 
 test('the validator bootstrap runs against the configured root and emits a pinned source or binary', t => {
   const repo = checkout(t);
-  write(repo.root, 'tools/loom-source.toml', 'schema = 1\nrepository = "acme/loom"\nrevision = "' + commit + '"\n');
+  write(repo.root, 'tools/loog-source.toml', 'schema = 1\nrepository = "acme/loog"\nrevision = "' + commit + '"\n');
   const output = path.join(repo.root, 'outputs');
   const run = extra => spawnSync(process.execPath, [fileURLToPath(new URL('../validator-source.mjs', import.meta.url))], {
-    cwd: repo.root, encoding: 'utf8', env: {...process.env, LOOM_EXT_ROOT: repo.root, LOOM_EXT_VALIDATE: '', GITHUB_OUTPUT: output, ...extra}
+    cwd: repo.root, encoding: 'utf8', env: {...process.env, LOOG_EXT_ROOT: repo.root, LOOG_EXT_VALIDATE: '', GITHUB_OUTPUT: output, ...extra}
   });
   let result = run();
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(fs.readFileSync(output, 'utf8'), 'source=true\nrepository=acme/loom\nrevision=' + commit + '\n');
+  assert.equal(fs.readFileSync(output, 'utf8'), 'source=true\nrepository=acme/loog\nrevision=' + commit + '\n');
   fs.writeFileSync(output, '');
   const binary = write(repo.root, 'provided-validator', 'test binary');
-  result = run({LOOM_EXT_VALIDATE: binary});
+  result = run({LOOG_EXT_VALIDATE: binary});
   assert.equal(result.status, 0, result.stderr);
   assert.equal(fs.readFileSync(output, 'utf8'), 'source=false\n');
-  assert.equal(fs.readFileSync(path.join(repo.root, 'tools/bin', process.platform === 'win32' ? 'loom-ext-validate.exe' : 'loom-ext-validate'), 'utf8'), 'test binary');
+  assert.equal(fs.readFileSync(path.join(repo.root, 'tools/bin', process.platform === 'win32' ? 'loog-ext-validate.exe' : 'loog-ext-validate'), 'utf8'), 'test binary');
 });
 
 test('a mismatched current index/signature pair recovers the newest verified immutable generation', async () => {
@@ -281,12 +281,12 @@ test('an interruption before switching the current pair repairs from its generat
 
 test('release cleanup removes unfinished platform stages and preserves other extensions', t => {
   const repo = checkout(t), dist = path.join(repo.root, 'dist');
-  write(dist, 'stage/any/loom.lang.demo/partial.wasm', 'partial build');
-  write(dist, 'stage/linux-x86_64/loom.lang.demo/manifest.json', '{}');
-  const other = write(dist, 'stage/any/loom.lang.other/resource', 'keep');
-  clearStage('loom.lang.demo', dist);
-  assert.equal(fs.existsSync(path.join(dist, 'stage/any/loom.lang.demo')), false);
-  assert.equal(fs.existsSync(path.join(dist, 'stage/linux-x86_64/loom.lang.demo')), false);
+  write(dist, 'stage/any/loog.lang.demo/partial.wasm', 'partial build');
+  write(dist, 'stage/linux-x86_64/loog.lang.demo/manifest.json', '{}');
+  const other = write(dist, 'stage/any/loog.lang.other/resource', 'keep');
+  clearStage('loog.lang.demo', dist);
+  assert.equal(fs.existsSync(path.join(dist, 'stage/any/loog.lang.demo')), false);
+  assert.equal(fs.existsSync(path.join(dist, 'stage/linux-x86_64/loog.lang.demo')), false);
   assert.equal(fs.readFileSync(other, 'utf8'), 'keep');
 });
 
@@ -305,7 +305,7 @@ test('no workflow input or script can delete published extension releases', () =
 
 test('release lookup finds drafts through authenticated listings when the published-tag endpoint returns 404', async () => {
   const calls = [];
-  const draft = {id: 7, tag_name: 'loom.lang.demo-0.1.0', draft: true, assets: [{name: 'package.loomext'}]};
+  const draft = {id: 7, tag_name: 'loog.lang.demo-0.1.0', draft: true, assets: [{name: 'package.loogext'}]};
   const fetcher = async (url, options) => {
     calls.push(url); assert.equal(options.headers['Cache-Control'], 'no-cache');
     const parsed = new URL(url); assert.ok(parsed.searchParams.get('_check'));
@@ -351,7 +351,7 @@ test('registry pair reads bypass old CDN aliases without weakening signature ver
 
 
 test('release metadata lookup by ID never depends on draft tag or list visibility', async () => {
-  const draft = {id: 123, tag_name: 'loom.lang.json-0.1.0', draft: true, assets: []};
+  const draft = {id: 123, tag_name: 'loog.lang.json-0.1.0', draft: true, assets: []};
   const requests = [];
   const fetcher = async url => {
     requests.push(url);
@@ -381,8 +381,8 @@ test('new drafts publish by their creation ID even when tag and list discovery n
 });
 
 test('post-write readback retries only verification and always requires complete matching bytes', async () => {
-  const records = [{file:'package.loomext',size:1,sha256:'a'.repeat(64)}];
-  const draft = {id:123,tag_name:'demo',draft:true,assets:[{name:'package.loomext',size:1,digest:'sha256:'+'a'.repeat(64)}]};
+  const records = [{file:'package.loogext',size:1,sha256:'a'.repeat(64)}];
+  const draft = {id:123,tag_name:'demo',draft:true,assets:[{name:'package.loogext',size:1,digest:'sha256:'+'a'.repeat(64)}]};
   const waits = []; let reads = 0;
   const lookup = async (repo, tag, fetcher, options) => {
     assert.deepEqual(options, {id:123});

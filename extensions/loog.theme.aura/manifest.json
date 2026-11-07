@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "loog.theme.aura",
+  "version": "0.1.0",
+  "name": "Aura Themes",
+  "publisher": "Loog",
+  "description": "The Aura Light, Ember and High Contrast color themes.",
+  "categories": ["Themes"],
+  "keywords": ["theme", "light", "dark", "high contrast"],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": { "loog": ">=0.1.8 <0.3" },
+  "contributes": {
+    "themes": [
+      { "id": "loog.theme.aura.light", "path": "themes/aura-light.json" },
+      { "id": "loog.theme.aura.ember", "path": "themes/ember.json" },
+      { "id": "loog.theme.aura.high-contrast", "path": "themes/high-contrast.json" }
+    ]
+  }
+}

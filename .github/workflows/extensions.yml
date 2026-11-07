@@ -43,7 +43,7 @@ jobs:
     name: Build ${{ matrix.extension }}
     runs-on: ubuntu-latest
     env:
-      LOOM_SOURCE: ${{ github.workspace }}/.work/loom-sdk
+      LOOG_SOURCE: ${{ github.workspace }}/.work/loog-sdk
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
@@ -57,33 +57,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Read the pinned Loom source
-        id: loom
-        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+      - name: Read the pinned Loog source
+        id: loog
+        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
-          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
-      - name: Check out the general Loom SDK
-        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
+      - name: Check out the general Loog SDK
+        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
         uses: actions/checkout@v4
         with:
-          repository: ${{ steps.loom.outputs.repository }}
-          ref: ${{ steps.loom.outputs.revision }}
-          path: .work/loom-sdk
+          repository: ${{ steps.loog.outputs.repository }}
+          ref: ${{ steps.loog.outputs.revision }}
+          path: .work/loog-sdk
           persist-credentials: false
       - name: Install the Rust language-client toolchain
-        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.98.0
           targets: wasm32-unknown-unknown
       - name: Test the private Rust language client
-        if: contains(fromJSON('["loom.lsp.rust-analyzer","loom.lsp.gopls","loom.lsp.typescript-language-server"]'), matrix.extension)
+        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
         run: cargo test --manifest-path rust/Cargo.toml --locked --lib
       - uses: actions/setup-go@v5
-        if: matrix.extension == 'loom.lsp.gopls'
+        if: matrix.extension == 'loog.lsp.gopls'
         with:
           go-version: stable
       - run: npm ci
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.extension }}
-          path: extensions/${{ matrix.extension }}/dist/*.loomext
+          path: extensions/${{ matrix.extension }}/dist/*.loogext
           if-no-files-found: error
           overwrite: true
 
@@ -108,4 +108,4 @@ jobs:
       actions: read
     uses: ./.github/workflows/publish.yml
     secrets:
-      LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+      LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}

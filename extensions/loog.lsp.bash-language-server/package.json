@@ -1,0 +1,9 @@
+{
+  "name": "build-loog-lsp-bash-language-server",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loog.lsp.bash-language-server package. Independent of the rest of the repository.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

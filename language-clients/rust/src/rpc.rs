@@ -202,7 +202,7 @@ impl Client {
                         .any(|d| key(&d.reference.path) == key(&path))
                     {
                         // A file nobody has open: the server knows it from the workspace,
-                        // such as the output of a build. Loom lists it with the problems.
+                        // such as the output of a build. Loog lists it with the problems.
                         crate::findings::publish(&s.key, &path, s.unit, array(&params["diagnostics"]));
                     }
                 }

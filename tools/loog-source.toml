@@ -1,0 +1,10 @@
+# The one Loog commit this repository builds against. Every workflow reads it:
+# the Rust language clients take their WIT from it, the AOT verification builds its
+# host from it, and until tools/validator.lock names a published validator the
+# production validator is built from it. When Loog changes its extension interface,
+# move this commit forward in the same change that adapts the extensions.
+# The commit must be reachable on Loog's main branch; never point it at a branch that
+# may be deleted.
+schema = 1
+repository = "lius-new/loog"
+revision = "b811984ff21e23ac4e1e26a0dc4ea9eae7299cf5"

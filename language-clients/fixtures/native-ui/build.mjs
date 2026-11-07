@@ -6,8 +6,8 @@ import {buildClient, clientNotices} from '../../rust/build.mjs';
 
 const directory = import.meta.dirname;
 const source = path.resolve(directory, '../../..');
-process.env.LOOM_SOURCE ??= path.resolve(directory, '../../../../..');
-const loom = path.resolve(process.env.LOOM_SOURCE);
+process.env.LOOG_SOURCE ??= path.resolve(directory, '../../../../..');
+const loog = path.resolve(process.env.LOOG_SOURCE);
 const output = buildClient(directory);
 clientNotices(path.dirname(output), directory, {source});
 
@@ -24,7 +24,7 @@ for (const name of ['language-clients/fixtures/native-ui/build.mjs',
   'language-clients/rust/componentize/src']) {
   for (const file of files(source, name)) inputs.push(['extensions/' + file, digest(fs.readFileSync(path.join(source, file)))]);
 }
-for (const file of files(loom, 'wit/loom-extension')) inputs.push(['loom/' + file, digest(fs.readFileSync(path.join(loom, file)))]);
+for (const file of files(loog, 'wit/loog-extension')) inputs.push(['loog/' + file, digest(fs.readFileSync(path.join(loog, file)))]);
 inputs.sort(([a], [b]) => a.localeCompare(b, 'en'));
 fs.writeFileSync(path.join(path.dirname(output), 'build.json'), JSON.stringify({
   sourceFingerprint: digest(JSON.stringify(inputs)), wasmSha256: digest(fs.readFileSync(output)),

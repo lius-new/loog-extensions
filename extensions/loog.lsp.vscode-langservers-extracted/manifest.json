@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.vscode-langservers-extracted",
+  "version": "0.1.0",
+  "name": "Vscode Langservers Extracted Language Server",
+  "publisher": "Loog",
+  "description": "The Vscode Langservers Extracted language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "vscode langservers extracted",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local"
+  ],
+  "requires": [
+    "loog.runtime.node@^0.1.0"
+  ],
+  "contributes": {
+    "language_service": {
+      "servers": [
+        {
+          "id": "loog.lsp.vscode-langservers-extracted.vscode-html-language-server",
+          "name": "HTML Language Server",
+          "languages": [
+            "html"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-html-language-server",
+            "--stdio"
+          ],
+          "root_markers": [
+            "package.json"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "html",
+              "language_id": "html"
+            }
+          ]
+        },
+        {
+          "id": "loog.lsp.vscode-langservers-extracted.vscode-css-language-server",
+          "name": "CSS Language Server",
+          "languages": [
+            "css",
+            "scss"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-css-language-server",
+            "--stdio"
+          ],
+          "root_markers": [
+            "package.json"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "css",
+              "language_id": "css"
+            },
+            {
+              "language": "scss",
+              "language_id": "scss"
+            }
+          ]
+        },
+        {
+          "id": "loog.lsp.vscode-langservers-extracted.vscode-json-language-server",
+          "name": "JSON Language Server",
+          "languages": [
+            "json"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-json-language-server",
+            "--stdio"
+          ],
+          "root_markers": [
+            "package.json"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "bindings": [
+            {
+              "language": "json",
+              "language_id": "json"
+            }
+          ]
+        },
+        {
+          "id": "loog.lsp.vscode-langservers-extracted.vscode-eslint-language-server",
+          "name": "ESLint Language Server",
+          "languages": [
+            "javascript",
+            "typescript"
+          ],
+          "command": "${runtime.node}/node",
+          "args": [
+            "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-eslint-language-server",
+            "--stdio"
+          ],
+          "root_markers": [
+            "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
+            ".eslintrc.json",
+            ".eslintrc.js"
+          ],
+          "root_strategy": "nearest",
+          "root_fallback": "workspace",
+          "priority": -10,
+          "bindings": [
+            {
+              "language": "javascript",
+              "language_id": "javascript"
+            },
+            {
+              "language": "typescript",
+              "variant": "typescript",
+              "language_id": "typescript"
+            },
+            {
+              "language": "typescript",
+              "variant": "tsx",
+              "language_id": "typescriptreact"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

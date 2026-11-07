@@ -1,0 +1,9 @@
+{
+  "name": "build-loog-lsp-typescript-language-server",
+  "private": true,
+  "type": "module",
+  "description": "Builds the TypeScript server with its private client and the general Loog SDK.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

@@ -43,7 +43,7 @@ export class GitHubReleases {
   /** Create the registry release if it is missing: the one mutable release, holding the index. */
   ensureRegistry() {
     if (this.view(REGISTRY_TAG)) return;
-    this.run(['release', 'create', REGISTRY_TAG, '--repo', this.repository, '--latest=false', '--title', 'Extension index', '--notes', 'The signed index of Loom extensions. Replaced on every publication.']);
+    this.run(['release', 'create', REGISTRY_TAG, '--repo', this.repository, '--latest=false', '--title', 'Extension index', '--notes', 'The signed index of Loog extensions. Replaced on every publication.']);
   }
 
   upload(tag, files, {clobber = false} = {}) {

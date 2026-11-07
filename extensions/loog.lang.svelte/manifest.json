@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.svelte",
+  "version": "0.1.0",
+  "name": "Svelte Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Svelte.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "svelte",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.svelte.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

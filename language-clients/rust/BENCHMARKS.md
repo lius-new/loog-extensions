@@ -1,6 +1,6 @@
 # Official Rust WASM client comparison
 
-Rust-analyzer and TypeScript Language Server 0.2.3 compile the same private Rust source independently. Server payloads and the Node runtime match the preserved 0.2.2 TypeScript baselines byte for byte. These are Windows x64 observations on a Ryzen 5 5600GT, not general limits. The Go comparison in extensions/loom.lsp.gopls/rust/BENCHMARKS.md is historical; Go now compiles the shared source and passed the native feature regression again.
+Rust-analyzer and TypeScript Language Server 0.2.3 compile the same private Rust source independently. Server payloads and the Node runtime match the preserved 0.2.2 TypeScript baselines byte for byte. These are Windows x64 observations on a Ryzen 5 5600GT, not general limits. The Go comparison in extensions/loog.lsp.gopls/rust/BENCHMARKS.md is historical; Go now compiles the shared source and passed the native feature regression again.
 
 | Language | WASM MiB, TS / Rust | Cold first usable s, TS / Rust | Small host resident MiB, TS / Rust |
 | --- | --- | --- | --- |
@@ -42,23 +42,23 @@ All 81 paired gates use Rust p95 <= TS p95 + max(10 ms, 20% of TS p95): 81 passe
 
 Readiness requires ten consecutive usable completion/hover/definition probes and at least two seconds; first usable time is separate. End-to-end cold startup is observed once per route, with an empty Wasmtime cache. Component-only compile/load, instantiate and dispatch use three isolated processes per mode. OS and server caches are retained. Large Unicode/CRLF documents are exactly 1 MiB and 8 MiB.
 
-Memory is the windowless native Loom test-host process, including Wasmtime and the plugin, excluding the separate language server and its children. TypeScript still depends on Node and tsserver. This is not whole-GUI or total ecosystem memory. Local first-load Wasmtime compilation remains; release-side AOT distribution is separate.
+Memory is the windowless native Loog test-host process, including Wasmtime and the plugin, excluding the separate language server and its children. TypeScript still depends on Node and tsserver. This is not whole-GUI or total ecosystem memory. Local first-load Wasmtime compilation remains; release-side AOT distribution is separate.
 
 Each of the three package configurations passes 19 Rust protocol/lifecycle tests and Clippy. The 87 publishing tool tests pass. Production import validation passes for all three Windows packages. Native server checks also pass for JSX/TSX and the refactored Go client. Dynamic registration, rollback, cancellation, backpressure, settings, multiple roots and operation receipts have synthetic protocol coverage. Linux/macOS execution and manual GUI QA were not performed. An initial candidate regressed JS completion latency; redundant JSON copying/serialization was removed and every final language cohort rerun. Initial candidate measurements are preserved separately under rejected-attempt-1.
 
 ## Reproduce
 
-Preserve the TS baseline before staging the candidate. Both roots need valid extensions.json indexes and versioned package folders; TS/JS also need the same loom.runtime.node. Use matching Loom source with the benchmark-only tests/example patch. Build before measuring:
+Preserve the TS baseline before staging the candidate. Both roots need valid extensions.json indexes and versioned package folders; TS/JS also need the same loog.runtime.node. Use matching Loog source with the benchmark-only tests/example patch. Build before measuring:
 
 ```sh
-cargo test --release --bin Loom --no-run --offline
-cargo build --release -p loom-extension-host --example component_cost --offline
+cargo test --release --bin Loog --no-run --offline
+cargo build --release -p loog-extension-host --example component_cost --offline
 # In the extensions repository, HOST is the release test executable printed above:
-node language-clients/rust/benchmark.mjs --loom LOOM --host HOST --baseline TS_ROOT --candidate RUST_ROOT --out EMPTY_OUTPUT --language rust --runs 3
+node language-clients/rust/benchmark.mjs --loog LOOG --host HOST --baseline TS_ROOT --candidate RUST_ROOT --out EMPTY_OUTPUT --language rust --runs 3
 # Repeat with --language javascript and --language typescript, each with a fresh output directory.
 ```
 
-The runner verifies identical server payload hashes (the entire node_modules tree for TS/JS), and Node runtime hashes. Metadata retains component and test-executable hashes, commit IDs, tool versions, all cohorts and cache states. Candidate sources are uncommitted local changes accompanying the evidence; the commit ID alone does not identify the migration. LOOM_MIGRATION_VARIANTS=1 enables JSX/TSX native fixtures; LOOM_MIGRATION_FULL_CHECKS=1 probes negotiated features.
+The runner verifies identical server payload hashes (the entire node_modules tree for TS/JS), and Node runtime hashes. Metadata retains component and test-executable hashes, commit IDs, tool versions, all cohorts and cache states. Candidate sources are uncommitted local changes accompanying the evidence; the commit ID alone does not identify the migration. LOOG_MIGRATION_VARIANTS=1 enables JSX/TSX native fixtures; LOOG_MIGRATION_FULL_CHECKS=1 probes negotiated features.
 
 The preserved TS/JS development fixtures on both measured routes also retain nine identical, unused npm .bin launcher scripts. Release builders have always used --no-bin-links and omit those shims; the client invokes Node and cli.mjs directly. Final artifact auditing verifies every other server package file byte for byte against the measured payload. The full development-tree hash and normalized release-server hash are both retained in payload_audit in the artifact manifest. This layout difference is not a server version change.
 

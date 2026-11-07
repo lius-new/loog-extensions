@@ -1,13 +1,13 @@
 name: Publish
 
 # Takes in this workflow run's completed build batch and publishes it: every
-# package must be one Loom can import, a released version never changes, and the
+# package must be one Loog can import, a released version never changes, and the
 # signed index is updated by exactly one writer at a time. Only this workflow holds
 # the index signing key; the extensions' build jobs never see it.
 on:
   workflow_call:
     secrets:
-      LOOM_INDEX_KEY:
+      LOOG_INDEX_KEY:
         required: true
 
 permissions:
@@ -83,17 +83,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Read the pinned Loom source
-        id: loom
+      - name: Read the pinned Loog source
+        id: loog
         shell: bash
         run: |
-          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
-          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loom-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
-          repository: ${{ steps.loom.outputs.repository }}
-          ref: ${{ steps.loom.outputs.revision }}
-          path: .work/loom-sdk
+          repository: ${{ steps.loog.outputs.repository }}
+          ref: ${{ steps.loog.outputs.revision }}
+          path: .work/loog-sdk
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -101,15 +101,15 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: actions/cache@v4
         with:
-          path: .work/loom-sdk/target
-          key: aot-host-${{ runner.os }}-${{ runner.arch }}-rust-1.98.0-${{ hashFiles('.work/loom-sdk/Cargo.lock', '.work/loom-sdk/crates/extension-host/**', '.work/loom-sdk/wit/**') }}
+          path: .work/loog-sdk/target
+          key: aot-host-${{ runner.os }}-${{ runner.arch }}-rust-1.98.0-${{ hashFiles('.work/loog-sdk/Cargo.lock', '.work/loog-sdk/crates/extension-host/**', '.work/loog-sdk/wit/**') }}
       - uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ needs.aot-corpus.outputs.artifact-id }}
           path: .work/aot-corpus
           merge-multiple: true
       - name: Require direct AOT loading and instantiate the real component ABI
-        run: cargo run --release --locked --manifest-path .work/loom-sdk/Cargo.toml -p loom-extension-host --target ${{ matrix.target }} --example aot_verify -- .work/aot-corpus ${{ matrix.target }}
+        run: cargo run --release --locked --manifest-path .work/loog-sdk/Cargo.toml -p loog-extension-host --target ${{ matrix.target }} --example aot_verify -- .work/aot-corpus ${{ matrix.target }}
 
 
   publish:
@@ -142,11 +142,11 @@ jobs:
           path: .work/handed-over
       - name: Require at least one completed package
         shell: bash
-        run: find .work/handed-over -name '*.loomext' -print -quit | grep -q .
+        run: find .work/handed-over -name '*.loogext' -print -quit | grep -q .
       - name: Check the publication signing key
         env:
-          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
-        run: node scripts/loom-ext.mjs release preflight
+          LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}
+        run: node scripts/loog-ext.mjs release preflight
       - name: Find the pinned production validator
         id: validator
         run: node scripts/validator-source.mjs
@@ -167,13 +167,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .work/validator-source/tools/ext-validate/target
-          key: validator-${{ runner.os }}-${{ hashFiles('tools/loom-source.toml', 'tools/validator.lock') }}
+          key: validator-${{ runner.os }}-${{ hashFiles('tools/loog-source.toml', 'tools/validator.lock') }}
       - name: Build the production validator
         if: steps.validator.outputs.source == 'true'
         run: |
-          cargo build --release --locked --manifest-path .work/validator-source/tools/ext-validate/Cargo.toml --bin loom-ext-validate
+          cargo build --release --locked --manifest-path .work/validator-source/tools/ext-validate/Cargo.toml --bin loog-ext-validate
           mkdir -p tools/bin
-          cp .work/validator-source/tools/ext-validate/target/release/loom-ext-validate tools/bin/loom-ext-validate
+          cp .work/validator-source/tools/ext-validate/target/release/loog-ext-validate tools/bin/loog-ext-validate
       - name: Install the pinned AOT compiler toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -187,17 +187,17 @@ jobs:
         run: cargo build --release --locked --manifest-path tools/aot-compiler/Cargo.toml
       - name: Compile and authenticate official language-client AOT
         env:
-          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
+          LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}
         run: node scripts/prepare-aot.mjs .work/handed-over/* --out .work/aot-packages
       - name: Take in the packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/loom-ext.mjs release intake .work/aot-packages
+        run: node scripts/loog-ext.mjs release intake .work/aot-packages
       - name: Publish the releases and update the signed index
         env:
           GH_TOKEN: ${{ github.token }}
-          LOOM_INDEX_KEY: ${{ secrets.LOOM_INDEX_KEY }}
-        run: node scripts/loom-ext.mjs release publish
+          LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}
+        run: node scripts/loog-ext.mjs release publish
       - name: Keep the delivery results
         if: always()
         uses: actions/upload-artifact@v4

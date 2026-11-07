@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "loog.lang.objc",
+  "version": "0.1.0",
+  "name": "Objective-C Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Objective-C.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "objective-c",
+    "syntax",
+    "tree-sitter",
+    "objc"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.objc.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

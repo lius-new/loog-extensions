@@ -1,4 +1,4 @@
-//! What the language server found in files that are not open, told to Loom so its
+//! What the language server found in files that are not open, told to Loog so its
 //! Problems panel can list them. An open file's findings go the usual way, with
 //! the document, and follow its edits; these are the rest of the workspace, such
 //! as the output of a build that the server publishes for every file.
@@ -8,12 +8,12 @@
 #[cfg(test)]
 use crate::host::findings as service;
 #[cfg(not(test))]
-use crate::loom::service::findings as service;
-use crate::loom::extension::types::ColumnUnit;
+use crate::loog::service::findings as service;
+use crate::loog::extension::types::ColumnUnit;
 use crate::protocol::{optional, string};
 use serde_json::Value;
 
-/// Loom's bounds on one file; more is cut here rather than refused there.
+/// Loog's bounds on one file; more is cut here rather than refused there.
 const MAX_PER_FILE: usize = 500;
 const MAX_MESSAGE: usize = 2000;
 const MAX_FIELD: usize = 128;
@@ -71,7 +71,7 @@ pub fn publish(key: &str, path: &str, unit: ColumnUnit, diagnostics: &[Value]) {
         ColumnUnit::Utf16 => service::Encoding::Utf16,
     };
     if let Err(error) = service::publish(key, path, encoding, &convert(diagnostics)) {
-        // Loom keeps what it already has; this is only worth a line in Output.
+        // Loog keeps what it already has; this is only worth a line in Output.
         crate::host::log(
             1,
             &format!("{}: findings for {path} were refused: {error}", crate::NAME),

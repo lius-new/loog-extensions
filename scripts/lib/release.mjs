@@ -22,7 +22,7 @@ export const releaseDirectory = (work = WORK) => path.join(work, 'release');
 export function fingerprint(root, id, ref) {
   const prefix = `extensions/${id}/`;
   const prefixes = [prefix];
-  if (['loom.lsp.rust-analyzer', 'loom.lsp.gopls', 'loom.lsp.typescript-language-server'].includes(id)) prefixes.push('language-clients/');
+  if (['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server'].includes(id)) prefixes.push('language-clients/');
   const entries = ref
     ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', ...prefixes]).split('\0').filter(Boolean)
     // What git tracks or would track: ignored folders (dependencies, build output) are not inputs.
@@ -177,7 +177,7 @@ export function readyToIndex(prepared, previous) {
 
 /** Publish complete extension releases before making them visible in the index. */
 export function checkSigningKey(config, privateKey) {
-  assert(privateKey, 'LOOM_INDEX_KEY is required; automatic publication never produces an unsigned index');
+  assert(privateKey, 'LOOG_INDEX_KEY is required; automatic publication never produces an unsigned index');
   assert(config.index.keys?.[config.index['key-id']] === publicKeyOf(privateKey), 'Signing key does not match the trusted public key');
 }
 

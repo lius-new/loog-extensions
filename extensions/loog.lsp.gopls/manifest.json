@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.gopls",
+  "version": "0.1.2",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["go"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "gopls Language Server",
+  "publisher": "Loog",
+  "description": "The gopls language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "gopls",
+    "language server",
+    "lsp"
+  ],
+  "license": "BSD-3-Clause",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.10 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+  ],
+  "contributes": {
+    "languages": [{ "id": "loog.lsp.gopls.language", "path": "languages/go/language.json" }],
+    "settings": [
+      { "key": "loog.lsp.gopls.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.gopls.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.gopls.performance", "kind": "boolean", "default": false }
+    ],
+    "language_service": {
+      "name": "gopls",
+      "providers": [
+        { "id": "loog.lsp.gopls.diagnostics", "kind": "diagnostics", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.completion", "kind": "completion", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.hover", "kind": "hover", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.definition", "kind": "definition", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.document-symbols", "kind": "document-symbols", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.signature-help", "kind": "signature-help", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.formatting", "kind": "formatting", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.code-actions", "kind": "code-actions", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.references", "kind": "references", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.document-highlights", "kind": "document-highlights", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.rename", "kind": "rename", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.code-lens", "kind": "code-lens", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.format-on-type", "kind": "format-on-type", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.execute-command", "kind": "execute-command", "selector": { "languages": ["go"] } },
+        { "id": "loog.lsp.gopls.highlights", "kind": "highlights", "selector": { "languages": ["go"] } }
+      ]
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// `.loomext` packages: gzip-compressed tar with the extension id as the one root
+// `.loogext` packages: gzip-compressed tar with the extension id as the one root
 // folder. Packing is reproducible (sorted entries, fixed times), and unpacking
 // refuses anything that could write outside the destination.
 import fs from 'node:fs';

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.hcl",
+  "version": "0.1.0",
+  "name": "HCL Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for HCL.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "hcl",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "Apache-2.0 AND MPL-2.0",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.8 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.hcl.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

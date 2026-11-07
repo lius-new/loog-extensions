@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.typescript-language-server",
+  "version": "0.1.2",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["javascript", "typescript"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "TypeScript Language Server",
+  "publisher": "Loog",
+  "description": "The TypeScript Language Server language server.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "typescript language server",
+    "language server",
+    "lsp"
+  ],
+  "license": "Apache-2.0",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.1.10 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+  ],
+  "requires": [
+    "loog.runtime.node@^0.1.0"
+  ],
+  "contributes": {
+    "languages": [
+      { "id": "loog.lsp.typescript-language-server.javascript", "path": "languages/javascript/language.json" },
+      { "id": "loog.lsp.typescript-language-server.typescript", "path": "languages/typescript/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.typescript-language-server.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.typescript-language-server.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.typescript-language-server.performance", "kind": "boolean", "default": false }
+    ],
+    "language_service": {
+      "name": "TypeScript Language Server",
+      "providers": [
+        { "id": "loog.lsp.typescript-language-server.diagnostics", "kind": "diagnostics", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.completion", "kind": "completion", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.hover", "kind": "hover", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.definition", "kind": "definition", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.document-symbols", "kind": "document-symbols", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.signature-help", "kind": "signature-help", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.formatting", "kind": "formatting", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.code-actions", "kind": "code-actions", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.references", "kind": "references", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.document-highlights", "kind": "document-highlights", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.rename", "kind": "rename", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.code-lens", "kind": "code-lens", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.format-on-type", "kind": "format-on-type", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.execute-command", "kind": "execute-command", "selector": { "languages": ["javascript", "typescript"] } },
+        { "id": "loog.lsp.typescript-language-server.highlights", "kind": "highlights", "selector": { "languages": ["javascript", "typescript"] } }
+      ]
+    }
+  }
+}

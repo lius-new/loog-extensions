@@ -4,7 +4,7 @@ The three official clients remain Rust WASM components. The trusted publisher co
 
 The production host pins compiler authorities and verifies plugin identity/version, profile, target, engine fingerprint and both WASM/native SHA-256 before deserializing owned bytes. It retains the WASM/cache fallback and logs why an AOT artifact was rejected. The ordinary CPU-tuned engine/cache is unchanged; the portable engine receives the same epoch ticker and store limits. Production does not read the temporary benchmark trust environment variable.
 
-An updated host is required: installing AOT does not retrofit an older Loom binary. Engine/profile changes require newly compiled, signed artifacts and new plugin versions; existing published packages remain immutable. TypeScript still runs its external Node server.
+An updated host is required: installing AOT does not retrofit an older Loog binary. Engine/profile changes require newly compiled, signed artifacts and new plugin versions; existing published packages remain immutable. TypeScript still runs its external Node server.
 
 ## Release gate
 
@@ -17,7 +17,7 @@ The accompanying evidence uses identical Rust WASM 0.2.3 / signed AOT 0.2.4 inpu
 Cold first usable time and memory include native host activity but exclude separately running language servers from memory. First usable time includes server indexing. Cold clears Wasmtime caches, not OS/server caches. Existing cached mappings can be faster and smaller than authenticated AOT copies; the tradeoff is shown. GUI manual validation and foreign-OS performance are not claimed by these Windows numbers.
 
 ```sh
-node language-clients/rust/aot-benchmark.mjs --loom LOOM --host RELEASE_TEST_HOST --baseline WASM_ROOT --candidate AOT_ROOT --out EMPTY_DIR --language go --runs 3
+node language-clients/rust/aot-benchmark.mjs --loog LOOG --host RELEASE_TEST_HOST --baseline WASM_ROOT --candidate AOT_ROOT --out EMPTY_DIR --language go --runs 3
 # Repeat for rust, javascript, typescript with separate empty output directories.
 # Test-signed local packages additionally require --test-authority BENCHMARK_PUBLIC_KEY_FILE.
 ```
@@ -106,9 +106,9 @@ typescript 两条路线的协商能力相同，额外真实功能检查 20 项�
 - 96 个端到端轮次、48 个独立组件轮次；28800 个正式请求全部保留。失败会中止轮次，未筛除慢样本；所有 AOT 轮次必须报告 published-aot，不能靠本地缓存或回退编译通过。
 - 每轮使用全新宿主/服务器；冷启动各三次，独立空缓存；顺序交替。就绪需连续十组可用补全/悬停/定义且持续至少两秒，首次可用另记。热态每项另预热十次，再测一百次。测量期间没有构建。
 - 大文件含中文、emoji 和 CRLF，严格为 1 MiB 和 8 MiB；小文件按语言保持相同内容。原开发 TS 夹具的九个未使用 npm .bin 脚本已移除，两条路线均采用正式包的服务器布局。
-- 内存是无窗口 Loom 测试宿主的工作集/私有字节，排除独立语言服务器及其子进程；不是整个 GUI 的内存。进程峰值为 OS 累积峰值，包含就绪前分配。
+- 内存是无窗口 Loog 测试宿主的工作集/私有字节，排除独立语言服务器及其子进程；不是整个 GUI 的内存。进程峰值为 OS 累积峰值，包含就绪前分配。
 - AOT 优化首次加载；已有本地编译缓存可能更快。AOT 每次仍做验签、SHA-256 和安全复制，热态请求也不保证逐轮更快。Rust 索引会波动，不把单轮索引差异解释为编译器收益。
-- 当前本地对照使用临时测试签名，测试信任仅在 cfg(test) 宿主显式注入；生产固定官方发布公钥。正式包由 CI 已有 LOOM_INDEX_KEY 签发，需含 AOT 加载器的新宿主。旧宿主、签名失败或不兼容配置保留 WASM 回退。
+- 当前本地对照使用临时测试签名，测试信任仅在 cfg(test) 宿主显式注入；生产固定官方发布公钥。正式包由 CI 已有 LOOG_INDEX_KEY 签发，需含 AOT 加载器的新宿主。旧宿主、签名失败或不兼容配置保留 WASM 回退。
 - 生产使用原生编译代码需可信编译器签名，并绑定插件 ID/版本、WASM/代码 SHA-256、目标和引擎配置。加载已验证的内存字节，避免验证后再映射可变文件的竞态。
 - 本机 Windows x64 实测；跨系统 ABI 验收在发布前由 CI 六种原生 runner 强制执行。GUI 人工验收未作为这些数字的依据。
 

@@ -423,7 +423,7 @@ fn commands_wait_for_native_edit_receipts_and_preserve_origin() {
     let mut command = request(ProviderKind::ExecuteCommand, 90);
     command.context.as_mut().unwrap().name = Some("gopls.test".into());
     command.context.as_mut().unwrap().data =
-        Some(json!([{"$loomSession":"1:","arguments":[42]}]).to_string());
+        Some(json!([{"$loogSession":"1:","arguments":[42]}]).to_string());
     c.provide(command).unwrap();
     let rpc = sent("workspace/executeCommand");
     assert_eq!(rpc["params"]["arguments"], json!([42]));
@@ -855,7 +855,7 @@ fn status_progress_idle_shutdown_and_workspace_changes_follow_the_contract() {
         json!({"token":1,"value":{"kind":"report","percentage":50}}),
     );
     assert!(state(|s| s.reports.values().any(|report| {
-        report.state == crate::loom::service::status::State::Working
+        report.state == crate::loog::service::status::State::Working
     })));
     server(
         &mut c,
@@ -963,8 +963,8 @@ fn publish_for(c: &mut Client, process: u64, id: u64, uri: &str, line: u64) {
 }
 
 #[test]
-fn a_file_nobody_has_open_is_told_to_loom_as_a_finding_in_the_servers_units() {
-    use crate::loom::service::findings::Encoding;
+fn a_file_nobody_has_open_is_told_to_loog_as_a_finding_in_the_servers_units() {
+    use crate::loog::service::findings::Encoding;
     let (mut c, p) = setup();
     publish_for(&mut c, p, 1, "file:///C:/project/other.go", 4);
     let key = c.sessions[&p].key.clone();
@@ -1040,7 +1040,7 @@ fn closing_a_file_keeps_its_problems_and_stopping_the_server_takes_them_back() {
 }
 
 #[test]
-fn findings_respect_loom_bounds_and_skip_what_cannot_be_placed() {
+fn findings_respect_loog_bounds_and_skip_what_cannot_be_placed() {
     let long = "é".repeat(2000);
     let mut values = vec![
         json!({"range":span(),"message":long,"code":{"x":1},"severity":9}),
@@ -1061,7 +1061,7 @@ fn findings_respect_loom_bounds_and_skip_what_cannot_be_placed() {
 
 #[test]
 fn a_session_reports_its_state_and_one_line_and_is_withdrawn_with_the_client() {
-    use crate::loom::service::status::State;
+    use crate::loog::service::status::State;
     state(|s| *s = Default::default());
     let mut widgets = crate::status::Widgets::default();
     let update = |widgets: &mut crate::status::Widgets, rank, detail: &str| {
@@ -1109,7 +1109,7 @@ fn a_session_reports_its_state_and_one_line_and_is_withdrawn_with_the_client() {
 
 #[test]
 fn status_keeps_roots_independent_and_releases_only_closed_documents() {
-    use crate::loom::service::status::State;
+    use crate::loog::service::status::State;
     let (mut client, first) = setup();
     state(|s| s.roots.push(root(2, "C:/other")));
     let reference = doc(2, "C:/other/other.go", "package other\n");

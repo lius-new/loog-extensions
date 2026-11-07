@@ -1,5 +1,5 @@
-// Intake: what is published is a package, not the way it was made. Each `.loomext`
-// handed over is unpacked and must be a package Loom can import; how its project
+// Intake: what is published is a package, not the way it was made. Each `.loogext`
+// handed over is unpacked and must be a package Loog can import; how its project
 // was laid out or built is not looked at.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,18 +16,18 @@ import {fingerprint, readRelease} from './release.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 
-/** `.loomext` files named on the command line, or found in the folders named. */
+/** `.loogext` files named on the command line, or found in the folders named. */
 export function packageFiles(paths) {
   return paths.flatMap(item => (fs.statSync(item).isDirectory()
-    ? fs.readdirSync(item).filter(name => name.endsWith('.loomext')).sort().map(name => path.resolve(item, name))
+    ? fs.readdirSync(item).filter(name => name.endsWith('.loogext')).sort().map(name => path.resolve(item, name))
     : [path.resolve(item)]));
 }
 
-/** The platform in `<id>-<version>-<platform>.loomext`. */
+/** The platform in `<id>-<version>-<platform>.loogext`. */
 export function platformOf(file, manifest) {
   const name = path.basename(file), prefix = `${manifest.id}-${manifest.version}-`;
-  assert(name.startsWith(prefix) && name.endsWith('.loomext'), `${name}: the file is named ${prefix}<platform>.loomext`);
-  const platform = name.slice(prefix.length, -'.loomext'.length);
+  assert(name.startsWith(prefix) && name.endsWith('.loogext'), `${name}: the file is named ${prefix}<platform>.loogext`);
+  const platform = name.slice(prefix.length, -'.loogext'.length);
   assert(validPlatform(platform), `${name}: ${platform} is not a platform`);
   assert(artifactName(manifest.id, manifest.version, platform) === name, `${name}: unexpected file name`);
   return platform;
@@ -80,7 +80,7 @@ export async function intake(files, {root = ROOT, dist = DIST, work = WORK, vali
       const versions = index?.extensions.find(e => e.id === id)?.versions ?? [];
       assert(versions.every(v => compare(version, v.version) > 0), `${id}: a new version must be newer than the published versions`);
       for (const item of group.items) if (validator && item.manifest.contributes?.highlight?.length) {
-        // Loom's own loaders must accept it; a sample is optional and not required.
+        // Loog's own loaders must accept it; a sample is optional and not required.
         validate(validator, item.directory, null);
       }
       const remote = repository ? await lookup(repository, releaseTag(id, version)) : null;

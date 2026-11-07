@@ -5,11 +5,11 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {language, server, theme, workspace, write} from './fixtures.mjs';
 
-const CLI = fileURLToPath(new URL('../loom-ext.mjs', import.meta.url));
+const CLI = fileURLToPath(new URL('../loog-ext.mjs', import.meta.url));
 
-export function checkout(t, {bundled = ['loom.theme.demo']} = {}) {
+export function checkout(t, {bundled = ['loog.theme.demo']} = {}) {
   const root = workspace(t);
-  write(root, 'loom-ext.toml', `schema = 1
+  write(root, 'loog-ext.toml', `schema = 1
 repository = "acme/extensions"
 bundled = ${JSON.stringify(bundled)}
 
@@ -29,7 +29,7 @@ export function populate({extensions}, what = ['theme', 'language']) {
 
 export function cli(root, args, env = {}) {
   const result = spawnSync(process.execPath, [CLI, ...args], {
-    cwd: root, encoding: 'utf8', env: {...process.env, LOOM_EXT_ROOT: root, ...env},
+    cwd: root, encoding: 'utf8', env: {...process.env, LOOG_EXT_ROOT: root, ...env},
   });
   return {status: result.status, out: result.stdout, err: result.stderr, all: result.stdout + result.stderr};
 }

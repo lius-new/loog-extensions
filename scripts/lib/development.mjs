@@ -1,5 +1,5 @@
 // Development staging uses the same version directories and activation index
-// as Loom's installed-package loader. Flat folders alone are not discoverable.
+// as Loog's installed-package loader. Flat folders alone are not discoverable.
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash, randomUUID} from 'node:crypto';
@@ -51,7 +51,7 @@ export function registerDevelopment(root, packages) {
       throw new Error(`Development package must be staged under <id>/<version>: ${directory}`);
     }
     // Unpacked local snapshots have no archive path. This records their source
-    // digest; Loom independently derives execution identities from package bytes.
+    // digest; Loog independently derives execution identities from package bytes.
     const localSource = source ?? {kind: 'file', sha256: fingerprint(directory)};
     if (!validSource(localSource)) {
       throw new Error(`Invalid development source for ${manifest.id}: expected a tagged source record, not a path`);
@@ -65,7 +65,7 @@ export function registerDevelopment(root, packages) {
         ? {previous: previous.version} : previous?.previous ? {previous: previous.previous} : {}),
     };
   }
-  // Loom rejects the entire activation index if any Source enum is malformed.
+  // Loog rejects the entire activation index if any Source enum is malformed.
   // Validate every retained entry as well as the entries changed by this batch.
   for (const [id, entry] of Object.entries(state.extensions)) {
     if (!entry || typeof entry.version !== 'string' || !validSource(entry.source)

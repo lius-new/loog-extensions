@@ -1,5 +1,5 @@
-// lock: pin the extensions Loom ships (loom-ext.toml `bundled`) to the versions in the
-// index, and keep a copy of that index. Loom's repository stores both: the lock says
+// lock: pin the extensions Loog ships (loog-ext.toml `bundled`) to the versions in the
+// index, and keep a copy of that index. Loog's repository stores both: the lock says
 // which packages to put in the installer, the snapshot is the index it falls back to
 // when the live one cannot be fetched.
 import fs from 'node:fs';
@@ -9,14 +9,14 @@ import {loadConfig} from '../lib/config.mjs';
 import {indexFile, readIndex, signatureFile} from '../lib/index.mjs';
 import {parseArgs} from '../lib/cli.mjs';
 
-export const usage = 'lock [--out dir]    Write extensions.lock and an index snapshot for Loom\'s repository';
+export const usage = 'lock [--out dir]    Write extensions.lock and an index snapshot for Loog\'s repository';
 
 export async function run(argv) {
   const {options} = parseArgs(argv, {out: 'string'});
   const config = loadConfig();
   const bytes = fs.existsSync(indexFile(DIST)) ? fs.readFileSync(indexFile(DIST)) : null;
   assert(bytes, 'No index; run index first');
-  assert(fs.existsSync(signatureFile(DIST)), 'The index is not signed; Loom only trusts a signed snapshot');
+  assert(fs.existsSync(signatureFile(DIST)), 'The index is not signed; Loog only trusts a signed snapshot');
   const index = readIndex(indexFile(DIST));
   const extensions = config.bundled.map(id => {
     const found = index.extensions.find(extension => extension.id === id);
