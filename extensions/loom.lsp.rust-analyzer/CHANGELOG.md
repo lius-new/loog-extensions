@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Tell Loom what the server found in files that are not open, so those findings show in the problems panel and status bar.
+
 ## 0.1.1
 
 - Report how the service is doing to Loom (`loom:service/status`) instead of drawing a status item; Loom shows it and lists the service in its language services panel.
