@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.lang.rst",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "name": "reStructuredText Language",
   "publisher": "Loog",
   "description": "Syntax highlighting for reStructuredText.",

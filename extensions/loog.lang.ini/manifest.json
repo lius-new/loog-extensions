@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.lang.ini",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "name": "INI Language",
   "publisher": "Loog",
   "description": "Syntax highlighting for INI.",

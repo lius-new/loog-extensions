@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.runtime.node",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "name": "Node.js Runtime",
   "publisher": "Loog",
   "description": "The Node.js runtime that JavaScript language servers run on.",

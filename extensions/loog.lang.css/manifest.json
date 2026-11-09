@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.lang.css",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "name": "CSS Language",
   "publisher": "Loog",
   "description": "Syntax highlighting for CSS.",

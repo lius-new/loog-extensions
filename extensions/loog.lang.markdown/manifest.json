@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.lang.markdown",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "name": "Markdown Language",
   "publisher": "Loog",
   "description": "Syntax highlighting for Markdown, with fenced code blocks highlighted in their own language.",

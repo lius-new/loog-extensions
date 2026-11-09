@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Redrew the extension icon as a picture; the extension itself did not change.
+
 ## 0.1.2
 
 - Tell Loog what the server found in files that are not open, so those findings show in the problems panel and status bar.

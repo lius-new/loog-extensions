@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Redrew the extension icon as a picture; the extension itself did not change.
+
 ## 0.1.3
 
 - Changed the extension category from Languages to Syntax Highlighting.
