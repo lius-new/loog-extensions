@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.zls",
-  "version": "0.1.0",
-  "name": "zls Language Server",
+  "version": "0.1.4",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["zig"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "Zig Language Server",
   "publisher": "Loog",
-  "description": "The zls language server.",
+  "description": "Zig completion, diagnostics and navigation powered by ZLS.",
   "categories": [
     "Language Services"
   ],
@@ -19,34 +22,44 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loog": ">=0.1.8 <0.3"
+    "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
+    "languages": [
+      { "id": "loog.lsp.zls.zig", "path": "languages/zig/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.zls.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.zls.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.zls.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loog.lsp.zls.zls",
-          "name": "zls",
-          "languages": [
-            "zig"
-          ],
-          "command": "${extension}/zls",
-          "root_markers": [
-            "build.zig",
-            "build.zig.zon"
-          ],
-          "root_strategy": "nearest",
-          "root_fallback": "file_directory",
-          "bindings": [
-            {
-              "language": "zig",
-              "language_id": "zig"
-            }
-          ]
-        }
+      "name": "Zig Language Server",
+      "providers": [
+        { "id": "loog.lsp.zls.diagnostics", "kind": "diagnostics", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.completion", "kind": "completion", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.hover", "kind": "hover", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.definition", "kind": "definition", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.document-symbols", "kind": "document-symbols", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.signature-help", "kind": "signature-help", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.formatting", "kind": "formatting", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.code-actions", "kind": "code-actions", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.references", "kind": "references", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.document-highlights", "kind": "document-highlights", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.rename", "kind": "rename", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.code-lens", "kind": "code-lens", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.format-on-type", "kind": "format-on-type", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.execute-command", "kind": "execute-command", "selector": { "languages": ["zig"] } },
+        { "id": "loog.lsp.zls.highlights", "kind": "highlights", "selector": { "languages": ["zig"] } }
       ]
     }
   }

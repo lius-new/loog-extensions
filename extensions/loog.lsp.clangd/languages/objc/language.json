@@ -1,0 +1,26 @@
+{
+  "name": "objc",
+  "display_name": "Objective-C",
+  "badge": "OBJC",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "objc"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "m",
+        "mm"
+      ],
+      "variant": "objc"
+    }
+  ]
+}

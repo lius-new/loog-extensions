@@ -83,10 +83,9 @@ root selection, protocol language IDs and initialization. Programs are package
 executables or come from declared runtime dependencies; launch still requires
 workspace trust. General SDK APIs wrap Loog services and contain no language client.
 
-The first clients support Rust, Go, JavaScript and TypeScript and require Loog
->=0.1.9. The retired `servers` declaration is rejected by the new host. Historical
-recipes for other languages remain explicitly `deferred` in `loog-ext.toml` until
-they are migrated; their already published releases are retained.
+All current language service recipes use typed providers. The retired `servers`
+declaration is rejected by the host. Each manifest declares its minimum Loog
+version.
 
 ## Platforms
 

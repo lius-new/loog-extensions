@@ -350,7 +350,7 @@ fn selector(value: &Value, doc: &DocumentRef) -> bool {
     array(value).iter().any(|filter| {
         if filter["language"]
             .as_str()
-            .is_some_and(|v| v != language_id(&doc.language, doc.variant.as_deref()))
+            .is_some_and(|v| v != language_id(&doc.language, doc.variant.as_deref(), &doc.path))
             || filter["scheme"].as_str().is_some_and(|v| v != "file")
         {
             return false;
@@ -960,7 +960,7 @@ impl Client {
         let next = Text::new(text.clone(), s.unit);
         s.version += 1;
         if doc.server_version.is_none() {
-            s.notify("textDocument/didOpen",json!({"textDocument":{"uri":uri(&reference.path),"languageId":language_id(&reference.language, reference.variant.as_deref()),"version":s.version,"text":text.as_ref()}}))?;
+            s.notify("textDocument/didOpen",json!({"textDocument":{"uri":uri(&reference.path),"languageId":language_id(&reference.language, reference.variant.as_deref(), &reference.path),"version":s.version,"text":text.as_ref()}}))?;
         } else {
             let sync = s.effective(Some(&reference))["textDocumentSync"].clone();
             let incremental = sync.as_u64() == Some(2) || sync["change"] == 2;

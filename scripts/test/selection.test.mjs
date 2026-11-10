@@ -33,8 +33,30 @@ test('private language client changes rebuild all configured clients', () => {
   const clients = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server',
     'loog.lsp.pyright', 'loog.lsp.yaml-language-server', 'loog.lsp.bash-language-server',
     'loog.lsp.clangd', 'loog.lsp.lua-language-server', 'loog.lsp.taplo',
-    'loog.lsp.css-language-server', 'loog.lsp.html-language-server'];
+    'loog.lsp.css-language-server', 'loog.lsp.html-language-server',
+    'loog.lsp.biome', 'loog.lsp.marksman', 'loog.lsp.ruff', 'loog.lsp.zls',
+    'loog.lsp.vscode-langservers-extracted', 'loog.lsp.eslint'];
   assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/rust/src/protocol.rs']), clients.sort());
+});
+
+test('every language service recipe has a matching component profile and selectors', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const profiles = JSON.parse(fs.readFileSync(path.join(root, 'language-clients/rust/clients.json'), 'utf8'));
+  const extensions = fs.readdirSync(path.join(root, 'extensions'), {withFileTypes: true})
+    .filter(entry => entry.isDirectory() && entry.name.startsWith('loog.lsp.')).map(entry => entry.name).sort();
+  assert.deepEqual(Object.keys(profiles).sort(), extensions);
+  for (const id of extensions) {
+    const dir = path.join(root, 'extensions', id);
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+    const selector = {languages: profiles[id].languages};
+    assert.equal(manifest.id, id);
+    assert.equal(manifest.api, 'loog:extension@0.1.0', id);
+    assert.equal(manifest.component, 'extension.wasm', id);
+    assert.deepEqual(manifest.activation.find(entry => entry.kind === 'document')?.selector, selector, id);
+    const service = manifest.contributes.language_service;
+    assert.ok(service.providers.length, id);
+    for (const provider of service.providers) assert.deepEqual(provider.selector, selector, provider.id);
+  }
 });
 
 test('manual selection is explicit, sorted and rejects unknown or malformed IDs', () => {

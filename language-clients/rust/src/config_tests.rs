@@ -60,11 +60,15 @@ fn selected_package_has_its_startup_configuration() {
                     "start"
                 ]
             );
-            assert_eq!(language_id("bash", Some("bash")), "shellscript");
+            assert_eq!(
+                language_id("bash", Some("bash"), "script.sh"),
+                "shellscript"
+            );
             assert!(config.markers.is_empty() && !config.file_fallback);
         }
         "loog.lsp.clangd" => {
-            assert_eq!(config.languages, &["c", "cpp"]);
+            assert_eq!(config.languages, &["c", "cpp", "objc"]);
+            assert_eq!(language_id("objc", Some("objc"), "source.m"), "objective-c");
             assert_eq!(config.program, "${extension}/bin/clangd");
             assert!(config.args.is_empty());
             assert_eq!(
@@ -88,7 +92,7 @@ fn selected_package_has_its_startup_configuration() {
             assert!(!config.outermost && !config.file_fallback);
         }
         "loog.lsp.css-language-server" => {
-            assert_eq!(config.languages, &["css"]);
+            assert_eq!(config.languages, &["css", "scss"]);
             assert_eq!(config.program, "${runtime.node}/node");
             assert_eq!(
                 config.args,
@@ -112,6 +116,82 @@ fn selected_package_has_its_startup_configuration() {
             );
             assert_eq!(config.markers, &["package.json"]);
             assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.biome" => {
+            assert_eq!(
+                config.languages,
+                &["javascript", "typescript", "json", "css"]
+            );
+            assert_eq!(config.program, "${extension}/biome");
+            assert_eq!(config.args, &["lsp-proxy"]);
+            assert_eq!(config.markers, &["biome.json", "biome.jsonc"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.marksman" => {
+            assert_eq!(config.languages, &["markdown"]);
+            assert_eq!(config.program, "${extension}/marksman");
+            assert_eq!(config.args, &["server"]);
+            assert_eq!(config.markers, &[".marksman.toml"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.ruff" => {
+            assert_eq!(config.languages, &["python"]);
+            assert_eq!(config.program, "${extension}/ruff");
+            assert_eq!(config.args, &["server"]);
+            assert_eq!(
+                config.markers,
+                &["ruff.toml", ".ruff.toml", "pyproject.toml"]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.vscode-langservers-extracted" => {
+            assert_eq!(config.languages, &["json"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-json-language-server",
+                    "--stdio"
+                ]
+            );
+            assert_eq!(config.markers, &["package.json"]);
+            assert!(!config.outermost && !config.file_fallback);
+            assert_eq!(language_id("json", Some("json"), "settings.JSONC"), "jsonc");
+            assert_eq!(language_id("json", Some("json"), "package.json"), "json");
+        }
+        "loog.lsp.eslint" => {
+            assert_eq!(config.languages, &["javascript", "typescript"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-eslint-language-server",
+                    "--stdio"
+                ]
+            );
+            assert_eq!(
+                config.markers,
+                &[
+                    "eslint.config.js",
+                    "eslint.config.mjs",
+                    "eslint.config.cjs",
+                    ".eslintrc.json",
+                    ".eslintrc.js",
+                    ".eslintrc.cjs",
+                    ".eslintrc.yml",
+                    ".eslintrc.yaml",
+                    ".eslintrc",
+                    "package.json"
+                ]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.zls" => {
+            assert_eq!(config.languages, &["zig"]);
+            assert_eq!(config.program, "${extension}/zls");
+            assert!(config.args.is_empty());
+            assert_eq!(config.markers, &["build.zig", "build.zig.zon"]);
+            assert!(!config.outermost && config.file_fallback);
         }
         _ => panic!("unconfigured package {ID}"),
     }

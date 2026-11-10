@@ -14,11 +14,21 @@ impl Default for Configuration {
     }
 }
 
-pub(crate) fn language_id<'a>(language: &'a str, variant: Option<&str>) -> &'a str {
+pub(crate) fn language_id<'a>(language: &'a str, variant: Option<&str>, path: &str) -> &'a str {
     match (language, variant) {
         ("javascript", Some("jsx")) => "javascriptreact",
         ("typescript", Some("tsx")) => "typescriptreact",
         ("bash", _) => "shellscript",
+        ("objc", _) => "objective-c",
+        // JSON and JSONC use the same Loog language and syntax grammar.
+        ("json", _)
+            if std::path::Path::new(path)
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("jsonc")) =>
+        {
+            "jsonc"
+        }
         _ => language,
     }
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Added a Loog WASM client for Marksman Language Server.
+
 ## 0.1.3
 
 - Changed the extension category from Languages to Language Services.

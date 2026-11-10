@@ -1,6 +1,6 @@
 # clangd
 
-C and C++ language services powered by clangd.
+C, C++ and Objective-C language services powered by clangd.
 
 Open a supported file in a trusted workspace to start the Loog WASM client.
 The client finds the nearest project marker (`compile_commands.json`, `compile_flags.txt`, `.clangd`) and falls back to the workspace folder.

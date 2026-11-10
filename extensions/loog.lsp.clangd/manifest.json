@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.clangd",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
-  "activation": [{ "kind": "document", "selector": { "languages": ["c","cpp"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "activation": [{ "kind": "document", "selector": { "languages": ["c", "cpp", "objc"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "clangd",
   "publisher": "Loog",
-  "description": "C and C++ language services powered by clangd.",
+  "description": "C, C++ and Objective-C language services powered by clangd.",
   "categories": [
     "Language Services"
   ],
@@ -30,7 +30,8 @@
   "contributes": {
     "languages": [
       { "id": "loog.lsp.clangd.c", "path": "languages/c/language.json" },
-      { "id": "loog.lsp.clangd.cpp", "path": "languages/cpp/language.json" }
+      { "id": "loog.lsp.clangd.cpp", "path": "languages/cpp/language.json" },
+      { "id": "loog.lsp.clangd.objc", "path": "languages/objc/language.json" }
     ],
     "settings": [
       { "key": "loog.lsp.clangd.configuration", "kind": "string", "default": "{}" },
@@ -40,27 +41,27 @@
     "language_service": {
       "name": "clangd",
       "providers": [
-        { "id": "loog.lsp.clangd.diagnostics", "kind": "diagnostics", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.completion", "kind": "completion", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.hover", "kind": "hover", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.definition", "kind": "definition", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.document-symbols", "kind": "document-symbols", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.signature-help", "kind": "signature-help", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.formatting", "kind": "formatting", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.code-actions", "kind": "code-actions", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.references", "kind": "references", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.document-highlights", "kind": "document-highlights", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.rename", "kind": "rename", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.code-lens", "kind": "code-lens", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.format-on-type", "kind": "format-on-type", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.execute-command", "kind": "execute-command", "selector": { "languages": ["c","cpp"] } },
-        { "id": "loog.lsp.clangd.highlights", "kind": "highlights", "selector": { "languages": ["c","cpp"] } }
+        { "id": "loog.lsp.clangd.diagnostics", "kind": "diagnostics", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.completion", "kind": "completion", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.hover", "kind": "hover", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.definition", "kind": "definition", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.document-symbols", "kind": "document-symbols", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.signature-help", "kind": "signature-help", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.formatting", "kind": "formatting", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.code-actions", "kind": "code-actions", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.references", "kind": "references", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.document-highlights", "kind": "document-highlights", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.rename", "kind": "rename", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.code-lens", "kind": "code-lens", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.format-on-type", "kind": "format-on-type", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.execute-command", "kind": "execute-command", "selector": { "languages": ["c", "cpp", "objc"] } },
+        { "id": "loog.lsp.clangd.highlights", "kind": "highlights", "selector": { "languages": ["c", "cpp", "objc"] } }
       ]
     }
   }

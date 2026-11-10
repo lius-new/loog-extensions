@@ -48,7 +48,7 @@
     "fileFallback": false
   },
   "loog.lsp.clangd": {
-    "languages": ["c", "cpp"],
+    "languages": ["c", "cpp", "objc"],
     "program": "${extension}/bin/clangd",
     "args": [],
     "markers": ["compile_commands.json", "compile_flags.txt", ".clangd"],
@@ -72,7 +72,7 @@
     "fileFallback": false
   },
   "loog.lsp.css-language-server": {
-    "languages": ["css"],
+    "languages": ["css", "scss"],
     "program": "${runtime.node}/node",
     "args": ["${extension}/node_modules/vscode-langservers-extracted/bin/vscode-css-language-server", "--stdio"],
     "markers": ["package.json"],
@@ -86,5 +86,53 @@
     "markers": ["package.json"],
     "outermost": false,
     "fileFallback": false
+  },
+  "loog.lsp.biome": {
+    "languages": ["javascript", "typescript", "json", "css"],
+    "program": "${extension}/biome",
+    "args": ["lsp-proxy"],
+    "markers": ["biome.json", "biome.jsonc"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.marksman": {
+    "languages": ["markdown"],
+    "program": "${extension}/marksman",
+    "args": ["server"],
+    "markers": [".marksman.toml"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.ruff": {
+    "languages": ["python"],
+    "program": "${extension}/ruff",
+    "args": ["server"],
+    "markers": ["ruff.toml", ".ruff.toml", "pyproject.toml"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.vscode-langservers-extracted": {
+    "languages": ["json"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/vscode-langservers-extracted/bin/vscode-json-language-server", "--stdio"],
+    "markers": ["package.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.eslint": {
+    "languages": ["javascript", "typescript"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/vscode-langservers-extracted/bin/vscode-eslint-language-server", "--stdio"],
+    "markers": ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yml", ".eslintrc.yaml", ".eslintrc", "package.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.zls": {
+    "languages": ["zig"],
+    "program": "${extension}/zls",
+    "args": [],
+    "markers": ["build.zig", "build.zig.zon"],
+    "outermost": false,
+    "fileFallback": true
   }
 }

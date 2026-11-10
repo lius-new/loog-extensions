@@ -1,14 +1,10 @@
 # Ruff Language Server
 
-The Ruff language server.
+Python linting, quick fixes and formatting powered by Ruff.
 
-Extension package: 0.1.0. Upstream program: 0.17.1.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The package contains a pinned native server for its platform.
 
-## Serves
+The `configuration` and `initialization` extension settings accept JSON text.
 
-- **Ruff**: `python`
-
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://docs.astral.sh/ruff/editors/setup/).

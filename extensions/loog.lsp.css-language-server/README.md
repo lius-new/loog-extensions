@@ -1,6 +1,6 @@
 # CSS Language Server
 
-CSS completion, validation and navigation.
+CSS and SCSS completion, validation and navigation.
 
 Open a supported file in a trusted workspace to start the Loog WASM client.
 The client finds the nearest project marker (`package.json`) and falls back to the workspace folder.

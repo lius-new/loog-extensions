@@ -1,14 +1,12 @@
-# zls Language Server
+# Zig Language Server
 
-The zls language server.
+Zig completion, diagnostics and navigation powered by ZLS.
 
-Extension package: 0.1.0. Upstream program: 0.17.0.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The package contains a pinned native server for its platform.
 
-## Serves
+Install the matching Zig toolchain and make `zig` available on PATH.
 
-- **zls**: `zig`
+The `configuration` and `initialization` extension settings accept JSON text.
 
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://zigtools.org/zls/install/).

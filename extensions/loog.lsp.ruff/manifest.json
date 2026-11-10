@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.ruff",
-  "version": "0.1.0",
+  "version": "0.1.4",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["python"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "Ruff Language Server",
   "publisher": "Loog",
-  "description": "The Ruff language server.",
+  "description": "Python linting, quick fixes and formatting powered by Ruff.",
   "categories": [
     "Language Services"
   ],
@@ -19,38 +22,44 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loog": ">=0.1.8 <0.3"
+    "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
+    "languages": [
+      { "id": "loog.lsp.ruff.python", "path": "languages/python/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.ruff.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.ruff.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.ruff.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loog.lsp.ruff.ruff",
-          "name": "Ruff",
-          "languages": [
-            "python"
-          ],
-          "command": "${extension}/ruff",
-          "args": [
-            "server"
-          ],
-          "root_markers": [
-            "ruff.toml",
-            ".ruff.toml",
-            "pyproject.toml"
-          ],
-          "root_strategy": "nearest",
-          "root_fallback": "workspace",
-          "bindings": [
-            {
-              "language": "python",
-              "language_id": "python"
-            }
-          ]
-        }
+      "name": "Ruff Language Server",
+      "providers": [
+        { "id": "loog.lsp.ruff.diagnostics", "kind": "diagnostics", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.completion", "kind": "completion", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.hover", "kind": "hover", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.definition", "kind": "definition", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.document-symbols", "kind": "document-symbols", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.signature-help", "kind": "signature-help", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.formatting", "kind": "formatting", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.code-actions", "kind": "code-actions", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.references", "kind": "references", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.document-highlights", "kind": "document-highlights", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.rename", "kind": "rename", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.code-lens", "kind": "code-lens", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.format-on-type", "kind": "format-on-type", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.execute-command", "kind": "execute-command", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.ruff.highlights", "kind": "highlights", "selector": { "languages": ["python"] } }
       ]
     }
   }

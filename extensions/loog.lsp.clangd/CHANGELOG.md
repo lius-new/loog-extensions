@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Restored Objective-C language service support.
+
 ## 0.1.4
 
 - Added a Loog WASM client for C and C++ language services.

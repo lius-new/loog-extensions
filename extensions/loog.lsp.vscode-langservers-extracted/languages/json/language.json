@@ -1,0 +1,21 @@
+{
+  "name": "json",
+  "display_name": "JSON",
+  "badge": "JSON",
+  "variants": [
+    {
+      "id": "json"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "json",
+        "jsonc",
+        "geojson",
+        "webmanifest"
+      ],
+      "variant": "json"
+    }
+  ]
+}

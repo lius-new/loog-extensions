@@ -11,10 +11,14 @@ The Python (Pyright), YAML and Bash clients run their pinned Node server through
 Python project marker. YAML and Bash use the open workspace folder. The Bash
 client sends the LSP language ID `shellscript` for Loog's `bash` documents.
 
-clangd serves C and C++, Lua Language Server serves Lua, and Taplo serves TOML.
-The CSS and HTML clients run separate servers from the locked
-`vscode-langservers-extracted` package through `loog.runtime.node`. Each client
-uses the nearest project marker or the open workspace folder.
+clangd serves C, C++ and Objective-C, Lua Language Server serves Lua, and Taplo
+serves TOML. Marksman serves Markdown, Ruff serves Python, ZLS serves Zig, and
+Biome serves JavaScript, TypeScript, JSON and CSS.
+
+The CSS and SCSS, HTML, JSON and JSON with Comments, and ESLint clients run
+separate servers from the locked `vscode-langservers-extracted` package through
+`loog.runtime.node`. The JSON client retains the original bundle ID. ESLint
+loads the workspace’s ESLint installation and project configuration.
 The 0.2.4 clients require Loog 0.1.10 and its independent `loog:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific

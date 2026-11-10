@@ -7,9 +7,7 @@ repository = "lius-new/loog-extensions"
 # The extensions Loog ships inside its installer. `lock` pins exactly these.
 bundled = ["loog.theme.aura", "loog.lang.json", "loog.lang.markdown"]
 
-# Historical host-LSP recipes retained until their component migration. They are
-# excluded from new builds/publication; published releases remain available.
-deferred = ["loog.lsp.biome", "loog.lsp.marksman", "loog.lsp.ruff", "loog.lsp.vscode-langservers-extracted", "loog.lsp.zls"]
+deferred = []
 
 [index]
 # Names the public key the application uses to check the index signature.

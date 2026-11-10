@@ -1,0 +1,21 @@
+{
+  "name": "zig",
+  "display_name": "Zig",
+  "badge": "ZIG",
+  "comments": {
+    "line": "//"
+  },
+  "variants": [
+    {
+      "id": "zig"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "zig"
+      ],
+      "variant": "zig"
+    }
+  ]
+}

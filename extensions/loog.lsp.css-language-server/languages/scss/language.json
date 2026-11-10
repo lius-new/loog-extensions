@@ -1,0 +1,25 @@
+{
+  "name": "scss",
+  "display_name": "SCSS",
+  "badge": "SCSS",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "scss"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "scss"
+      ],
+      "variant": "scss"
+    }
+  ]
+}

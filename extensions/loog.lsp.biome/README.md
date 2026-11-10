@@ -1,14 +1,10 @@
 # Biome Language Server
 
-The Biome language server.
+Biome linting and formatting for JavaScript, TypeScript, JSON and CSS.
 
-Extension package: 0.1.0. Upstream program: 2.5.15.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The package contains a pinned native server for its platform.
 
-## Serves
+The `configuration` and `initialization` extension settings accept JSON text.
 
-- **Biome**: `javascript`, `typescript`, `json`, `css`
-
-License: MIT OR Apache-2.0. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://biomejs.dev/reference/cli/).

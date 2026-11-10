@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.marksman",
-  "version": "0.1.0",
+  "version": "0.1.4",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["markdown"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "Marksman Language Server",
   "publisher": "Loog",
-  "description": "The Marksman language server.",
+  "description": "Markdown link completion and navigation powered by Marksman.",
   "categories": [
     "Language Services"
   ],
@@ -19,37 +22,44 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loog": ">=0.1.8 <0.3"
+    "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
+    "languages": [
+      { "id": "loog.lsp.marksman.markdown", "path": "languages/markdown/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.marksman.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.marksman.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.marksman.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loog.lsp.marksman.marksman",
-          "name": "Marksman",
-          "languages": [
-            "markdown"
-          ],
-          "command": "${extension}/marksman",
-          "args": [
-            "server"
-          ],
-          "root_markers": [
-            ".marksman.toml",
-            ".git"
-          ],
-          "root_strategy": "nearest",
-          "root_fallback": "workspace",
-          "bindings": [
-            {
-              "language": "markdown",
-              "language_id": "markdown"
-            }
-          ]
-        }
+      "name": "Marksman Language Server",
+      "providers": [
+        { "id": "loog.lsp.marksman.diagnostics", "kind": "diagnostics", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.completion", "kind": "completion", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.hover", "kind": "hover", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.definition", "kind": "definition", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.document-symbols", "kind": "document-symbols", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.signature-help", "kind": "signature-help", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.formatting", "kind": "formatting", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.code-actions", "kind": "code-actions", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.references", "kind": "references", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.document-highlights", "kind": "document-highlights", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.rename", "kind": "rename", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.code-lens", "kind": "code-lens", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.format-on-type", "kind": "format-on-type", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.execute-command", "kind": "execute-command", "selector": { "languages": ["markdown"] } },
+        { "id": "loog.lsp.marksman.highlights", "kind": "highlights", "selector": { "languages": ["markdown"] } }
       ]
     }
   }

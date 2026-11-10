@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.css-language-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
-  "activation": [{ "kind": "document", "selector": { "languages": ["css"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "activation": [{ "kind": "document", "selector": { "languages": ["css", "scss"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "CSS Language Server",
   "publisher": "Loog",
-  "description": "CSS completion, validation and navigation.",
+  "description": "CSS and SCSS completion, validation and navigation.",
   "categories": [
     "Language Services"
   ],
@@ -32,7 +32,8 @@
   ],
   "contributes": {
     "languages": [
-      { "id": "loog.lsp.css-language-server.css", "path": "languages/css/language.json" }
+      { "id": "loog.lsp.css-language-server.css", "path": "languages/css/language.json" },
+      { "id": "loog.lsp.css-language-server.scss", "path": "languages/scss/language.json" }
     ],
     "settings": [
       { "key": "loog.lsp.css-language-server.configuration", "kind": "string", "default": "{}" },
@@ -42,27 +43,27 @@
     "language_service": {
       "name": "CSS Language Server",
       "providers": [
-        { "id": "loog.lsp.css-language-server.diagnostics", "kind": "diagnostics", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.completion", "kind": "completion", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.hover", "kind": "hover", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.definition", "kind": "definition", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.document-symbols", "kind": "document-symbols", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.signature-help", "kind": "signature-help", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.formatting", "kind": "formatting", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.code-actions", "kind": "code-actions", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.references", "kind": "references", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.document-highlights", "kind": "document-highlights", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.rename", "kind": "rename", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.code-lens", "kind": "code-lens", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.format-on-type", "kind": "format-on-type", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.execute-command", "kind": "execute-command", "selector": { "languages": ["css"] } },
-        { "id": "loog.lsp.css-language-server.highlights", "kind": "highlights", "selector": { "languages": ["css"] } }
+        { "id": "loog.lsp.css-language-server.diagnostics", "kind": "diagnostics", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.completion", "kind": "completion", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.hover", "kind": "hover", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.definition", "kind": "definition", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.document-symbols", "kind": "document-symbols", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.signature-help", "kind": "signature-help", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.formatting", "kind": "formatting", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.code-actions", "kind": "code-actions", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.references", "kind": "references", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.document-highlights", "kind": "document-highlights", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.rename", "kind": "rename", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.code-lens", "kind": "code-lens", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.format-on-type", "kind": "format-on-type", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.execute-command", "kind": "execute-command", "selector": { "languages": ["css", "scss"] } },
+        { "id": "loog.lsp.css-language-server.highlights", "kind": "highlights", "selector": { "languages": ["css", "scss"] } }
       ]
     }
   }

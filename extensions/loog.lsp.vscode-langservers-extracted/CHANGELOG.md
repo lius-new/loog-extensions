@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Migrated JSON and JSON with Comments to the Loog WASM client. CSS and SCSS, HTML, and ESLint are separate extensions.
+
 ## 0.1.3
 
 - Changed the extension category from Languages to Language Services.

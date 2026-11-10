@@ -17,12 +17,9 @@ Highlighting and the language service are separate extensions, so each can be ch
 updated and disabled on its own. A highlight extension names the language service
 extensions it works well with in `recommends`.
 
-Rust, Go, JavaScript and TypeScript are the first component clients (Loog >=0.1.10).
-All three clients are implemented in Rust WASM; their private shared source and
-staging checks are in [language-clients](language-clients/README.md).
-Other historical server recipes are retained but listed as `deferred` in
-`loog-ext.toml`, excluding them from new automatic/manual builds until migration.
-Already published assets remain available to compatible older Loog versions.
+Every language service recipe under `extensions/loog.lsp.*` uses a Rust WASM
+client. See [language-clients](language-clients/README.md) for the shared source
+and staging checks. Each manifest declares its minimum Loog version.
 
 ## What an extension is here
 
