@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.ocaml",
+  "version": "0.1.0",
+  "name": "OCaml Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for OCaml.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "ocaml",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.ocaml.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

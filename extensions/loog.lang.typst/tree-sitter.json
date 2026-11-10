@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "typst",
+      "title": "Typst",
+      "path": ".",
+      "file-types": [
+        "typ"
+      ],
+      "highlights": "queries/typst/highlights.scm",
+      "injections": "queries/typst/injections.scm"
+    }
+  ]
+}

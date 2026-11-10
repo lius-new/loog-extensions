@@ -1,0 +1,19 @@
+{
+  "grammars": [
+    {
+      "name": "erlang",
+      "title": "Erlang",
+      "path": ".",
+      "file-types": [
+        "erl",
+        "hrl",
+        "app.src",
+        "app",
+        "escript",
+        "rebar.config",
+        "sys.config"
+      ],
+      "highlights": "queries/erlang/highlights.scm"
+    }
+  ]
+}

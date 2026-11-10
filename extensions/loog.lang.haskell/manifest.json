@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.haskell",
+  "version": "0.1.0",
+  "name": "Haskell Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Haskell.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "haskell",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.haskell.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

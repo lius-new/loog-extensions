@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "loog.lang.elixir",
+  "version": "0.1.0",
+  "name": "Elixir Language",
+  "publisher": "Loog",
+  "description": "Syntax highlighting for Elixir.",
+  "categories": [
+    "Syntax Highlighting"
+  ],
+  "keywords": [
+    "elixir",
+    "syntax",
+    "tree-sitter"
+  ],
+  "license": "Apache-2.0",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "contributes": {
+    "highlight": [
+      {
+        "id": "loog.lang.elixir.grammar",
+        "path": "tree-sitter.json"
+      }
+    ]
+  }
+}

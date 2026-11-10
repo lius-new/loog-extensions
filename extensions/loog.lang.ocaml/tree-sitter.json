@@ -1,0 +1,22 @@
+{
+  "grammars": [
+    {
+      "name": "ocaml",
+      "title": "OCaml",
+      "path": ".",
+      "file-types": [
+        "ml"
+      ],
+      "highlights": "queries/ocaml/highlights.scm"
+    },
+    {
+      "name": "ocaml_interface",
+      "title": "OCaml Interface",
+      "path": ".",
+      "file-types": [
+        "mli"
+      ],
+      "highlights": "queries/ocaml_interface/highlights.scm"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "grammars": [
+    {
+      "name": "haskell",
+      "title": "Haskell",
+      "path": ".",
+      "file-types": [
+        "hs",
+        "hs-boot"
+      ],
+      "highlights": "queries/haskell/highlights.scm",
+      "injections": "queries/haskell/injections.scm"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "grammars": [
+    {
+      "name": "nginx",
+      "title": "Nginx",
+      "path": ".",
+      "file-types": [
+        "nginx",
+        "nginx.conf"
+      ],
+      "highlights": "queries/nginx/highlights.scm"
+    }
+  ]
+}

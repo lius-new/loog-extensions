@@ -1,0 +1,15 @@
+{
+  "grammars": [
+    {
+      "name": "elixir",
+      "title": "Elixir",
+      "path": ".",
+      "file-types": [
+        "ex",
+        "exs"
+      ],
+      "highlights": "queries/elixir/highlights.scm",
+      "injections": "queries/elixir/injections.scm"
+    }
+  ]
+}

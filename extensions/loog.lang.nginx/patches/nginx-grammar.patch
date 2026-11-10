@@ -1,0 +1,65 @@
+diff --git a/grammar.js b/grammar.js
+index c974f16..c0794de 100644
+--- a/grammar.js
++++ b/grammar.js
+@@ -49 +49 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -149 +149 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -161 +161 @@ module.exports = grammar({
+-			seq(alias($._time_keyword, $.keyword), $.time, terminator, $._newline),
++			seq(alias($._time_keyword, $.keyword), $.time, terminator, optional($._newline)),
+@@ -174 +174 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -185 +185 @@ module.exports = grammar({
+-			seq(alias($._file_keyword, $.keyword), $.file, terminator, $._newline),
++			seq(alias($._file_keyword, $.keyword), $.file, terminator, optional($._newline)),
+@@ -193 +193 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -201 +201 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -209 +209 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -217 +217 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -225 +225 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -233 +233 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -241 +241 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -249 +249 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -256 +256,5 @@ module.exports = grammar({
+-				optional(alias($.random_value, $.value)),
++				optional(choice(
++					$.string_literal,
++					$.quoted_string_literal,
++					alias($.random_value, $.value),
++				)),
+@@ -258 +262 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -267 +271 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -276 +280 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -293 +297 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
+@@ -302 +306 @@ module.exports = grammar({
+-				$._newline,
++				optional($._newline),
