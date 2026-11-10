@@ -134,5 +134,77 @@
     "markers": ["build.zig", "build.zig.zon"],
     "outermost": false,
     "fileFallback": true
+  },
+  "loog.lsp.phpantom": {
+    "languages": ["php"],
+    "program": "${extension}/phpantom_lsp",
+    "args": [],
+    "markers": [".phpantom.toml", "composer.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.svelte-language-server": {
+    "languages": ["svelte"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/svelte-language-server/bin/server.js", "--stdio"],
+    "markers": ["svelte.config.js", "svelte.config.ts", "svelte.config.mjs", "svelte.config.cjs", "package.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.dockerfile-language-server": {
+    "languages": ["dockerfile"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/dockerfile-language-server-nodejs/bin/docker-langserver", "--stdio"],
+    "markers": [],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.neocmakelsp": {
+    "languages": ["cmake"],
+    "program": "${extension}/neocmakelsp",
+    "args": ["stdio"],
+    "markers": ["CMakeLists.txt", "CMakePresets.json"],
+    "outermost": true,
+    "fileFallback": false
+  },
+  "loog.lsp.roslyn": {
+    "languages": ["csharp"],
+    "program": "${extension}/roslyn",
+    "args": ["--stdio", "--autoLoadProjects", "--telemetryLevel", "off"],
+    "markers": ["global.json", "Directory.Build.props", "Directory.Packages.props"],
+    "outermost": true,
+    "fileFallback": false
+  },
+  "loog.lsp.postgres-language-server": {
+    "languages": ["sql"],
+    "program": "${extension}/postgres-language-server",
+    "args": ["lsp-proxy"],
+    "markers": ["postgres-language-server.jsonc", "postgres-language-server.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.graphql-language-server": {
+    "languages": ["graphql"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/graphql-language-service-cli/bin/graphql.js", "server", "--method", "stream"],
+    "markers": [".graphqlrc", ".graphqlrc.json", ".graphqlrc.yaml", ".graphqlrc.yml", ".graphqlrc.js", ".graphqlrc.cjs", ".graphqlrc.mjs", ".graphqlrc.ts", "graphql.config.json", "graphql.config.yaml", "graphql.config.yml", "graphql.config.js", "graphql.config.cjs", "graphql.config.mjs", "graphql.config.ts"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.jdtls": {
+    "languages": ["java"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/launch.mjs"],
+    "markers": ["pom.xml", "build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts", ".project"],
+    "outermost": true,
+    "fileFallback": false
+  },
+  "loog.lsp.buf": {
+    "languages": ["proto"],
+    "program": "${extension}/buf",
+    "args": ["lsp", "serve"],
+    "markers": ["buf.yaml", "buf.work.yaml"],
+    "outermost": true,
+    "fileFallback": false
   }
 }

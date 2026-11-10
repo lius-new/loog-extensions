@@ -58,7 +58,11 @@ test('private language client sources affect all official client fingerprints on
     'loog.lsp.clangd', 'loog.lsp.lua-language-server', 'loog.lsp.taplo',
     'loog.lsp.css-language-server', 'loog.lsp.html-language-server',
     'loog.lsp.biome', 'loog.lsp.marksman', 'loog.lsp.ruff', 'loog.lsp.zls',
-    'loog.lsp.vscode-langservers-extracted', 'loog.lsp.eslint'];
+    'loog.lsp.vscode-langservers-extracted', 'loog.lsp.eslint',
+    'loog.lsp.phpantom', 'loog.lsp.svelte-language-server',
+    'loog.lsp.dockerfile-language-server', 'loog.lsp.neocmakelsp',
+    'loog.lsp.roslyn', 'loog.lsp.postgres-language-server', 'loog.lsp.graphql-language-server',
+    'loog.lsp.jdtls', 'loog.lsp.buf'];
   for (const id of ids) write(repo.extensions, `${id}/rust/Cargo.toml`, '[package]\nname = "client"');
   const before = ids.map(id => fingerprint(repo.root, id));
   write(repo.root, 'language-clients/rust/src/client.rs', 'const REVISION: u8 = 1;');

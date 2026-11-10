@@ -354,6 +354,71 @@ fn unicode_coordinates_incremental_sync_and_stale_diagnostics() {
 }
 
 #[test]
+fn pulls_and_combines_each_matching_diagnostic_source() {
+    let (mut c, p) = setup();
+    c.sessions.get_mut(&p).unwrap().capabilities["diagnosticProvider"] = Value::Null;
+    server(
+        &mut c,
+        p,
+        100,
+        "client/registerCapability",
+        json!({"registrations":[
+            {"id":"syntax","method":"textDocument/diagnostic","registerOptions":{"identifier":"syntax"}},
+            {"id":"syntax-extra","method":"textDocument/diagnostic","registerOptions":{"identifier":"syntax-extra"}},
+            {"id":"types","method":"textDocument/diagnostic","registerOptions":{"identifier":"types","documentSelector":[{"language":"go"}]}},
+            {"id":"other","method":"textDocument/diagnostic","registerOptions":{"identifier":"other","documentSelector":[{"language":"rust"}]}}
+        ]}),
+    );
+    c.message(Inbound::ProviderRequest(request(
+        ProviderKind::Diagnostics,
+        101,
+    )))
+    .unwrap();
+    let first = sent("textDocument/diagnostic");
+    assert_eq!(first["params"]["identifier"], "syntax");
+    response(
+        &mut c,
+        p,
+        first["id"].clone(),
+        json!({"kind":"full","items":[{"range":span(),"message":"syntax"}]}),
+    );
+    assert!(state(|s| s.answers.is_empty()));
+    let extra = sent("textDocument/diagnostic");
+    assert_eq!(extra["params"]["identifier"], "syntax-extra");
+    input(
+        &mut c,
+        p,
+        json!({"jsonrpc":"2.0","id":extra["id"],"error":{"code":-32603,"message":"test error"}}),
+    );
+    assert!(state(|s| s.answers.is_empty()));
+    let second = sent("textDocument/diagnostic");
+    assert_eq!(second["params"]["identifier"], "types");
+    response(
+        &mut c,
+        p,
+        second["id"].clone(),
+        json!({"kind":"full","items":[{"range":span(),"message":"types"}]}),
+    );
+    let messages: Vec<_> = c.documents[&1]
+        .diagnostics
+        .iter()
+        .map(|item| item["message"].as_str().unwrap())
+        .collect();
+    assert_eq!(messages, ["syntax", "types"]);
+    assert!(state(|s| s.answers.len() == 1 && s.snapshots.is_empty()));
+}
+
+#[test]
+fn file_uris_support_paths_with_and_without_an_authority() {
+    assert_eq!(path("file:/C:/project/a%20b.java").unwrap(), "C:/project/a b.java");
+    assert_eq!(path("file:/workspace/a.java").unwrap(), "/workspace/a.java");
+    assert_eq!(path("file://LOCALHOST/C:/project/a.java").unwrap(), "C:/project/a.java");
+    assert_eq!(path("file://server/share/a.java").unwrap(), "//server/share/a.java");
+    assert!(path("file:relative.java").is_err());
+    assert!(path("jdt://contents/Library.class").is_err());
+}
+
+#[test]
 fn dynamic_registration_waits_for_watches_and_rolls_back_failures() {
     let (mut c, p) = setup();
     server(
@@ -361,9 +426,16 @@ fn dynamic_registration_waits_for_watches_and_rolls_back_failures() {
         p,
         100,
         "client/registerCapability",
-        json!({"registrations":[{"id":"watch","method":"workspace/didChangeWatchedFiles","registerOptions":{"watchers":[{"globPattern":"**/*.go","kind":1}]}},{"id":"completion","method":"textDocument/completion","registerOptions":{"triggerCharacters":["@"],"documentSelector":[{"language":"go","pattern":"**/*.go"}]}}]}),
+        json!({"registrations":[{"id":"watch","method":"workspace/didChangeWatchedFiles","registerOptions":{"watchers":[
+            {"globPattern":{"baseUri":"file:/C:/project","pattern":"**/*.go"},"kind":1},
+            {"globPattern":{"baseUri":"file:/C:/toolchain","pattern":"settings.xml"}},
+            {"globPattern":"C:/toolchain/config/*.xml"}
+        ]}},{"id":"completion","method":"textDocument/completion","registerOptions":{"triggerCharacters":["@"],"documentSelector":[{"language":"go","pattern":"**/*.go"}]}}]}),
     );
-    let watch = state(|s| *s.watches.keys().next().unwrap());
+    let watch = state(|s| {
+        assert_eq!(s.watches.len(), 1);
+        *s.watches.keys().next().unwrap()
+    });
     server(
         &mut c,
         p,

@@ -1,0 +1,25 @@
+{
+  "name": "java",
+  "display_name": "Java",
+  "badge": "JAVA",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "java"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "java"
+      ],
+      "variant": "java"
+    }
+  ]
+}

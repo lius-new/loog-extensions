@@ -131,6 +131,7 @@ impl Client {
             let default = context();
             let ctx = request.context.as_ref().unwrap_or(&default);
             let supported = s.effective(Some(&reference));
+            let mut diagnostic_pull = None;
             let resolve = matches!(
                 request.kind,
                 ProviderKind::CompletionResolve
@@ -257,6 +258,18 @@ impl Client {
                         host::release_snapshot(snapshot);
                         return Ok(());
                     }
+                    let mut identifiers = s.diagnostic_sources(&reference).into_iter();
+                    if let Some(Some(identifier)) = identifiers.next() {
+                        target["identifier"] = json!(identifier);
+                    }
+                    let remaining: VecDeque<_> = identifiers.flatten().collect();
+                    if !remaining.is_empty() {
+                        diagnostic_pull = Some(DiagnosticPull {
+                            remaining,
+                            items: vec![],
+                            bytes: 0,
+                        });
+                    }
                     ("textDocument/diagnostic", target)
                 }
                 ProviderKind::Formatting | ProviderKind::Save => {
@@ -365,6 +378,7 @@ impl Client {
                     reference,
                     raw,
                     semantic_delta,
+                    diagnostic_pull,
                 })),
                 5000,
             )

@@ -1,0 +1,26 @@
+{
+  "name": "dockerfile",
+  "display_name": "Dockerfile",
+  "badge": "DOCK",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "dockerfile"
+    }
+  ],
+  "files": [
+    {
+      "names": [
+        "Dockerfile",
+        "Containerfile"
+      ],
+      "extensions": [
+        "dockerfile",
+        "containerfile"
+      ],
+      "variant": "dockerfile"
+    }
+  ]
+}

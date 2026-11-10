@@ -1,0 +1,25 @@
+{
+  "name": "sql",
+  "display_name": "SQL",
+  "badge": "SQL",
+  "comments": {
+    "line": "--",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "sql"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "sql"
+      ],
+      "variant": "sql"
+    }
+  ]
+}

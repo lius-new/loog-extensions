@@ -19,6 +19,16 @@ The CSS and SCSS, HTML, JSON and JSON with Comments, and ESLint clients run
 separate servers from the locked `vscode-langservers-extracted` package through
 `loog.runtime.node`. The JSON client retains the original bundle ID. ESLint
 loads the workspace’s ESLint installation and project configuration.
+
+PHPantom and Neocmakelsp bundle native servers for PHP and CMake. The Svelte
+and Dockerfile clients run their pinned servers through `loog.runtime.node`.
+
+Roslyn serves C# projects with an installed .NET SDK. The Postgres Language
+Server handles PostgreSQL SQL. The GraphQL client uses GraphQL Config and runs
+its pinned server through `loog.runtime.node`.
+
+Eclipse JDT LS 1.63.0 serves Java with an installed JDK 25 or newer. Buf provides
+Protobuf support through its pinned native CLI.
 The 0.2.4 clients require Loog 0.1.10 and its independent `loog:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific

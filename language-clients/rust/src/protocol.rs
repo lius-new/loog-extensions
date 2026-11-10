@@ -71,11 +71,16 @@ pub fn uri(path: &str) -> String {
 }
 pub fn path(value: &str) -> Result<String> {
     let rest = value
-        .get(..7)
-        .filter(|s| s.eq_ignore_ascii_case("file://"))
-        .and_then(|_| value.get(7..))
+        .get(..5)
+        .filter(|s| s.eq_ignore_ascii_case("file:"))
+        .and_then(|_| value.get(5..))
         .ok_or("only file locations are supported")?;
-    let (authority, body) = rest.split_once('/').ok_or("invalid file URI")?;
+    // A local file URI may omit the authority, as in file:/path (RFC 8089).
+    let (authority, body) = if let Some(rest) = rest.strip_prefix("//") {
+        rest.split_once('/').ok_or("invalid file URI")?
+    } else {
+        ("", rest.strip_prefix('/').ok_or("invalid file URI")?)
+    };
     let body = body.split(['?', '#']).next().unwrap_or_default();
     let bytes = body.as_bytes();
     let mut decoded = Vec::new();
@@ -91,7 +96,7 @@ pub fn path(value: &str) -> Result<String> {
         }
     }
     let body = String::from_utf8(decoded).map_err(|_| "invalid URI UTF-8")?;
-    if !authority.is_empty() && authority != "localhost" {
+    if !authority.is_empty() && !authority.eq_ignore_ascii_case("localhost") {
         Ok(format!("//{authority}/{body}"))
     } else if body.as_bytes().get(1) == Some(&b':') {
         Ok(body)

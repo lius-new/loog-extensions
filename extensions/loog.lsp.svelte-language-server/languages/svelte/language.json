@@ -1,0 +1,24 @@
+{
+  "name": "svelte",
+  "display_name": "Svelte",
+  "badge": "SV",
+  "comments": {
+    "block": [
+      "<!--",
+      "-->"
+    ]
+  },
+  "variants": [
+    {
+      "id": "svelte"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "svelte"
+      ],
+      "variant": "svelte"
+    }
+  ]
+}

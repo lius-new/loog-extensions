@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Rebuilt with the expanded shared language client configuration.
+
 ## 0.1.6
 
 - Rebuilt with the expanded shared language client configuration.

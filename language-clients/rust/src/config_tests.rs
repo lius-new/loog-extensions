@@ -193,6 +193,143 @@ fn selected_package_has_its_startup_configuration() {
             assert_eq!(config.markers, &["build.zig", "build.zig.zon"]);
             assert!(!config.outermost && config.file_fallback);
         }
+        "loog.lsp.phpantom" => {
+            assert_eq!(config.languages, &["php"]);
+            assert_eq!(config.program, "${extension}/phpantom_lsp");
+            assert!(config.args.is_empty());
+            assert_eq!(config.markers, &[".phpantom.toml", "composer.json"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.svelte-language-server" => {
+            assert_eq!(config.languages, &["svelte"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/svelte-language-server/bin/server.js",
+                    "--stdio"
+                ]
+            );
+            assert_eq!(
+                config.markers,
+                &[
+                    "svelte.config.js",
+                    "svelte.config.ts",
+                    "svelte.config.mjs",
+                    "svelte.config.cjs",
+                    "package.json"
+                ]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.dockerfile-language-server" => {
+            assert_eq!(config.languages, &["dockerfile"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/dockerfile-language-server-nodejs/bin/docker-langserver",
+                    "--stdio"
+                ]
+            );
+            assert!(config.markers.is_empty());
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.neocmakelsp" => {
+            assert_eq!(config.languages, &["cmake"]);
+            assert_eq!(config.program, "${extension}/neocmakelsp");
+            assert_eq!(config.args, &["stdio"]);
+            assert_eq!(config.markers, &["CMakeLists.txt", "CMakePresets.json"]);
+            assert!(config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.roslyn" => {
+            assert_eq!(config.languages, &["csharp"]);
+            assert_eq!(config.program, "${extension}/roslyn");
+            assert_eq!(
+                config.args,
+                &["--stdio", "--autoLoadProjects", "--telemetryLevel", "off"]
+            );
+            assert_eq!(
+                config.markers,
+                &[
+                    "global.json",
+                    "Directory.Build.props",
+                    "Directory.Packages.props"
+                ]
+            );
+            assert!(config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.postgres-language-server" => {
+            assert_eq!(config.languages, &["sql"]);
+            assert_eq!(config.program, "${extension}/postgres-language-server");
+            assert_eq!(config.args, &["lsp-proxy"]);
+            assert_eq!(
+                config.markers,
+                &[
+                    "postgres-language-server.jsonc",
+                    "postgres-language-server.json"
+                ]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.graphql-language-server" => {
+            assert_eq!(config.languages, &["graphql"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/graphql-language-service-cli/bin/graphql.js",
+                    "server",
+                    "--method",
+                    "stream"
+                ]
+            );
+            assert_eq!(
+                config.markers,
+                &[
+                    ".graphqlrc",
+                    ".graphqlrc.json",
+                    ".graphqlrc.yaml",
+                    ".graphqlrc.yml",
+                    ".graphqlrc.js",
+                    ".graphqlrc.cjs",
+                    ".graphqlrc.mjs",
+                    ".graphqlrc.ts",
+                    "graphql.config.json",
+                    "graphql.config.yaml",
+                    "graphql.config.yml",
+                    "graphql.config.js",
+                    "graphql.config.cjs",
+                    "graphql.config.mjs",
+                    "graphql.config.ts"
+                ]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.jdtls" => {
+            assert_eq!(config.languages, &["java"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(config.args, &["${extension}/launch.mjs"]);
+            assert_eq!(
+                config.markers,
+                &[
+                    "pom.xml",
+                    "build.gradle",
+                    "build.gradle.kts",
+                    "settings.gradle",
+                    "settings.gradle.kts",
+                    ".project"
+                ]
+            );
+            assert!(config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.buf" => {
+            assert_eq!(config.languages, &["proto"]);
+            assert_eq!(config.program, "${extension}/buf");
+            assert_eq!(config.args, &["lsp", "serve"]);
+            assert_eq!(config.markers, &["buf.yaml", "buf.work.yaml"]);
+            assert!(config.outermost && !config.file_fallback);
+        }
         _ => panic!("unconfigured package {ID}"),
     }
 }

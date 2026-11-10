@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Rebuilt with the expanded shared language client configuration.
+
 ## 0.1.4
 
 - Migrated JSON and JSON with Comments to the Loog WASM client. CSS and SCSS, HTML, and ESLint are separate extensions.

@@ -1,0 +1,71 @@
+{
+  "version": "5.13.0-1.26514.10",
+  "platforms": {
+    "linux-aarch64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.linux-arm64/5.13.0-1.26514.10/roslyn-language-server.linux-arm64.5.13.0-1.26514.10.nupkg",
+      "sha256": "7358caa7b7bf678e9b6f952afeaa95d4f5e899926b99edf82852f57b382d3a1a",
+      "size": 63250046,
+      "format": "zip",
+      "root": "tools/net10.0/linux-arm64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.linux-x64/5.13.0-1.26514.10/roslyn-language-server.linux-x64.5.13.0-1.26514.10.nupkg",
+      "sha256": "f8f880a763af02082ea07bd70923eace61bc2c5d03ed762fa5b2db95877ccf14",
+      "size": 66639284,
+      "format": "zip",
+      "root": "tools/net10.0/linux-x64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.osx-arm64/5.13.0-1.26514.10/roslyn-language-server.osx-arm64.5.13.0-1.26514.10.nupkg",
+      "sha256": "2f90ba6f8cc80462d8dc166e910d40301f912eaf5202cded7de8511ac5e13304",
+      "size": 63391176,
+      "format": "zip",
+      "root": "tools/net10.0/osx-arm64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.osx-x64/5.13.0-1.26514.10/roslyn-language-server.osx-x64.5.13.0-1.26514.10.nupkg",
+      "sha256": "3062334acffc69cdeeda606455e48a1f6e41714c5f93ad76e92be6f3d65ccbff",
+      "size": 66880259,
+      "format": "zip",
+      "root": "tools/net10.0/osx-x64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.win-arm64/5.13.0-1.26514.10/roslyn-language-server.win-arm64.5.13.0-1.26514.10.nupkg",
+      "sha256": "ca9c05d86cdf92863c0c4678c86cc04a75c0522304157440160dce355b57d302",
+      "size": 64246274,
+      "format": "zip",
+      "root": "tools/net10.0/win-arm64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer.exe"
+      ]
+    },
+    "windows-x86_64": {
+      "url": "https://api.nuget.org/v3-flatcontainer/roslyn-language-server.win-x64/5.13.0-1.26514.10/roslyn-language-server.win-x64.5.13.0-1.26514.10.nupkg",
+      "sha256": "84422d583f0d5f6524c4758617042662dd30d3f600238546cfe937705d71d366",
+      "size": 66766070,
+      "format": "zip",
+      "root": "tools/net10.0/win-x64",
+      "executables": [
+        "Microsoft.CodeAnalysis.LanguageServer.exe"
+      ]
+    }
+  },
+  "licenses": {
+    "roslyn-LICENSE": {
+      "url": "https://raw.githubusercontent.com/dotnet/roslyn/d82b7f7dc6c203f66c41a23207e10bf462af896f/License.txt",
+      "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b"
+    }
+  }
+}

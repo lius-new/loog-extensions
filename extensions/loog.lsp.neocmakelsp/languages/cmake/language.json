@@ -1,0 +1,24 @@
+{
+  "name": "cmake",
+  "display_name": "CMake",
+  "badge": "CMK",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "cmake"
+    }
+  ],
+  "files": [
+    {
+      "names": [
+        "CMakeLists.txt"
+      ],
+      "extensions": [
+        "cmake"
+      ],
+      "variant": "cmake"
+    }
+  ]
+}

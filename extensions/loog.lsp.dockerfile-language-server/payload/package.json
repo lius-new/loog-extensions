@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "dockerfile-language-server-nodejs": "0.15.0"
+  },
+  "version": "0.0.0",
+  "name": "loog-lsp-dockerfile-language-server",
+  "private": true
+}

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.phpantom",
+  "version": "0.1.0",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["php"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "PHPantom",
+  "publisher": "Loog",
+  "description": "PHP completion, type information and navigation powered by PHPantom.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "php",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT AND Apache-2.0",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+  ],
+  "contributes": {
+    "languages": [
+      { "id": "loog.lsp.phpantom.php", "path": "languages/php/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.phpantom.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.phpantom.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.phpantom.performance", "kind": "boolean", "default": false }
+    ],
+    "language_service": {
+      "name": "PHPantom",
+      "providers": [
+        { "id": "loog.lsp.phpantom.diagnostics", "kind": "diagnostics", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.completion", "kind": "completion", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.hover", "kind": "hover", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.definition", "kind": "definition", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.document-symbols", "kind": "document-symbols", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.signature-help", "kind": "signature-help", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.formatting", "kind": "formatting", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.code-actions", "kind": "code-actions", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.references", "kind": "references", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.document-highlights", "kind": "document-highlights", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.rename", "kind": "rename", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.code-lens", "kind": "code-lens", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.format-on-type", "kind": "format-on-type", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.execute-command", "kind": "execute-command", "selector": { "languages": ["php"] } },
+        { "id": "loog.lsp.phpantom.highlights", "kind": "highlights", "selector": { "languages": ["php"] } }
+      ]
+    }
+  }
+}

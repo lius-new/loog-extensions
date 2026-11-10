@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.jdtls",
+  "version": "0.1.0",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["java"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "Eclipse JDT Language Server",
+  "publisher": "Loog",
+  "description": "Java completion, diagnostics and navigation powered by Eclipse JDT LS.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "java",
+    "language server",
+    "lsp"
+  ],
+  "license": "EPL-2.0",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+  ],
+  "requires": [
+    "loog.runtime.node@^0.1.0"
+  ],
+  "contributes": {
+    "languages": [
+      { "id": "loog.lsp.jdtls.java", "path": "languages/java/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.jdtls.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.jdtls.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.jdtls.performance", "kind": "boolean", "default": false }
+    ],
+    "language_service": {
+      "name": "Eclipse JDT Language Server",
+      "providers": [
+        { "id": "loog.lsp.jdtls.diagnostics", "kind": "diagnostics", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.completion", "kind": "completion", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.hover", "kind": "hover", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.definition", "kind": "definition", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.document-symbols", "kind": "document-symbols", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.signature-help", "kind": "signature-help", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.formatting", "kind": "formatting", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.code-actions", "kind": "code-actions", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.references", "kind": "references", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.document-highlights", "kind": "document-highlights", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.rename", "kind": "rename", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.code-lens", "kind": "code-lens", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.format-on-type", "kind": "format-on-type", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.execute-command", "kind": "execute-command", "selector": { "languages": ["java"] } },
+        { "id": "loog.lsp.jdtls.highlights", "kind": "highlights", "selector": { "languages": ["java"] } }
+      ]
+    }
+  }
+}

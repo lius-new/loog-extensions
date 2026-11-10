@@ -132,6 +132,12 @@ struct Call {
     reference: DocumentRef,
     raw: Value,
     semantic_delta: bool,
+    diagnostic_pull: Option<DiagnosticPull>,
+}
+struct DiagnosticPull {
+    remaining: VecDeque<String>,
+    items: Vec<Value>,
+    bytes: usize,
 }
 enum Purpose {
     Initialize,
@@ -244,6 +250,18 @@ impl Session {
             result[&dynamic.field] = merge_options(&result[&dynamic.field], &dynamic.options);
         }
         result
+    }
+    fn diagnostic_sources(&self, document: &DocumentRef) -> BTreeSet<Option<String>> {
+        let static_options = &self.capabilities["diagnosticProvider"];
+        std::iter::once(static_options)
+            .filter(|options| yes(options))
+            .chain(self.dynamic.values().filter_map(|dynamic| {
+                (dynamic.field == "diagnosticProvider"
+                    && selector(&dynamic.options["documentSelector"], document))
+                .then_some(&dynamic.options)
+            }))
+            .map(|options| options["identifier"].as_str().map(str::to_owned))
+            .collect()
     }
     fn flush(&mut self) -> Result<()> {
         while let Some(frame) = self.outbox.front() {

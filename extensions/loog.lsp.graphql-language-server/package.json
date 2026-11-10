@@ -1,0 +1,9 @@
+{
+  "name": "build-loog-lsp-graphql-language-server",
+  "private": true,
+  "type": "module",
+  "description": "Builds the loog.lsp.graphql-language-server package. Includes the shared Loog WASM client.",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

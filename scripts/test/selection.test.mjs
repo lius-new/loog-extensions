@@ -35,7 +35,11 @@ test('private language client changes rebuild all configured clients', () => {
     'loog.lsp.clangd', 'loog.lsp.lua-language-server', 'loog.lsp.taplo',
     'loog.lsp.css-language-server', 'loog.lsp.html-language-server',
     'loog.lsp.biome', 'loog.lsp.marksman', 'loog.lsp.ruff', 'loog.lsp.zls',
-    'loog.lsp.vscode-langservers-extracted', 'loog.lsp.eslint'];
+    'loog.lsp.vscode-langservers-extracted', 'loog.lsp.eslint',
+    'loog.lsp.phpantom', 'loog.lsp.svelte-language-server',
+    'loog.lsp.dockerfile-language-server', 'loog.lsp.neocmakelsp',
+    'loog.lsp.roslyn', 'loog.lsp.postgres-language-server', 'loog.lsp.graphql-language-server',
+    'loog.lsp.jdtls', 'loog.lsp.buf'];
   assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/rust/src/protocol.rs']), clients.sort());
 });
 

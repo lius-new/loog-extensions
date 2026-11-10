@@ -1,0 +1,69 @@
+{
+  "version": "0.11.1",
+  "platforms": {
+    "linux-aarch64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-aarch64-unknown-linux-gnu.tar.gz",
+      "sha256": "5c7483504e0bc245b3c6c91d746e0709a4564e559076154d25692da5a96d591c",
+      "size": 16659783,
+      "format": "tar.gz",
+      "executables": [
+        "phpantom_lsp"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "906dd8104d4bf82aa1c4225fba297a90ff1cff0552df635ee858fc272f445fc6",
+      "size": 17410185,
+      "format": "tar.gz",
+      "executables": [
+        "phpantom_lsp"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-aarch64-apple-darwin.tar.gz",
+      "sha256": "ba32a40677fe2fa87f44f3f7ce6dda678a55a770d06d77f2fe128dcc742e17c6",
+      "size": 14837229,
+      "format": "tar.gz",
+      "executables": [
+        "phpantom_lsp"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-x86_64-apple-darwin.tar.gz",
+      "sha256": "a521654efa0aa60f10b87d1f2c9ecf943c3431a11004c404a3c0769b2c7b2f64",
+      "size": 16297739,
+      "format": "tar.gz",
+      "executables": [
+        "phpantom_lsp"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-aarch64-pc-windows-msvc.zip",
+      "sha256": "45dcff2fbc6d148bf37d8774e8941ed62626f828a0d20908db61840f74719f92",
+      "size": 14787562,
+      "format": "zip",
+      "executables": [
+        "phpantom_lsp.exe"
+      ]
+    },
+    "windows-x86_64": {
+      "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/download/0.11.1/phpantom_lsp-x86_64-pc-windows-msvc.zip",
+      "sha256": "2f717c05e44573ae7ad3ab394fc322a5fa0309edae116b245c299c740b4dae8e",
+      "size": 15886721,
+      "format": "zip",
+      "executables": [
+        "phpantom_lsp.exe"
+      ]
+    }
+  },
+  "licenses": {
+    "phpantom-LICENSE": {
+      "url": "https://raw.githubusercontent.com/PHPantom-dev/phpantom_lsp/1756b1f920c1290d4c4fdd4d2c902fad53a75cd3/LICENSE",
+      "sha256": "0558c8ee80c9eacd4168299a3e6479b65287353a691a107a8681575f0b038dca"
+    },
+    "phpstorm-stubs-LICENSE": {
+      "sha256": "0b6bf6984e35b44f04c68ec5e18950cc10fea56b04576fab95fde116d0290408",
+      "url": "https://raw.githubusercontent.com/JetBrains/phpstorm-stubs/5f68c1021badebe34119fb8fa10ba7cc25de6c0c/LICENSE"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "proto",
+  "display_name": "Protocol Buffers",
+  "badge": "BUF",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "proto"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "proto"
+      ],
+      "variant": "proto"
+    }
+  ]
+}

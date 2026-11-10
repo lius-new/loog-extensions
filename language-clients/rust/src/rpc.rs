@@ -70,13 +70,17 @@ impl Client {
             }
             if matches!(pending.purpose, Purpose::Initialize) {
                 self.failed(s, error);
-            } else {
-                host::log(1, &error);
-                self.discard(pending.purpose);
+                return Ok(());
             }
-            return Ok(());
+            host::log(1, &error);
+            if !valid
+                || !matches!(&pending.purpose, Purpose::Provider(call) if call.diagnostic_pull.is_some())
+            {
+                self.discard(pending.purpose);
+                return Ok(());
+            }
         }
-        let answer = message["result"].take();
+        let mut answer = message["result"].take();
         match pending.purpose {
             Purpose::Initialize => {
                 s.capabilities = answer
@@ -137,7 +141,29 @@ impl Client {
                 self.statuses.remove(&s.key);
                 self.refresh_status();
             }
-            Purpose::Provider(call) => {
+            Purpose::Provider(mut call) => {
+                if let Some(pull) = &mut call.diagnostic_pull {
+                    if answer["kind"] == "full" && pull.bytes + text.len() <= MAX_MESSAGE {
+                        pull.bytes += text.len();
+                        if let Value::Array(items) = answer["items"].take() {
+                            pull.items.extend(items);
+                        }
+                    }
+                    if let Some(identifier) = pull.remaining.pop_front() {
+                        let mut params = pending.params;
+                        params["identifier"] = json!(identifier);
+                        let snapshot = call.request.snapshot;
+                        let result =
+                            self.rpc(s, &pending.method, params, Purpose::Provider(call), 5000);
+                        if result.is_err() {
+                            host::release_snapshot(snapshot);
+                        }
+                        return result;
+                    }
+                    if pull.bytes > 0 {
+                        answer = json!({"kind":"full","items":std::mem::take(&mut pull.items)});
+                    }
+                }
                 let started = host::monotonic_nanoseconds();
                 let result = self.answer_provider(s, &call, answer, text.len());
                 self.record(
@@ -468,14 +494,18 @@ impl Client {
                             .unwrap_or_else(|| s.path.clone());
                         let base = normalize(&base);
                         let root = normalize(&s.root.path);
+                        // COMPAT(mixed-workspace-watches): JDT LS 1.63.0 requests workspace
+                        // and external toolchain watches in the same registration. Retain
+                        // the workspace subset until supported servers send scoped
+                        // registrations themselves. No removal version is scheduled.
                         if key(&base) != key(&root) && !inside(&base, &root) {
-                            return Err("watch base is outside this workspace".into());
+                            continue;
                         }
                         let pattern = if relative.starts_with('/')
                             || relative.as_bytes().get(1) == Some(&b':')
                         {
                             if !inside(&relative, &root) {
-                                return Err("absolute watch glob is outside this workspace".into());
+                                continue;
                             }
                             relative[root.len()..].trim_start_matches('/').to_owned()
                         } else {

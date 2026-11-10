@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "id": "loog.lsp.postgres-language-server",
+  "version": "0.1.0",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["sql"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "Postgres Language Server",
+  "publisher": "Loog",
+  "description": "PostgreSQL SQL syntax diagnostics, migration linting and formatting.",
+  "categories": [
+    "Language Services"
+  ],
+  "keywords": [
+    "sql",
+    "language server",
+    "lsp"
+  ],
+  "license": "MIT AND BSD-3-Clause AND PostgreSQL",
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {
+    "loog": ">=0.2.0 <0.3"
+  },
+  "capabilities": [
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+  ],
+  "contributes": {
+    "languages": [
+      { "id": "loog.lsp.postgres-language-server.sql", "path": "languages/sql/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.postgres-language-server.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.postgres-language-server.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.postgres-language-server.performance", "kind": "boolean", "default": false }
+    ],
+    "language_service": {
+      "name": "Postgres Language Server",
+      "providers": [
+        { "id": "loog.lsp.postgres-language-server.diagnostics", "kind": "diagnostics", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.completion", "kind": "completion", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.hover", "kind": "hover", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.definition", "kind": "definition", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.document-symbols", "kind": "document-symbols", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.signature-help", "kind": "signature-help", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.formatting", "kind": "formatting", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.code-actions", "kind": "code-actions", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.references", "kind": "references", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.document-highlights", "kind": "document-highlights", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.rename", "kind": "rename", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.code-lens", "kind": "code-lens", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.format-on-type", "kind": "format-on-type", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.execute-command", "kind": "execute-command", "selector": { "languages": ["sql"] } },
+        { "id": "loog.lsp.postgres-language-server.highlights", "kind": "highlights", "selector": { "languages": ["sql"] } }
+      ]
+    }
+  }
+}

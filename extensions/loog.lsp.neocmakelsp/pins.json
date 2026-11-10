@@ -1,0 +1,65 @@
+{
+  "version": "0.12.0",
+  "platforms": {
+    "linux-aarch64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-aarch64-unknown-linux-gnu.tar.gz",
+      "sha256": "4a2e989b0c2de01452955ac4f7a5de8a82eda5ca2501d3d40272886f3a3726c8",
+      "size": 3353877,
+      "format": "tar.gz",
+      "executables": [
+        "neocmakelsp"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "fae7bf87e114b0748fef5aa8c464b8413a2022925a2a61821bae5e2a9a7fdda2",
+      "size": 3629476,
+      "format": "tar.gz",
+      "executables": [
+        "neocmakelsp"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-universal-apple-darwin.tar.gz",
+      "sha256": "39d0887ccc4cec0b8c8cf9c42aa5481aad27fa7198cebaabd3e581403f702ff8",
+      "size": 7241629,
+      "format": "tar.gz",
+      "executables": [
+        "neocmakelsp"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-universal-apple-darwin.tar.gz",
+      "sha256": "39d0887ccc4cec0b8c8cf9c42aa5481aad27fa7198cebaabd3e581403f702ff8",
+      "size": 7241629,
+      "format": "tar.gz",
+      "executables": [
+        "neocmakelsp"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-aarch64-pc-windows-msvc.zip",
+      "sha256": "13eaedccb4706129658be33ecd83bfc2f76d3b3fa5c30f7c3e0b567c58bb5b49",
+      "size": 3362609,
+      "format": "zip",
+      "executables": [
+        "neocmakelsp.exe"
+      ]
+    },
+    "windows-x86_64": {
+      "url": "https://github.com/neocmakelsp/neocmakelsp/releases/download/v0.12.0/neocmakelsp-x86_64-pc-windows-msvc.zip",
+      "sha256": "8abc3cdfa641478e689b70ae474b0eb784b2d4211026398a2fd4fd2a452be8ae",
+      "size": 3642565,
+      "format": "zip",
+      "executables": [
+        "neocmakelsp.exe"
+      ]
+    }
+  },
+  "licenses": {
+    "neocmakelsp-LICENSE": {
+      "url": "https://raw.githubusercontent.com/neocmakelsp/neocmakelsp/acc3fbf490cfa0bcd5c7d07887d120a32d0237ba/LICENSE",
+      "sha256": "94edad072fabbb80ee6601653c652546558b3f22a2549040b2f6093a03a09200"
+    }
+  }
+}

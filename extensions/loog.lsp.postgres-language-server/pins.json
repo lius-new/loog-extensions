@@ -1,0 +1,73 @@
+{
+  "version": "0.28.2",
+  "platforms": {
+    "linux-aarch64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_aarch64-unknown-linux-gnu",
+      "sha256": "7be7de3660df047fd712f8fca4d6c42ecf1515daad952715eb02e29053ce256c",
+      "size": 26839408,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server"
+      ]
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_x86_64-unknown-linux-gnu",
+      "sha256": "82ff82e39be65824378afa5d02626a1b42e8d8e48f97cb4938e4d477c8a9be52",
+      "size": 28907544,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server"
+      ]
+    },
+    "macos-aarch64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_aarch64-apple-darwin",
+      "sha256": "e6d113284280977265e9d9000a47d9600d0fb58fe6d5d076726328678f5a66ec",
+      "size": 26489696,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server"
+      ]
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_x86_64-apple-darwin",
+      "sha256": "8c709d766ea9c6715a150dbca7c9c0e07dc0b6e585ba329449b0a22839921eca",
+      "size": 27181760,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server"
+      ]
+    },
+    "windows-aarch64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_aarch64-pc-windows-msvc.exe",
+      "sha256": "90b2c06bc1720c795543965b33fec7e568d9d4d8534628e888c1b5e3d3ab4d5b",
+      "size": 28262912,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server.exe"
+      ]
+    },
+    "windows-x86_64": {
+      "url": "https://github.com/supabase-community/postgres-language-server/releases/download/0.28.2/postgres-language-server_x86_64-pc-windows-msvc.exe",
+      "sha256": "585e028278d37f373510129f216a7163afd7e340127334aa6da6ca711a446060",
+      "size": 31500288,
+      "format": "raw",
+      "executables": [
+        "postgres-language-server.exe"
+      ]
+    }
+  },
+  "licenses": {
+    "postgres-LICENSE": {
+      "sha256": "fcd3687f0b40662b0abd423979f75484d54e0e4e2b8d0d74a6b2662efeeee375",
+      "url": "https://raw.githubusercontent.com/supabase-community/postgres-language-server/5c2f5d7140b7a9c99654f889c58b49f2d692ad77/LICENSE"
+    },
+    "libpg-query-LICENSE": {
+      "sha256": "f9352c20940619a380a5e9f23cebe34d8f797cfbd747fc236a7a3e5fc8ef9b41",
+      "url": "https://raw.githubusercontent.com/pganalyze/libpg_query/9ac12d29f2ffc0e49de8f4239223d50aaccd1549/LICENSE"
+    },
+    "PostgreSQL-COPYRIGHT": {
+      "sha256": "e3822c4797fadcab31a3fc73f75c28ac20c73d72b565da91e9974cf9398ef4d2",
+      "url": "https://raw.githubusercontent.com/pganalyze/libpg_query/9ac12d29f2ffc0e49de8f4239223d50aaccd1549/src/postgres/COPYRIGHT"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "sha256": "b1f2abe0b3cccb462cf64fb4a5587c7d09df60cf8be7748b152cbd89d018bdc4",
+  "version": "1.63.0",
+  "size": 51143565,
+  "launcher": "plugins/org.eclipse.equinox.launcher_1.8.0.v20260804-1928.jar",
+  "url": "https://download.eclipse.org/jdtls/milestones/1.63.0/jdt-language-server-1.63.0-202610191322.tar.gz",
+  "licenses": {
+    "jdtls-LICENSE": {
+      "url": "https://raw.githubusercontent.com/eclipse-jdtls/eclipse.jdt.ls/d98abba8f04cf041542d9ebb6df0d472a1395606/LICENSE",
+      "sha256": "209fe24bf55677bbf81c2b0481c1403201fab57b3b4c609971eba4ec8162b99c"
+    }
+  }
+}

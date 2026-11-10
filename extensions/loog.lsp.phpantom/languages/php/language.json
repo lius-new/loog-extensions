@@ -1,0 +1,26 @@
+{
+  "name": "php",
+  "display_name": "PHP",
+  "badge": "PHP",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "php"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "php",
+        "phtml"
+      ],
+      "variant": "php"
+    }
+  ]
+}

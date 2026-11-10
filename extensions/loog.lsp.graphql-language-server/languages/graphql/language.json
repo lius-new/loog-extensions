@@ -1,0 +1,22 @@
+{
+  "name": "graphql",
+  "display_name": "GraphQL",
+  "badge": "GQL",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "graphql"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "graphql",
+        "gql"
+      ],
+      "variant": "graphql"
+    }
+  ]
+}
