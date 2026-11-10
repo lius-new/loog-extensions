@@ -22,5 +22,29 @@
     "markers": ["tsconfig.json", "jsconfig.json", "package.json"],
     "outermost": false,
     "fileFallback": false
+  },
+  "loog.lsp.pyright": {
+    "languages": ["python"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/pyright/langserver.index.js", "--stdio"],
+    "markers": ["pyrightconfig.json", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.yaml-language-server": {
+    "languages": ["yaml"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/yaml-language-server/bin/yaml-language-server", "--stdio"],
+    "markers": [],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.bash-language-server": {
+    "languages": ["bash"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/bash-language-server/out/cli.js", "start"],
+    "markers": [],
+    "outermost": false,
+    "fileFallback": false
   }
 }

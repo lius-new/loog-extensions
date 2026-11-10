@@ -4,6 +4,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {loadConfig} from '../lib/config.mjs';
+import clients from '../../language-clients/rust/clients.json' with {type: 'json'};
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const shared = file => file.startsWith('.github/workflows/') || file.startsWith('scripts/') ||
@@ -19,7 +20,7 @@ export function selectExtensions(available, files, {all = false, requested = ''}
   if (all || files.some(shared)) return ids;
   const changed = new Set(files.filter(file => file.startsWith('extensions/')).map(file => file.split('/')[1]));
   if (files.some(file => file.startsWith('language-clients/'))) {
-    for (const id of ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server']) changed.add(id);
+    for (const id of Object.keys(clients)) changed.add(id);
   }
   return ids.filter(id => changed.has(id));
 }

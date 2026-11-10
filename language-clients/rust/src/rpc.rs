@@ -13,6 +13,23 @@ impl Client {
             return Err("invalid JSON-RPC message".into());
         }
         if let Some(method) = message["method"].as_str() {
+            // File watches are acknowledged asynchronously. Preserve the order of
+            // subsequent capability changes, including ones sent during startup.
+            if s.registration.is_some()
+                && matches!(
+                    method,
+                    "client/registerCapability" | "client/unregisterCapability"
+                )
+            {
+                if s.registration_queue.len() >= 16 || text.len() > 64 * 1024 {
+                    return s.answer(
+                        message["id"].take(),
+                        Err("capability registration queue limit exceeded".into()),
+                    );
+                }
+                s.registration_queue.push_back(text.to_owned());
+                return Ok(());
+            }
             let method = method.to_owned();
             let id = message["id"].take();
             let params = message["params"].take();
@@ -391,9 +408,6 @@ impl Client {
         params: &Value,
         id: &Value,
     ) -> Result<Option<Value>> {
-        if s.registration.is_some() {
-            return Err("a capability registration is still pending".into());
-        }
         let values = params["registrations"]
             .as_array()
             .ok_or("invalid registration batch")?;
@@ -591,6 +605,12 @@ impl Client {
                 } else if let Some(error) = error {
                     host::log(1, &format!("Watch: {error}"));
                     c.restart(s)?;
+                }
+                while s.registration.is_none() {
+                    let Some(message) = s.registration_queue.pop_front() else {
+                        break;
+                    };
+                    c.input(s, &message)?;
                 }
                 Ok(())
             })?;

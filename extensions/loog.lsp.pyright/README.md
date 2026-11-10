@@ -1,16 +1,13 @@
-# Pyright Language Server
+# Pyright
 
-The Pyright language server.
+Python language services powered by Pyright.
 
-Extension package: 0.1.0. Upstream program: 1.1.414.
+The extension runs its own Loog WASM client and the pinned server (1.1.414)
+through `loog.runtime.node`. Open a Python file in a trusted workspace to
+start the service. The client looks for the nearest Python project configuration, then uses the workspace folder.
 
-## Serves
+The `configuration` and `initialization` extension settings accept JSON text.
+Loog enables the features the server advertises for the open file.
 
-- **Pyright**: `python`
-
-Requires: `loog.runtime.node@^0.1.0`.
-
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+`PROVENANCE.md` records the locked npm dependencies and `licenses/` contains
+the Rust client and dependency notices.

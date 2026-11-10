@@ -1,16 +1,13 @@
-# YAML Language Server Language Server
+# YAML Language Server
 
-The YAML Language Server language server.
+YAML validation, completion, navigation and formatting.
 
-Extension package: 0.1.0. Upstream program: 2.0.0.
+The extension runs its own Loog WASM client and the pinned server (2.0.0)
+through `loog.runtime.node`. Open a YAML file in a trusted workspace to
+start the service. The client uses the workspace folder as its project root.
 
-## Serves
+The `configuration` and `initialization` extension settings accept JSON text.
+Loog enables the features the server advertises for the open file.
 
-- **YAML Language Server**: `yaml`
-
-Requires: `loog.runtime.node@^0.1.0`.
-
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+`PROVENANCE.md` records the locked npm dependencies and `licenses/` contains
+the Rust client and dependency notices.

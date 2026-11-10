@@ -9,7 +9,7 @@ bundled = ["loog.theme.aura", "loog.lang.json", "loog.lang.markdown"]
 
 # Historical host-LSP recipes retained until their component migration. They are
 # excluded from new builds/publication; published releases remain available.
-deferred = ["loog.lsp.bash-language-server", "loog.lsp.biome", "loog.lsp.clangd", "loog.lsp.lua-language-server", "loog.lsp.marksman", "loog.lsp.pyright", "loog.lsp.ruff", "loog.lsp.taplo", "loog.lsp.vscode-langservers-extracted", "loog.lsp.yaml-language-server", "loog.lsp.zls"]
+deferred = ["loog.lsp.biome", "loog.lsp.clangd", "loog.lsp.lua-language-server", "loog.lsp.marksman", "loog.lsp.ruff", "loog.lsp.taplo", "loog.lsp.vscode-langservers-extracted", "loog.lsp.zls"]
 
 [index]
 # Names the public key the application uses to check the index signature.

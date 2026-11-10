@@ -1,5 +1,5 @@
 #[test]
-fn selected_package_keeps_its_original_startup_configuration() {
+fn selected_package_has_its_startup_configuration() {
     let config = crate::CONFIG;
     match ID {
         "loog.lsp.gopls" => {
@@ -24,6 +24,44 @@ fn selected_package_keeps_its_original_startup_configuration() {
                 ]
             );
             assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.pyright" => {
+            assert_eq!(config.languages, &["python"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/pyright/langserver.index.js",
+                    "--stdio"
+                ]
+            );
+            assert!(config.markers.contains(&"pyproject.toml"));
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.yaml-language-server" => {
+            assert_eq!(config.languages, &["yaml"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/yaml-language-server/bin/yaml-language-server",
+                    "--stdio"
+                ]
+            );
+            assert!(config.markers.is_empty() && !config.file_fallback);
+        }
+        "loog.lsp.bash-language-server" => {
+            assert_eq!(config.languages, &["bash"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/bash-language-server/out/cli.js",
+                    "start"
+                ]
+            );
+            assert_eq!(language_id("bash", Some("bash")), "shellscript");
+            assert!(config.markers.is_empty() && !config.file_fallback);
         }
         _ => panic!("unconfigured package {ID}"),
     }

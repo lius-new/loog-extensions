@@ -364,6 +364,14 @@ fn dynamic_registration_waits_for_watches_and_rolls_back_failures() {
         json!({"registrations":[{"id":"watch","method":"workspace/didChangeWatchedFiles","registerOptions":{"watchers":[{"globPattern":"**/*.go","kind":1}]}},{"id":"completion","method":"textDocument/completion","registerOptions":{"triggerCharacters":["@"],"documentSelector":[{"language":"go","pattern":"**/*.go"}]}}]}),
     );
     let watch = state(|s| *s.watches.keys().next().unwrap());
+    server(
+        &mut c,
+        p,
+        102,
+        "client/registerCapability",
+        json!({"registrations":[{"id":"diagnostics","method":"textDocument/diagnostic","registerOptions":{"identifier":"smoke"}}]}),
+    );
+    assert!(!state(|s| s.messages.iter().any(|(_, v)| v["id"] == 102)));
     assert!(!state(|s| s
         .messages
         .iter()
@@ -373,6 +381,14 @@ fn dynamic_registration_waits_for_watches_and_rolls_back_failures() {
         .messages
         .iter()
         .any(|(_, v)| v["id"] == 100 && v.get("result").is_some())));
+    assert!(state(|s| s
+        .messages
+        .iter()
+        .any(|(_, v)| v["id"] == 102 && v.get("result").is_some())));
+    assert_eq!(
+        c.sessions[&p].dynamic["diagnostics"].field,
+        "diagnosticProvider"
+    );
     assert!(state(|s| s.configurations[&format!("{ID}.completion")]
         .triggers
         .contains(&"@".into())));

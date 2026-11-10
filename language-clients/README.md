@@ -1,10 +1,15 @@
 # Official language clients
 
-The three official clients compile private Rust sources from `rust/` into
+The official clients compile private Rust sources from `rust/` into
 independent WASM components. Each extension has its own Cargo manifest and lock
 file; `rust/clients.json` retains its language IDs, program, arguments and root
 selection policy. JavaScript/TypeScript includes JSX/TSX. Each installed extension owns its
 RPC connection, documents, capability registrations, processes and private UI contributions.
+
+The Python (Pyright), YAML and Bash clients run their pinned Node server through
+`loog.runtime.node` and require Loog 0.2.0 or newer. Pyright uses the nearest
+Python project marker. YAML and Bash use the open workspace folder. The Bash
+client sends the LSP language ID `shellscript` for Loog's `bash` documents.
 The 0.2.4 clients require Loog 0.1.10 and its independent `loog:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific

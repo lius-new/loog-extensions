@@ -29,8 +29,9 @@ test('shared build and publication inputs select every extension', () => {
   assert.deepEqual(selectExtensions(ids, [], {all: true}), sorted);
 });
 
-test('private language client changes rebuild all three official clients', () => {
-  const clients = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server'];
+test('private language client changes rebuild all configured clients', () => {
+  const clients = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server',
+    'loog.lsp.pyright', 'loog.lsp.yaml-language-server', 'loog.lsp.bash-language-server'];
   assert.deepEqual(selectExtensions([...ids, ...clients], ['language-clients/rust/src/protocol.rs']), clients.sort());
 });
 

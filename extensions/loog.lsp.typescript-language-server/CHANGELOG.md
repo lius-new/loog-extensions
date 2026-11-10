@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Fixed concurrent capability registrations during language server startup.
+
 ## 0.1.3
 
 - Redrew the extension icon as a picture; the extension itself did not change.

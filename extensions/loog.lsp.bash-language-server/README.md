@@ -1,16 +1,14 @@
-# Bash Language Server Language Server
+# Bash Language Server
 
-The Bash Language Server language server.
+Bash language services for shell scripts and startup files.
 
-Extension package: 0.1.0. Upstream program: 5.8.1.
+The extension runs its own Loog WASM client and the pinned server (5.8.1)
+through `loog.runtime.node`. Open a Bash file in a trusted workspace to
+start the service. The client uses the workspace folder as its project root.
 
-## Serves
+The `configuration` and `initialization` extension settings accept JSON text.
+Loog enables the features the server advertises for the open file.
+Linting uses ShellCheck when it is available on `PATH`.
 
-- **Bash Language Server**: `bash`
-
-Requires: `loog.runtime.node@^0.1.0`.
-
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+`PROVENANCE.md` records the locked npm dependencies and `licenses/` contains
+the Rust client and dependency notices.

@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "id": "loog.lsp.pyright",
-  "version": "0.1.0",
-  "name": "Pyright Language Server",
+  "version": "0.1.4",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["python"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "Pyright",
   "publisher": "Loog",
-  "description": "The Pyright language server.",
+  "description": "Python language services powered by Pyright.",
   "categories": [
     "Language Services"
   ],
@@ -19,45 +22,47 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loog": ">=0.1.8 <0.3"
+    "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "requires": [
     "loog.runtime.node@^0.1.0"
   ],
   "contributes": {
+    "languages": [
+      { "id": "loog.lsp.pyright.python", "path": "languages/python/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.pyright.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.pyright.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.pyright.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loog.lsp.pyright.pyright",
-          "name": "Pyright",
-          "languages": [
-            "python"
-          ],
-          "command": "${runtime.node}/node",
-          "args": [
-            "${extension}/node_modules/pyright/langserver.index.js",
-            "--stdio"
-          ],
-          "root_markers": [
-            "pyrightconfig.json",
-            "pyproject.toml",
-            "setup.py",
-            "setup.cfg",
-            "requirements.txt"
-          ],
-          "root_strategy": "nearest",
-          "root_fallback": "workspace",
-          "priority": 10,
-          "bindings": [
-            {
-              "language": "python",
-              "language_id": "python"
-            }
-          ]
-        }
+      "name": "Pyright",
+      "providers": [
+        { "id": "loog.lsp.pyright.diagnostics", "kind": "diagnostics", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.completion", "kind": "completion", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.hover", "kind": "hover", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.definition", "kind": "definition", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.document-symbols", "kind": "document-symbols", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.signature-help", "kind": "signature-help", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.formatting", "kind": "formatting", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.code-actions", "kind": "code-actions", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.references", "kind": "references", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.document-highlights", "kind": "document-highlights", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.rename", "kind": "rename", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.code-lens", "kind": "code-lens", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.format-on-type", "kind": "format-on-type", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.execute-command", "kind": "execute-command", "selector": { "languages": ["python"] } },
+        { "id": "loog.lsp.pyright.highlights", "kind": "highlights", "selector": { "languages": ["python"] } }
       ]
     }
   }

@@ -18,6 +18,7 @@ pub(crate) fn language_id<'a>(language: &'a str, variant: Option<&str>) -> &'a s
     match (language, variant) {
         ("javascript", Some("jsx")) => "javascriptreact",
         ("typescript", Some("tsx")) => "typescriptreact",
+        ("bash", _) => "shellscript",
         _ => language,
     }
 }

@@ -1,0 +1,23 @@
+{
+  "name": "python",
+  "display_name": "Python",
+  "badge": "PY",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "python"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "py",
+        "pyi",
+        "pyw"
+      ],
+      "variant": "python"
+    }
+  ]
+}

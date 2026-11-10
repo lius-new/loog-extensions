@@ -53,7 +53,8 @@ test('a fingerprint follows the files git sees, leaves out Markdown, and notices
 test('private language client sources affect all official client fingerprints only', t => {
   const repo = fixture(t);
   const theme = fingerprint(repo.root, 'loog.theme.demo');
-  const ids = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server'];
+  const ids = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server',
+    'loog.lsp.pyright', 'loog.lsp.yaml-language-server', 'loog.lsp.bash-language-server'];
   for (const id of ids) write(repo.extensions, `${id}/rust/Cargo.toml`, '[package]\nname = "client"');
   const before = ids.map(id => fingerprint(repo.root, id));
   write(repo.root, 'language-clients/rust/src/client.rs', 'const REVISION: u8 = 1;');

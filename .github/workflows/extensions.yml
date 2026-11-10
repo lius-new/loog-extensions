@@ -57,16 +57,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Read the pinned Loog source
+      - name: Read the pinned Loog source for Rust language clients
         id: loog
-        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
+        env:
+          LOOG_EXTENSION: ${{ matrix.extension }}
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
+          is_client=$(node -p 'Object.hasOwn(require("./language-clients/rust/clients.json"), process.env.LOOG_EXTENSION)')
+          if [[ "$is_client" != "true" ]]; then exit 0; fi
           echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
           echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
       - name: Check out the general Loog SDK
-        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
+        if: steps.loog.outputs.revision != ''
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.loog.outputs.repository }}
@@ -74,13 +77,13 @@ jobs:
           path: .work/loog-sdk
           persist-credentials: false
       - name: Install the Rust language-client toolchain
-        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
+        if: steps.loog.outputs.revision != ''
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.98.0
           targets: wasm32-unknown-unknown
       - name: Test the private Rust language client
-        if: contains(fromJSON('["loog.lsp.rust-analyzer","loog.lsp.gopls","loog.lsp.typescript-language-server"]'), matrix.extension)
+        if: steps.loog.outputs.revision != ''
         run: cargo test --manifest-path rust/Cargo.toml --locked --lib
       - uses: actions/setup-go@v5
         if: matrix.extension == 'loog.lsp.gopls'

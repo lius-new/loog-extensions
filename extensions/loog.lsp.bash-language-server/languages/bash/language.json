@@ -1,0 +1,26 @@
+{
+  "name": "bash",
+  "display_name": "Bash",
+  "badge": "SH",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "bash"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "sh",
+        "bash"
+      ],
+      "names": [
+        ".bashrc",
+        ".bash_profile"
+      ],
+      "variant": "bash"
+    }
+  ]
+}

@@ -165,6 +165,7 @@ struct Session {
     dynamic: BTreeMap<String, Dynamic>,
     watches: BTreeMap<String, Vec<Watch>>,
     registration: Option<Registration>,
+    registration_queue: VecDeque<String>,
     pending: BTreeMap<u64, Rpc>,
     outbox: VecDeque<Frame>,
     waiting: VecDeque<ProviderRequest>,
@@ -718,6 +719,7 @@ impl Client {
             dynamic: BTreeMap::new(),
             watches: BTreeMap::new(),
             registration: None,
+            registration_queue: VecDeque::new(),
             pending: BTreeMap::new(),
             outbox: VecDeque::new(),
             waiting: VecDeque::new(),
@@ -824,6 +826,7 @@ impl Client {
                 host::unwatch_files(watch);
             }
         }
+        s.registration_queue.clear();
         self.operations
             .retain(|_, operation| operation.process != s.process);
         s.outbox.clear();

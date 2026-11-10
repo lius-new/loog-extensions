@@ -11,6 +11,7 @@ import {satisfies} from './semver.mjs';
 import {buildIndex, releaseTag, validateIndex} from './index.mjs';
 import {verifyIndex, signIndex, publicKeyOf} from './sign.mjs';
 import {GitHubReleases} from './github.mjs';
+import clients from '../../language-clients/rust/clients.json' with {type: 'json'};
 
 const meaningful = name => !/\.md$/i.test(name);
 const git = (root, args) => execFileSync('git', args, {cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024});
@@ -22,7 +23,7 @@ export const releaseDirectory = (work = WORK) => path.join(work, 'release');
 export function fingerprint(root, id, ref) {
   const prefix = `extensions/${id}/`;
   const prefixes = [prefix];
-  if (['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server'].includes(id)) prefixes.push('language-clients/');
+  if (Object.hasOwn(clients, id)) prefixes.push('language-clients/');
   const entries = ref
     ? git(root, ['ls-tree', '-r', '--name-only', '-z', ref, '--', ...prefixes]).split('\0').filter(Boolean)
     // What git tracks or would track: ignored folders (dependencies, build output) are not inputs.

@@ -1,0 +1,22 @@
+{
+  "name": "yaml",
+  "display_name": "YAML",
+  "badge": "YAML",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "yaml"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "yaml",
+        "yml"
+      ],
+      "variant": "yaml"
+    }
+  ]
+}
