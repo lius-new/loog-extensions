@@ -46,5 +46,45 @@
     "markers": [],
     "outermost": false,
     "fileFallback": false
+  },
+  "loog.lsp.clangd": {
+    "languages": ["c", "cpp"],
+    "program": "${extension}/bin/clangd",
+    "args": [],
+    "markers": ["compile_commands.json", "compile_flags.txt", ".clangd"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.lua-language-server": {
+    "languages": ["lua"],
+    "program": "${extension}/bin/lua-language-server",
+    "args": [],
+    "markers": [".luarc.json", ".luarc.jsonc"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.taplo": {
+    "languages": ["toml"],
+    "program": "${extension}/taplo",
+    "args": ["lsp", "stdio"],
+    "markers": [".taplo.toml", "taplo.toml"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.css-language-server": {
+    "languages": ["css"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/vscode-langservers-extracted/bin/vscode-css-language-server", "--stdio"],
+    "markers": ["package.json"],
+    "outermost": false,
+    "fileFallback": false
+  },
+  "loog.lsp.html-language-server": {
+    "languages": ["html"],
+    "program": "${runtime.node}/node",
+    "args": ["${extension}/node_modules/vscode-langservers-extracted/bin/vscode-html-language-server", "--stdio"],
+    "markers": ["package.json"],
+    "outermost": false,
+    "fileFallback": false
   }
 }

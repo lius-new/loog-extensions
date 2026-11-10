@@ -2,8 +2,7 @@
 // pins.json, or for the ones named: node build.mjs [platform…]
 //   npm ci && node build.mjs
 // Each package is the upstream release archive repackaged unchanged: what pins.json
-// says to include, checked against the pinned hash. This project depends on nothing
-// outside itself except what package.json names.
+// says to include, checked against the pinned hash, plus the Loog WASM client.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -13,11 +12,13 @@ import {pipeline} from 'node:stream/promises';
 import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import xz from 'xz-decompress';
+import { buildClient, clientNotices } from '../../language-clients/rust/build.mjs';
 
 const {XzReadableStream} = xz;
 const FILES = ['manifest.json', 'README.md', 'CHANGELOG.md', 'icon.svg'];
 
 const here = import.meta.dirname;
+const component = buildClient(here);
 const pins = JSON.parse(fs.readFileSync(path.join(here, 'pins.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(here, 'manifest.json'), 'utf8'));
 const work = path.join(here, '.work'), dist = path.join(here, 'dist');
@@ -88,6 +89,9 @@ for (const platform of platforms) {
     fs.mkdirSync(path.join(folder, 'licenses'), {recursive: true});
     fs.copyFileSync(await download(license, path.join(work, 'downloads', license.sha256)), path.join(folder, 'licenses', name));
   }
+  fs.cpSync(path.join(here, 'languages'), path.join(folder, 'languages'), {recursive: true});
+  fs.copyFileSync(component, path.join(folder, 'extension.wasm'));
+  clientNotices(folder, here);
   fs.writeFileSync(path.join(folder, 'manifest.json'), JSON.stringify({...manifest, executables: pin.executables}, null, 2) + '\n');
   fs.writeFileSync(path.join(folder, 'PROVENANCE.md'), `# ${manifest.name} ${pins.version}\n\nRepackaged from the upstream release.\n\nPlatform: ${platform}\nLicense: ${manifest.license}\nUpstream: ${pin.url}\nSHA-256: ${pin.sha256}\n`);
 

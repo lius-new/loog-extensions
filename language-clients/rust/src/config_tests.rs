@@ -63,6 +63,56 @@ fn selected_package_has_its_startup_configuration() {
             assert_eq!(language_id("bash", Some("bash")), "shellscript");
             assert!(config.markers.is_empty() && !config.file_fallback);
         }
+        "loog.lsp.clangd" => {
+            assert_eq!(config.languages, &["c", "cpp"]);
+            assert_eq!(config.program, "${extension}/bin/clangd");
+            assert!(config.args.is_empty());
+            assert_eq!(
+                config.markers,
+                &["compile_commands.json", "compile_flags.txt", ".clangd"]
+            );
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.lua-language-server" => {
+            assert_eq!(config.languages, &["lua"]);
+            assert_eq!(config.program, "${extension}/bin/lua-language-server");
+            assert!(config.args.is_empty());
+            assert_eq!(config.markers, &[".luarc.json", ".luarc.jsonc"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.taplo" => {
+            assert_eq!(config.languages, &["toml"]);
+            assert_eq!(config.program, "${extension}/taplo");
+            assert_eq!(config.args, &["lsp", "stdio"]);
+            assert_eq!(config.markers, &[".taplo.toml", "taplo.toml"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.css-language-server" => {
+            assert_eq!(config.languages, &["css"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-css-language-server",
+                    "--stdio"
+                ]
+            );
+            assert_eq!(config.markers, &["package.json"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
+        "loog.lsp.html-language-server" => {
+            assert_eq!(config.languages, &["html"]);
+            assert_eq!(config.program, "${runtime.node}/node");
+            assert_eq!(
+                config.args,
+                &[
+                    "${extension}/node_modules/vscode-langservers-extracted/bin/vscode-html-language-server",
+                    "--stdio"
+                ]
+            );
+            assert_eq!(config.markers, &["package.json"]);
+            assert!(!config.outermost && !config.file_fallback);
+        }
         _ => panic!("unconfigured package {ID}"),
     }
 }

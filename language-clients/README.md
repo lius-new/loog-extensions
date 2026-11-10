@@ -10,6 +10,11 @@ The Python (Pyright), YAML and Bash clients run their pinned Node server through
 `loog.runtime.node` and require Loog 0.2.0 or newer. Pyright uses the nearest
 Python project marker. YAML and Bash use the open workspace folder. The Bash
 client sends the LSP language ID `shellscript` for Loog's `bash` documents.
+
+clangd serves C and C++, Lua Language Server serves Lua, and Taplo serves TOML.
+The CSS and HTML clients run separate servers from the locked
+`vscode-langservers-extracted` package through `loog.runtime.node`. Each client
+uses the nearest project marker or the open workspace folder.
 The 0.2.4 clients require Loog 0.1.10 and its independent `loog:ui/tree@0.1.0`
 interface. Each client chooses `statusbar.cursor-position` as a logical target
 and inserts its status before that component; there is no language-specific

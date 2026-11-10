@@ -1,0 +1,25 @@
+{
+  "name": "html",
+  "display_name": "HTML",
+  "badge": "HTML",
+  "comments": {
+    "block": [
+      "<!--",
+      "-->"
+    ]
+  },
+  "variants": [
+    {
+      "id": "html"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "html",
+        "htm"
+      ],
+      "variant": "html"
+    }
+  ]
+}

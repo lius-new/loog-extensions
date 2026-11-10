@@ -1,14 +1,15 @@
-# clangd Language Server
+# clangd
 
-The clangd language server.
+C and C++ language services powered by clangd.
 
-Extension package: 0.1.0. Upstream program: 23.1.0.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The client finds the nearest project marker (`compile_commands.json`, `compile_flags.txt`, `.clangd`) and falls back to the workspace folder.
 
-## Serves
+The package contains a pinned native server for its platform.
 
-- **clangd**: `c`, `cpp`, `objc`
+Give clangd a compilation database (`compile_commands.json`) or `compile_flags.txt`
+so it can resolve project includes and compiler options.
 
-License: Apache-2.0 WITH LLVM-exception. Platform: every supported platform.
+The `configuration` and `initialization` extension settings accept JSON text.
 
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://clangd.llvm.org/).

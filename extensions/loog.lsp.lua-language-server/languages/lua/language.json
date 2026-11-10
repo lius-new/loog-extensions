@@ -1,0 +1,25 @@
+{
+  "name": "lua",
+  "display_name": "Lua",
+  "badge": "LUA",
+  "comments": {
+    "line": "--",
+    "block": [
+      "--[[",
+      "]]"
+    ]
+  },
+  "variants": [
+    {
+      "id": "lua"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "lua"
+      ],
+      "variant": "lua"
+    }
+  ]
+}

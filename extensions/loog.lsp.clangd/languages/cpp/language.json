@@ -1,0 +1,30 @@
+{
+  "name": "cpp",
+  "display_name": "C++",
+  "badge": "C++",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "cpp"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "cpp",
+        "cc",
+        "cxx",
+        "hpp",
+        "hh",
+        "hxx"
+      ],
+      "variant": "cpp"
+    }
+  ]
+}

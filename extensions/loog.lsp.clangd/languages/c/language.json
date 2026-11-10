@@ -1,0 +1,26 @@
+{
+  "name": "c",
+  "display_name": "C",
+  "badge": "C",
+  "comments": {
+    "line": "//",
+    "block": [
+      "/*",
+      "*/"
+    ]
+  },
+  "variants": [
+    {
+      "id": "c"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "c",
+        "h"
+      ],
+      "variant": "c"
+    }
+  ]
+}

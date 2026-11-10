@@ -54,7 +54,9 @@ test('private language client sources affect all official client fingerprints on
   const repo = fixture(t);
   const theme = fingerprint(repo.root, 'loog.theme.demo');
   const ids = ['loog.lsp.rust-analyzer', 'loog.lsp.gopls', 'loog.lsp.typescript-language-server',
-    'loog.lsp.pyright', 'loog.lsp.yaml-language-server', 'loog.lsp.bash-language-server'];
+    'loog.lsp.pyright', 'loog.lsp.yaml-language-server', 'loog.lsp.bash-language-server',
+    'loog.lsp.clangd', 'loog.lsp.lua-language-server', 'loog.lsp.taplo',
+    'loog.lsp.css-language-server', 'loog.lsp.html-language-server'];
   for (const id of ids) write(repo.extensions, `${id}/rust/Cargo.toml`, '[package]\nname = "client"');
   const before = ids.map(id => fingerprint(repo.root, id));
   write(repo.root, 'language-clients/rust/src/client.rs', 'const REVISION: u8 = 1;');
@@ -204,7 +206,7 @@ test('one batch waits for all independent builds and publishes only on main outs
   assert.match(publish, /LOOG_INDEX_KEY: \$\{\{ secrets\.LOOG_INDEX_KEY \}\}/);
   assert.doesNotMatch(publish, /secrets: inherit/);
   for (const entry of fs.readdirSync(new URL('../../extensions/', import.meta.url), {withFileTypes: true})) {
-    if (!entry.isDirectory()) continue;
+    if (!entry.isDirectory() || !entry.name.startsWith('loog.')) continue;
     for (const file of ['package.json', 'package-lock.json', 'build.mjs']) {
       assert.ok(fs.existsSync(new URL('../../extensions/' + entry.name + '/' + file, import.meta.url)), entry.name + ': ' + file);
     }

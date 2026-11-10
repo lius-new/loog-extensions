@@ -1,15 +1,18 @@
 {
   "schema": 1,
   "id": "loog.lsp.taplo",
-  "version": "0.1.0",
-  "name": "Taplo Language Server",
+  "version": "0.1.4",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "activation": [{ "kind": "document", "selector": { "languages": ["toml"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "name": "Taplo",
   "publisher": "Loog",
-  "description": "The Taplo language server.",
+  "description": "TOML validation, completion and formatting powered by Taplo.",
   "categories": [
     "Language Services"
   ],
   "keywords": [
-    "taplo",
+    "toml",
     "language server",
     "lsp"
   ],
@@ -19,38 +22,44 @@
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
   "engines": {
-    "loog": ">=0.1.8 <0.3"
+    "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local"
+    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
+    "languages": [
+      { "id": "loog.lsp.taplo.toml", "path": "languages/toml/language.json" }
+    ],
+    "settings": [
+      { "key": "loog.lsp.taplo.configuration", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.taplo.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.taplo.performance", "kind": "boolean", "default": false }
+    ],
     "language_service": {
-      "servers": [
-        {
-          "id": "loog.lsp.taplo.taplo",
-          "name": "Taplo",
-          "languages": [
-            "toml"
-          ],
-          "command": "${extension}/taplo",
-          "args": [
-            "lsp",
-            "stdio"
-          ],
-          "root_markers": [
-            ".taplo.toml",
-            "taplo.toml"
-          ],
-          "root_strategy": "nearest",
-          "root_fallback": "workspace",
-          "bindings": [
-            {
-              "language": "toml",
-              "language_id": "toml"
-            }
-          ]
-        }
+      "name": "Taplo",
+      "providers": [
+        { "id": "loog.lsp.taplo.diagnostics", "kind": "diagnostics", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.completion", "kind": "completion", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.hover", "kind": "hover", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.definition", "kind": "definition", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.document-symbols", "kind": "document-symbols", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.signature-help", "kind": "signature-help", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.formatting", "kind": "formatting", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.inlay-hints", "kind": "inlay-hints", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.code-actions", "kind": "code-actions", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.references", "kind": "references", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.workspace-symbols", "kind": "workspace-symbols", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.document-highlights", "kind": "document-highlights", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.rename", "kind": "rename", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.folding-ranges", "kind": "folding-ranges", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.selection-ranges", "kind": "selection-ranges", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.call-hierarchy", "kind": "call-hierarchy", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.type-hierarchy", "kind": "type-hierarchy", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.code-lens", "kind": "code-lens", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.format-on-type", "kind": "format-on-type", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.execute-command", "kind": "execute-command", "selector": { "languages": ["toml"] } },
+        { "id": "loog.lsp.taplo.highlights", "kind": "highlights", "selector": { "languages": ["toml"] } }
       ]
     }
   }

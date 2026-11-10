@@ -1,0 +1,21 @@
+{
+  "name": "toml",
+  "display_name": "TOML",
+  "badge": "TOML",
+  "comments": {
+    "line": "#"
+  },
+  "variants": [
+    {
+      "id": "toml"
+    }
+  ],
+  "files": [
+    {
+      "extensions": [
+        "toml"
+      ],
+      "variant": "toml"
+    }
+  ]
+}

@@ -1,14 +1,12 @@
-# Lua Language Server Language Server
+# Lua Language Server
 
-The Lua Language Server language server.
+Lua completion, diagnostics and navigation.
 
-Extension package: 0.1.0. Upstream program: 3.19.2.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The client finds the nearest project marker (`.luarc.json`, `.luarc.jsonc`) and falls back to the workspace folder.
 
-## Serves
+The package contains a pinned native server for its platform.
 
-- **Lua Language Server**: `lua`
+The `configuration` and `initialization` extension settings accept JSON text.
 
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://luals.github.io/).

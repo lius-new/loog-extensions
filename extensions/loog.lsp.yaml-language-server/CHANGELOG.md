@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Rebuilt with the expanded shared language client configuration.
+
 ## 0.1.4
 
 - Added a Loog WASM client for YAML language services.

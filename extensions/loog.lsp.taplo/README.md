@@ -1,14 +1,12 @@
-# Taplo Language Server
+# Taplo
 
-The Taplo language server.
+TOML validation, completion and formatting powered by Taplo.
 
-Extension package: 0.1.0. Upstream program: 0.10.0.
+Open a supported file in a trusted workspace to start the Loog WASM client.
+The client finds the nearest project marker (`.taplo.toml`, `taplo.toml`) and falls back to the workspace folder.
 
-## Serves
+The package contains a pinned native server for its platform.
 
-- **Taplo**: `toml`
+The `configuration` and `initialization` extension settings accept JSON text.
 
-License: MIT. Platform: every supported platform.
-
-Loog starts the server when you open a file it serves, and asks before running it the first time.
-`PROVENANCE.md` records where the files came from and `licenses/` carries their licenses.
+See the [upstream server documentation](https://taplo.tamasfe.dev/).
