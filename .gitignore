@@ -2,6 +2,7 @@ node_modules/
 # Everything the tools produce.
 dist/
 .work/
+/extensions/*/rust/target/
 # Downloaded validator, see tools/validator.lock.
 tools/bin/
 *.tmp
