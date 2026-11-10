@@ -1,0 +1,16 @@
+{
+  "grammars": [
+    {
+      "name": "git_config",
+      "title": "Git Config",
+      "path": ".",
+      "file-types": [
+        "gitconfig",
+        ".gitconfig",
+        "gitmodules",
+        ".gitmodules"
+      ],
+      "highlights": "queries/git_config/highlights.scm"
+    }
+  ]
+}
