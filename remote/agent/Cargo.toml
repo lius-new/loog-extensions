@@ -1,0 +1,28 @@
+[package]
+name = "loog-remote-agent"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+description = "Static Linux agent for the Remote SSH, WSL and container packages. Needs only a POSIX shell on the target."
+
+[dependencies]
+libc = "0.2"
+serde_json = "1"
+base64 = "0.22"
+sha2 = "0.10"
+ignore = "0.4"
+# Pinned with the SDK checkout at .work/loog-sdk (node scripts/sdk.mjs), as the other packages are.
+loog-text-core = { path = "../../.work/loog-sdk/crates/text-core" }
+loog-workspace-api = { path = "../../.work/loog-sdk/crates/workspace-api" }
+
+[dev-dependencies]
+encoding_rs = "0.8"
+
+[workspace]
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"
