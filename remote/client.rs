@@ -33,6 +33,8 @@ struct Client {
     /// The status bar entry; selecting it opens this connection's menu.
     controls: BTreeMap<u64, &'static str>,
     status_entry: Option<u64>,
+    /// The mark and the host name inside the status bar entry.
+    entry_parts: Option<(u64, u64)>,
     status_text: String,
     error_text: String,
     /// Why the last attempt ended, until the next attempt starts.
@@ -136,7 +138,13 @@ impl Client {
                 failure.get_or_insert(error);
             }
         }
-        self.label("Disconnected")?;
+        if forget {
+            // The person ended it: nothing is left to show in the status bar.
+            self.status_text = "Disconnected".into();
+            self.remove_entry();
+        } else {
+            self.label("Disconnected")?;
+        }
         failure.map_or(Ok(()), Err)
     }
     fn fail(&mut self, message: &str) {
@@ -356,34 +364,72 @@ impl Client {
     }
     fn label(&mut self, text: &str) -> Result<(), String> {
         self.status_text = text.into();
-        if let Some(entry) = self.status_entry {
-            let state = if self.scope.is_some() { "Connected" } else if self.process.is_some() { "Connecting" }
-                else if self.failure.is_some() { "Failed" } else { "Disconnected" };
-            let target = self.connected.as_ref().unwrap_or(&self.profile).target.chars().take(48).collect::<String>();
-            let caption = if target.is_empty() { "SSH".into() } else { format!("SSH {target}: {state}") };
-            host::ui_update(entry, &description(&self.status_id(), UiKind::Button, &caption, None)).map_err(|e| e.message)?;
-        }
+        self.paint_entry()
+    }
+    /// How the connection looks in the status bar: the host, in the colors of its state.
+    fn entry_look(&self) -> (&'static str, u32, u32, &'static str) {
+        if self.scope.is_some() { ("Connected", 0xfff4f4f5, 0xff6366f1, SWAP_ICON) }
+        else if self.process.is_some() { ("Connecting", 0xffffe9a6, 0xff6b4f0b, SWAP_ICON) }
+        else if self.failure.is_some() { ("Failed", 0xffffd5db, 0xff7f1d2d, ALERT_ICON) }
+        else { ("Disconnected", 0xffa1a1aa, 0xff262a35, SWAP_ICON) }
+    }
+    /// Bring the status bar entry up to date with the connection.
+    fn paint_entry(&mut self) -> Result<(), String> {
+        let (Some(entry), Some((icon, text))) = (self.status_entry, self.entry_parts) else { return Ok(()) };
+        let (state, foreground, background, mark) = self.entry_look();
+        let target = self.connected.as_ref().unwrap_or(&self.profile).label();
+        let target: String = target.chars().take(40).collect();
+        let mut root = entry_node(&self.status_id(), UiKind::Block, "", None, foreground, Some(background));
+        root.label = Some(format!("Remote SSH: {target}, {state}"));
+        host::ui_update(entry, &root).map_err(|e| e.message)?;
+        let mut icon_node = entry_node("icon", UiKind::Icon, "", Some(14.0), foreground, None);
+        icon_node.icon = Some(mark.into());
+        host::ui_update(icon, &icon_node).map_err(|e| e.message)?;
+        host::ui_update(text, &entry_node("host", UiKind::Text, &target, None, foreground, None)).map_err(|e| e.message)?;
         Ok(())
     }
-    /// The status bar entry of this connection, made the first time it connects.
+    /// The status bar entry of this connection, made the first time it connects: a mark and the
+    /// host, at the start of the bar's right side, before the language services. Selecting it
+    /// opens this connection's actions.
     fn ensure_entry(&mut self) -> Result<(), String> {
         if self.status_entry.is_some() { return Ok(()) }
         let entry = host::ui_create(&UiParent::Mount("ui.detached".into()),
-            &description(&self.status_id(), UiKind::Button, "SSH", None)).map_err(|e| e.message)?;
+            &entry_node(&self.status_id(), UiKind::Block, "", None, 0xfff4f4f5, Some(0xff6366f1))).map_err(|e| e.message)?;
         loog::ui::tree::place(entry, &loog::ui::tree::Placement {
-            target: loog::ui::tree::Target::PublicId("statusbar.extensions".into()),
-            relation: loog::ui::tree::Relation::Append, order: 0,
+            target: loog::ui::tree::Target::PublicId("statusbar.start".into()),
+            relation: loog::ui::tree::Relation::Before, order: self.index as i32,
         })?;
+        let part = |id: &str, kind: UiKind, width: Option<f32>| host::ui_create(&UiParent::Node(entry),
+            &entry_node(id, kind, "", width, 0xfff4f4f5, None)).map_err(|e| e.message);
+        part("lead", UiKind::Block, Some(6.0))?;
+        let icon = part("icon", UiKind::Icon, Some(14.0))?;
+        let text = part("host", UiKind::Text, None)?;
+        part("trail", UiKind::Block, Some(6.0))?;
         self.status_entry = Some(entry);
+        self.entry_parts = Some((icon, text));
         self.controls.insert(entry, "menu");
-        Ok(())
+        self.paint_entry()
+    }
+    /// Take the entry away, when the person ended the connection.
+    fn remove_entry(&mut self) {
+        if let Some(entry) = self.status_entry.take() {
+            let _ = host::ui_remove(entry);
+            self.controls.remove(&entry);
+        }
+        self.entry_parts = None;
     }
     fn status_id(&self) -> String {
         if self.index == 0 { "show".into() } else { format!("show-{}", self.index) }
     }
 }
-fn description(id: &str, kind: UiKind, text: &str, width: Option<f32>) -> UiDescription {
-    UiDescription { id: id.into(), kind, text: Some(text.into()), width, height: None,
-        icon: None, foreground: None, background: None, padding: 2.0, gap: 6.0, visible: true,
-        label: Some(text.into()) }
+// Material Design Icons (Pictogrammers), Apache-2.0.
+const SWAP_ICON: &str = "svg-path:24x24:M21,9L17,5V8H10V10H17V13M7,11L3,15L7,19V16H14V14H7V11Z";
+const ALERT_ICON: &str = "svg-path:24x24:M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z";
+/// The height of the status bar, which the entry fills so no gap shows under its color.
+const BAR_HEIGHT: f32 = 24.0;
+/// A part of the status bar entry: as high as the bar, with no padding of its own.
+fn entry_node(id: &str, kind: UiKind, text: &str, width: Option<f32>, foreground: u32, background: Option<u32>) -> UiDescription {
+    UiDescription { id: id.into(), kind, text: Some(text.into()), width, height: Some(BAR_HEIGHT),
+        icon: None, foreground: Some(foreground), background, padding: 0.0, gap: 4.0, visible: true,
+        label: None }
 }
