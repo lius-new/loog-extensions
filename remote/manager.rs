@@ -1,23 +1,35 @@
-//! Bounded independent SSH connections and the command palette flow that opens them.
+//! Bounded independent connections and the command palette flow that opens them.
 //! Host tickets, scopes and process IDs route to their owner; Agent handles are
 //! meaningful only inside that owner. The palette shows only words and ids this
 //! component supplies; the application never learns what they stand for.
 use super::*;
+use crate::transport::{SAVED, TITLE};
 use picker::{Accepted, Activity, Choice, Entry, Mode, View};
 
 const MAX_CONNECTIONS: usize = 4;
 const MAX_SAVED: usize = 32;
 const STORAGE_KEY: &str = "hosts";
-const TITLE: &str = "Remote SSH";
 
 /// Where the person is in the palette.
 enum Step {
     /// A host is being typed.
+    #[cfg(transport = "ssh")]
     Host,
     /// The host is known; how to authenticate is being chosen.
+    #[cfg(transport = "ssh")]
     Auth(Profile),
     /// The system file dialog is open to choose a private key.
+    #[cfg(transport = "ssh")]
     Key { profile: Profile, request: u64 },
+    /// The list of targets is being read.
+    #[cfg(not(transport = "ssh"))]
+    List,
+    /// The targets are listed and one is being chosen.
+    #[cfg(not(transport = "ssh"))]
+    Pick,
+    /// A connection could not be started; the choices offer another try.
+    #[cfg(not(transport = "ssh"))]
+    Failed(Profile),
     /// One connection is being made, or has failed.
     Connecting { client: usize, profile: Profile, failed: bool },
     /// The actions of one connection.
@@ -28,6 +40,14 @@ struct Flow {
     step: Step,
 }
 
+/// The process that prints the list of targets, and what it has printed.
+#[cfg(not(transport = "ssh"))]
+struct Lister {
+    process: u64,
+    output: Vec<u8>,
+    errors: Vec<u8>,
+}
+
 pub(super) struct Connections {
     clients: Vec<Client>,
     selected: usize,
@@ -36,23 +56,44 @@ pub(super) struct Connections {
     started: bool,
     /// What was last published as palette entries, to publish again only a change.
     published: Vec<(String, String, Option<String>, String)>,
+    #[cfg(not(transport = "ssh"))]
+    lister: Option<Lister>,
 }
 impl Default for Connections {
     fn default() -> Self {
         Self { clients: vec![Client::default()], selected: 0, flow: None, saved: Vec::new(),
-            started: false, published: Vec::new() }
+            started: false, published: Vec::new(),
+            #[cfg(not(transport = "ssh"))]
+            lister: None }
     }
 }
 
-/// The words of `text` on one line, cut to what the palette shows. SSH reports
-/// failures over several lines; the palette takes one.
+/// The most bytes of a note the palette takes (it takes 200); text in other scripts is wider than its length.
+const NOTE_BYTES: usize = 190;
+
+/// The words of `text` on one line, cut to what the palette shows. Channels report failures
+/// over several lines, often a warning first and the cause last, so a long text keeps its end.
 fn one_line(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(180).collect()
+    let clean: String = text.chars().filter(|c| !c.is_control() || c.is_whitespace()).collect();
+    let line = clean.split_whitespace().collect::<Vec<_>>().join(" ");
+    if line.len() <= NOTE_BYTES { return line; }
+    let mut start = line.len() - (NOTE_BYTES - 3);
+    while !line.is_char_boundary(start) { start += 1; }
+    format!("...{}", &line[start..])
+}
+
+/// What a failure means to the person, when it is a failure they can fix.
+fn explain(line: String) -> String {
+    let lower = line.to_lowercase();
+    if lower.contains("python3") && (lower.contains("no such file") || lower.contains("not found")) {
+        return "Python 3 is not installed in the target. Install it and try again".into();
+    }
+    line
 }
 
 fn view(tags: &[&str], placeholder: &str, mode: Mode, choices: Vec<Choice>, activity: Activity, note: Option<String>) -> View {
     View { tags: tags.iter().map(|tag| (*tag).to_owned()).collect(), placeholder: placeholder.into(),
-        mode, choices, activity, note: note.map(|note| one_line(&note)) }
+        mode, choices, activity, note: note.map(|note| explain(one_line(&note))) }
 }
 fn choice(id: &str, title: &str, detail: Option<&str>, trailing: Option<&str>) -> Choice {
     Choice { id: id.into(), title: title.into(), detail: detail.map(Into::into), group: None,
@@ -66,7 +107,7 @@ impl Connections {
                 && client.tickets.is_empty() && client.pending.is_empty()
         }) { return Ok(index); }
         if self.clients.len() >= MAX_CONNECTIONS {
-            return Err("At most four SSH environments can be connected; disconnect one first".into());
+            return Err("At most four environments can be connected; disconnect one first".into());
         }
         let index = self.clients.len();
         self.clients.push(Client { index, ..Client::default() });
@@ -95,14 +136,14 @@ impl Connections {
         }
         for profile in &self.saved {
             entries.push((format!("host:{}", profile.identity()), format!("{TITLE}: {}", profile.label()),
-                Some(folder(&profile.root)), "Saved Hosts".to_owned()));
+                Some(folder(&profile.root)), SAVED.to_owned()));
         }
         if entries == self.published { return; }
         let list: Vec<Entry> = entries.iter().map(|(id, title, detail, category)| Entry {
             id: id.clone(), title: title.clone(), detail: detail.clone(), category: category.clone() }).collect();
         match picker::publish_entries(&list) {
             Ok(()) => self.published = entries,
-            Err(error) => host::log(2, &format!("Remote SSH: {error}")),
+            Err(error) => host::log(2, &format!("{TITLE}: {error}")),
         }
     }
 
@@ -112,38 +153,107 @@ impl Connections {
         self.saved.insert(0, profile);
         self.saved.truncate(MAX_SAVED);
         if let Err(error) = host::storage_set(StorageScope::User, STORAGE_KEY, &serde_json::to_string(&self.saved).unwrap()) {
-            host::log(2, &format!("Remote SSH: {}", error.message));
+            host::log(2, &format!("{TITLE}: {}", error.message));
         }
     }
 
     /// Open the palette on the first step of a new connection.
+    #[cfg(transport = "ssh")]
     fn begin(&mut self) {
         let shown = view(&[TITLE], "user@host[:port]", Mode::Text, vec![], Activity::Idle, None);
         self.open(Step::Host, shown);
     }
+    /// Open the palette on the list of targets, which is read first.
+    #[cfg(not(transport = "ssh"))]
+    fn begin(&mut self) {
+        self.stop_listing();
+        let shown = view(&[TITLE], "Listing…", Mode::Choose, vec![], Activity::Busy, None);
+        self.open(Step::List, shown);
+        if self.flow.is_none() { return; }
+        let (program, args) = listing::command();
+        match tools::launch(program, &args) {
+            Ok(process) => {
+                host::log(1, &format!("{TITLE}: listing started with {program}"));
+                self.lister = Some(Lister { process, output: Vec::new(), errors: Vec::new() });
+            }
+            Err(error) => self.listing_failed(&error),
+        }
+    }
+    #[cfg(not(transport = "ssh"))]
+    fn stop_listing(&mut self) {
+        if let Some(lister) = self.lister.take() { host::process_kill(lister.process); }
+    }
+    /// The list could not be read: say so where it would have been.
+    #[cfg(not(transport = "ssh"))]
+    fn listing_failed(&mut self, why: &str) {
+        self.lister = None;
+        if let Some(flow) = &mut self.flow { flow.step = Step::List; }
+        // The reason is the whole message here, so it is said in the field, not only on the mark.
+        let reason = explain(one_line(why));
+        self.note(why, &[TITLE], &reason, Mode::Choose, vec![]);
+    }
+    /// The program that lists the targets spoke or ended. True when the message was its own.
+    #[cfg(not(transport = "ssh"))]
+    fn lister_message(&mut self, message: &Inbound) -> bool {
+        let Some(lister) = &mut self.lister else { return false };
+        match message {
+            Inbound::ProcessOutput(output) if output.process == lister.process => {
+                let (kept, limit) = if matches!(output.channel, OutputChannel::Stderr) { (&mut lister.errors, 4096) }
+                    else { (&mut lister.output, listing::MAX_BYTES) };
+                let room = limit.saturating_sub(kept.len());
+                kept.extend_from_slice(&output.bytes[..output.bytes.len().min(room)]);
+                true
+            }
+            Inbound::ProcessExited(exit) if exit.process == lister.process => {
+                let Some(lister) = self.lister.take() else { return true };
+                let targets = listing::parse(&lister.output);
+                host::log(1, &format!("{TITLE}: listing ended with code {:?}, {} bytes, {} targets",
+                    exit.code, lister.output.len(), targets.len()));
+                if exit.error.is_some() || exit.code != Some(0) && targets.is_empty() {
+                    let said = listing::decode(&lister.errors);
+                    let why = if said.trim().is_empty() { format!("{} is not available. Install it and make sure it is running", crate::transport::LISTER) } else { said };
+                    self.listing_failed(&why);
+                } else if targets.is_empty() {
+                    self.listing_failed(crate::transport::NONE_FOUND);
+                } else if self.flow.as_ref().is_some_and(|flow| matches!(flow.step, Step::List)) {
+                    let choices = targets.iter().map(|target| choice(&target.name, &target.name, Some(&target.detail), None)).collect();
+                    let shown = view(&[TITLE], crate::transport::PICK, Mode::Choose, choices, Activity::Idle, None);
+                    self.show(Step::Pick, shown);
+                }
+                true
+            }
+            _ => false,
+        }
+    }
     fn open(&mut self, step: Step, shown: View) {
         match picker::open(&shown) {
             Ok(session) => self.flow = Some(Flow { session, step }),
-            Err(error) => host::log(2, &format!("Remote SSH: {error}")),
+            Err(error) => host::log(2, &format!("{TITLE}: {error}")),
         }
     }
     fn show(&mut self, step: Step, shown: View) {
         let Some(flow) = &mut self.flow else { return };
-        if let Err(error) = picker::update(flow.session, &shown) { host::log(2, &format!("Remote SSH: {error}")); }
+        if let Err(error) = picker::update(flow.session, &shown) { host::log(2, &format!("{TITLE}: {error}")); }
         flow.step = step;
     }
     /// Say something in the open palette without changing the step.
     fn note(&mut self, message: &str, tags: &[&str], placeholder: &str, mode: Mode, choices: Vec<Choice>) {
         if let Some(flow) = &self.flow {
-            let shown = view(tags, placeholder, mode, choices, Activity::Failed, Some(message.chars().take(180).collect()));
-            if let Err(error) = picker::update(flow.session, &shown) { host::log(2, &format!("Remote SSH: {error}")); }
+            let shown = view(tags, placeholder, mode, choices, Activity::Failed, Some(message.to_owned()));
+            if let Err(error) = picker::update(flow.session, &shown) { host::log(2, &format!("{TITLE}: {error}")); }
         }
     }
     /// What can be done about a connection that failed.
+    #[cfg(transport = "ssh")]
     fn failed_choices() -> Vec<Choice> {
         vec![choice("retry", "Retry", None, None),
             choice("key", "Choose Key File…", Some("Use one specific private key"), None)]
     }
+    #[cfg(not(transport = "ssh"))]
+    fn failed_choices() -> Vec<Choice> {
+        vec![choice("retry", "Retry", None, None)]
+    }
+    #[cfg(transport = "ssh")]
     fn auth_view(profile: &Profile) -> View {
         let label = profile.label();
         view(&[TITLE, &label], "Select private key", Mode::Choose, vec![
@@ -155,8 +265,10 @@ impl Connections {
     fn accepted(&mut self, accepted: Accepted) {
         let Some(flow) = &self.flow else { return };
         if flow.session != accepted.session { return; }
-        let step = std::mem::replace(&mut self.flow.as_mut().unwrap().step, Step::Host);
+        // Every arm below puts a step back; this one only stands in while the step is taken.
+        let step = std::mem::replace(&mut self.flow.as_mut().unwrap().step, Step::Menu(usize::MAX));
         match step {
+            #[cfg(transport = "ssh")]
             Step::Host => match Profile::from_input(&accepted.text) {
                 Ok(profile) if self.active(&profile).is_some() => {
                     // Nothing to choose: say so where the host was typed.
@@ -169,6 +281,7 @@ impl Connections {
                     self.note(&error, &[TITLE], "user@host[:port]", Mode::Text, vec![]);
                 }
             },
+            #[cfg(transport = "ssh")]
             Step::Auth(profile) => match accepted.choice.as_deref() {
                 Some("default") => self.connect_in_palette(profile),
                 Some("key") => match picker::pick_file("Select Private Key") {
@@ -180,11 +293,29 @@ impl Connections {
                 },
                 _ => self.flow.as_mut().unwrap().step = Step::Auth(profile),
             },
+            #[cfg(transport = "ssh")]
             Step::Key { profile, request } => self.flow.as_mut().unwrap().step = Step::Key { profile, request },
+            #[cfg(not(transport = "ssh"))]
+            Step::List => self.flow.as_mut().unwrap().step = Step::List,
+            #[cfg(not(transport = "ssh"))]
+            Step::Pick => match accepted.choice.as_deref().map(Profile::for_target) {
+                Some(Ok(profile)) => self.connect_in_palette(profile),
+                Some(Err(error)) => {
+                    self.flow.as_mut().unwrap().step = Step::Pick;
+                    self.note(&error, &[TITLE], crate::transport::PICK, Mode::Choose, vec![]);
+                }
+                None => self.flow.as_mut().unwrap().step = Step::Pick,
+            },
+            #[cfg(not(transport = "ssh"))]
+            Step::Failed(profile) => match accepted.choice.as_deref() {
+                Some("retry") => self.connect_in_palette(profile),
+                _ => self.flow.as_mut().unwrap().step = Step::Failed(profile),
+            },
             Step::Connecting { client, profile, failed } => {
                 // A failed attempt offers to try again or to use another key; while one runs nothing is chosen.
                 match (failed, accepted.choice.as_deref()) {
                     (true, Some("retry")) => self.connect_in_palette(profile),
+                    #[cfg(transport = "ssh")]
                     (true, Some("key")) => match picker::pick_file("Select Private Key") {
                         Ok(request) => self.flow.as_mut().unwrap().step = Step::Key { profile, request },
                         Err(error) => {
@@ -222,8 +353,16 @@ impl Connections {
                 self.show(Step::Connecting { client, profile, failed: false }, shown);
             }
             Err(error) => {
-                self.flow.as_mut().unwrap().step = Step::Auth(profile.clone());
-                self.note(&error, &[TITLE, &label], "Select private key", Mode::Choose, Self::auth_view(&profile).choices);
+                #[cfg(transport = "ssh")]
+                {
+                    self.flow.as_mut().unwrap().step = Step::Auth(profile.clone());
+                    self.note(&error, &[TITLE, &label], "Select private key", Mode::Choose, Self::auth_view(&profile).choices);
+                }
+                #[cfg(not(transport = "ssh"))]
+                {
+                    self.flow.as_mut().unwrap().step = Step::Failed(profile);
+                    self.note(&error, &[TITLE, &label], "Connection failed", Mode::Choose, Self::failed_choices());
+                }
             }
         }
     }
@@ -240,7 +379,7 @@ impl Connections {
         profile.validate()?;
         if let Some(index) = self.active(&profile) {
             self.selected = index;
-            return Err("This SSH environment is already connected".into());
+            return Err("Already connected".into());
         }
         let index = self.candidate()?;
         self.selected = index;
@@ -258,6 +397,8 @@ impl Connections {
             let client = *client;
             if self.clients[client].scope.is_none() { let _ = self.clients[client].disconnect(false); }
         }
+        #[cfg(not(transport = "ssh"))]
+        self.stop_listing();
         self.flow = None;
     }
 
@@ -275,7 +416,7 @@ impl Connections {
         let mut choices = Vec::new();
         if !live { choices.push(choice("reconnect", "Reconnect", None, None)); }
         if live { choices.push(choice("disconnect", "Disconnect", None, None)); }
-        choices.push(choice("new", "Connect to New Host…", None, None));
+        choices.push(choice("new", crate::transport::NEW, None, None));
         let shown = view(&[TITLE, &label], "Select an action", Mode::Choose, choices,
             if client.failure.is_some() { Activity::Failed } else { Activity::Idle }, client.failure.clone());
         self.open(Step::Menu(index), shown);
@@ -287,12 +428,17 @@ impl Connections {
             picker::Event::Accepted(accepted) => self.accepted(accepted),
             picker::Event::Cancelled(session) => self.cancelled(session),
             picker::Event::Entry(id) => self.entry(&id),
+            #[cfg(transport = "ssh")]
             picker::Event::File(picked) => self.picked(picked),
+            // Only a private key is asked of the system dialog, and only the SSH package asks.
+            #[cfg(not(transport = "ssh"))]
+            picker::Event::File(_) => {}
         }
         self.sync();
     }
 
     /// The file dialog for a private key was answered.
+    #[cfg(transport = "ssh")]
     fn picked(&mut self, picked: picker::Picked) {
         let Some(flow) = &mut self.flow else { return };
         let Step::Key { request, .. } = &flow.step else { return };
@@ -322,11 +468,12 @@ impl Connections {
                 // Choosing a host closed the palette; it opens again to show how the connection goes.
                 let label = profile.label();
                 let shown = view(&[TITLE, &label], "Connecting…", Mode::Choose, vec![], Activity::Busy, None);
-                self.open(Step::Auth(profile.clone()), shown);
+                // The step stands in until the connection starts and sets its own.
+                self.open(Step::Menu(usize::MAX), shown);
                 if self.flow.is_some() {
                     self.connect_in_palette(profile);
                 } else if let Err(error) = self.connect(profile) {
-                    host::log(2, &format!("Remote SSH: {error}"));
+                    host::log(2, &format!("{TITLE}: {error}"));
                 }
             }
         }
@@ -361,15 +508,21 @@ impl Connections {
     pub(super) fn message(&mut self, message: Inbound) {
         self.start();
         if let Inbound::RunCommand(command) = &message {
-            if command.command == "loog.remote.ssh.connect" {
+            if command.command == format!("{ID}.connect") {
                 self.begin();
                 return;
             }
-            if command.command == "loog.remote.ssh.disconnect" {
-                if let Err(error) = self.clients[self.selected].disconnect(true) { host::log(2, &format!("Remote SSH: {error}")); }
+            if command.command == format!("{ID}.disconnect") {
+                if let Err(error) = self.clients[self.selected].disconnect(true) { host::log(2, &format!("{TITLE}: {error}")); }
                 self.sync();
                 return;
             }
+        }
+        // What the list of targets prints is not a connection's.
+        #[cfg(not(transport = "ssh"))]
+        if self.lister_message(&message) {
+            self.sync();
+            return;
         }
         let Some(index) = self.message_owner(&message) else { return };
         if let Inbound::UiEvent(event) = &message {
@@ -402,13 +555,13 @@ impl Connections {
                 if let Some(client) = self.clients.iter().find(|client| client.connected.as_ref()
                     .is_some_and(|active| active.identity() == profile.identity())) {
                     if client.connected.as_ref().unwrap().root != profile.root && client.canonical_root != profile.root {
-                        return Err("This SSH environment already has another folder connected".into());
+                        return Err("This environment already has another folder connected".into());
                     }
                     return Ok(());
                 }
                 self.connect(profile).map(|_| ())
             })();
-            if let Err(error) = result { host::log(2, &format!("Remote SSH: {error}")); }
+            if let Err(error) = result { host::log(2, &format!("{TITLE}: {error}")); }
             self.sync();
             return;
         }
@@ -464,11 +617,24 @@ mod tests {
         assert_eq!(connections.candidate().unwrap(), 2);
     }
     #[test]
-    fn a_multi_line_ssh_failure_becomes_one_short_line() {
+    fn a_multi_line_failure_becomes_one_short_line() {
         let text = "No ED25519 host key is known.\r\nHost key verification failed.\r\n";
         assert_eq!(one_line(text), "No ED25519 host key is known. Host key verification failed.");
         assert!(!one_line(&"word ".repeat(100)).contains('\n'));
-        assert_eq!(one_line(&"é".repeat(300)).chars().count(), 180);
+    }
+    #[test]
+    fn a_long_note_keeps_its_end_and_fits_the_palette_in_bytes_whatever_the_script() {
+        for text in ["é".repeat(300), "检测到代理配置 ".repeat(40) + "execvpe(python3) failed", "a\0b\u{7}c".repeat(100)] {
+            let line = one_line(&text);
+            assert!(line.len() <= 200 && !line.contains(['\n', '\0', '\r']), "{line}");
+        }
+        assert!(one_line(&("x ".repeat(200) + "the cause")).ends_with("the cause"));
+    }
+    #[test]
+    fn a_missing_python_is_said_plainly() {
+        let line = one_line("<3>WSL (12 - Relay) ERROR: CreateProcessCommon:800: execvpe(python3) failed: No such file or directory");
+        assert!(explain(line).starts_with("Python 3 is not installed"));
+        assert_eq!(explain("Host key verification failed.".into()), "Host key verification failed.");
     }
     #[test]
     fn a_remote_folder_is_named_for_the_person() {

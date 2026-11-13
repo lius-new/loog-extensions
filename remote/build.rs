@@ -1,6 +1,12 @@
 use std::{env, fs, path::PathBuf};
 
 fn main() {
+    // One source builds each package; the package name says how its Agent channel starts.
+    println!("cargo:rustc-check-cfg=cfg(transport, values(\"ssh\", \"wsl\", \"docker\"))");
+    let package = env::var("CARGO_PKG_NAME").expect("package name");
+    let transport = package.strip_prefix("loog-remote-").expect("loog-remote-<transport> package name");
+    assert!(["ssh", "wsl", "docker"].contains(&transport), "unknown transport {transport}");
+    println!("cargo:rustc-cfg=transport=\"{transport}\"");
     if env::var("CARGO_CFG_TARGET_ARCH").as_deref() == Ok("wasm32") {
         let bundle = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("../../../remote/search/target");
         for name in ["bundle.txt", "bundle.gz"] {

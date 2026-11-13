@@ -1,6 +1,9 @@
-//! SSH policy, connection UI and private Agent protocol live in this component.
+//! Channel policy, connection UI and private Agent protocol live in this component. One
+//! source builds the SSH, WSL and container packages; see `transport`.
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 mod protocol;
+mod transport;
+mod listing;
 mod manager;
 use exports::loog::extension::guest::Guest;
 use loog::extension::{host, types::*};
@@ -11,7 +14,7 @@ use protocol::{Profile, Frames};
 use serde_json::{Value, json};
 use std::{cell::RefCell, collections::{BTreeMap, VecDeque}};
 
-const ID: &str = "loog.remote.ssh";
+use transport::ID;
 enum Pending { Hello, Bundle(usize), BundleReady, Mount, Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
 enum Ticket { Register(u64), Mount(u64), Started { process: u64, capability: api::Capability, handle: u64 }, Other }
 struct Outgoing { id: Option<u64>, bytes: Vec<u8> }
@@ -98,12 +101,12 @@ impl Client {
         if self.process.is_some() || self.environment.is_some() {
             return Err("Disconnect the current connection before connecting again".into());
         }
-        let args = self.profile.arguments()?;
+        let (program, args) = self.profile.launch()?;
         self.ensure_entry()?;
         self.frames = Frames::default();
         self.error_text.clear();
         self.failure = None;
-        self.process = Some(tools::launch("ssh", &args)?);
+        self.process = Some(tools::launch(program, &args)?);
         self.connected = Some(self.profile.clone());
         self.outgoing.push_back(Outgoing { id: None, bytes: protocol::AGENT.to_vec() });
         self.send("hello", json!({}), Pending::Hello)?;
@@ -152,7 +155,7 @@ impl Client {
         let short: String = message.chars().take(300).collect();
         self.failure = Some(short.clone());
         let _ = self.label(&short);
-        host::log(2, &format!("Remote SSH: {short}"));
+        host::log(2, &format!("{}: {short}", transport::TITLE));
     }
     fn message(&mut self, message: Inbound) -> Result<(), String> {
         match message {
@@ -167,7 +170,7 @@ impl Client {
                 if matches!(output.channel, OutputChannel::Stderr) {
                     if self.error_text.len() < 4096 {
                         let bytes = &output.bytes[..output.bytes.len().min(4096 - self.error_text.len())];
-                        self.error_text.push_str(&String::from_utf8_lossy(bytes));
+                        self.error_text.push_str(&listing::decode(bytes));
                     }
                 } else {
                     for value in self.frames.push(&output.bytes)? { self.agent(value)?; }
@@ -176,7 +179,7 @@ impl Client {
             Inbound::ProcessExited(exit) if Some(exit.process) == self.process => {
                 self.process = None;
                 return Err(exit.error.map(|e| e.message).unwrap_or_else(|| {
-                    if self.error_text.is_empty() { "SSH connection ended".into() } else { self.error_text.clone() }
+                    if self.error_text.is_empty() { "The connection ended".into() } else { self.error_text.clone() }
                 }));
             }
             _ => {}
@@ -201,7 +204,7 @@ impl Client {
                     return Err("This provider requires the bundled Agent on Linux".into());
                 }
                 if value["machine"] != "x86_64" {
-                    return Err("This SSH package currently supports Linux x86_64 targets".into());
+                    return Err("This package currently supports Linux x86_64 targets".into());
                 }
                 self.label("Preparing workspace search")?;
                 self.send("search_bundle_begin", json!({"size":protocol::SEARCH_SIZE.parse::<usize>().map_err(|_| "Invalid bundled search size")?,
@@ -380,7 +383,7 @@ impl Client {
         let target = self.connected.as_ref().unwrap_or(&self.profile).label();
         let target: String = target.chars().take(40).collect();
         let mut root = entry_node(&self.status_id(), UiKind::Block, "", None, foreground, Some(background));
-        root.label = Some(format!("Remote SSH: {target}, {state}"));
+        root.label = Some(format!("{}: {target}, {state}", transport::TITLE));
         host::ui_update(entry, &root).map_err(|e| e.message)?;
         let mut icon_node = entry_node("icon", UiKind::Icon, "", Some(14.0), foreground, None);
         icon_node.icon = Some(mark.into());

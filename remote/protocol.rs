@@ -40,8 +40,16 @@ impl Default for Profile {
     }
 }
 impl Profile {
+    /// A profile for a target that was listed rather than typed: a distribution or a container.
+    #[cfg(not(transport = "ssh"))]
+    pub fn for_target(target: &str) -> Result<Self, String> {
+        let profile = Self { target: target.into(), ..Self::default() };
+        profile.validate()?;
+        Ok(profile)
+    }
     /// Split what a person types for a host — `alias`, `user@host` or either with
     /// `:port` — into a target and a port. Bracketed IPv6 literals keep their colons.
+    #[cfg(transport = "ssh")]
     pub fn from_input(text: &str) -> Result<Self, String> {
         let text = text.trim();
         let (target, port) = match text.rsplit_once(':') {
@@ -56,12 +64,11 @@ impl Profile {
     }
     /// What is shown for the host: its target, with a port that is not the usual one.
     pub fn label(&self) -> String {
-        if self.port == 22 { self.target.clone() } else { format!("{}:{}", self.target, self.port) }
+        if self.port == 22 || cfg!(not(transport = "ssh")) { self.target.clone() } else { format!("{}:{}", self.target, self.port) }
     }
     pub fn validate(&self) -> Result<(), String> {
-        if self.target.is_empty() || self.target.len() > 512 || self.target.starts_with('-')
-            || !self.target.bytes().all(|c| c.is_ascii_alphanumeric() || b".@:_-[]".contains(&c)) {
-            return Err("Enter an SSH alias or user@host".into());
+        if !crate::transport::target_valid(&self.target) {
+            return Err(crate::transport::target_hint().into());
         }
         if self.port == 0 || self.root.len() > 4096 || self.root.contains('\0')
             || !(self.root == HOME || self.root.starts_with('/')) {
@@ -76,8 +83,38 @@ impl Profile {
         Ok(())
     }
     pub fn identity(&self) -> String {
-        serde_json::to_string(&(&self.target, self.port, &self.config)).unwrap()
+        #[cfg(transport = "ssh")]
+        { serde_json::to_string(&(&self.target, self.port, &self.config)).unwrap() }
+        #[cfg(not(transport = "ssh"))]
+        { serde_json::to_string(&(&self.target,)).unwrap() }
     }
+    /// The Python that checks the bundled Agent against its digest and runs it, as one
+    /// argument for a channel that starts a program without a shell. It holds no quote
+    /// character other than the single quote, so every channel passes it through as is.
+    #[cfg(not(transport = "ssh"))]
+    fn bootstrap_source() -> String {
+        format!("import sys,hashlib;s=sys.stdin.buffer.read({});assert hashlib.sha256(s).hexdigest()=='{:x}';exec(compile(s,'<loog-agent>','exec'))",
+            AGENT.len(), Sha256::digest(AGENT))
+    }
+    /// The program that opens the channel to the Agent and its arguments. Only the fixed
+    /// bootstrap is sent; no target, folder or user text is interpolated into a shell.
+    #[cfg(transport = "wsl")]
+    pub fn launch(&self) -> Result<(&'static str, Vec<String>), String> {
+        self.validate()?;
+        Ok(("wsl.exe", ["-d", self.target.as_str(), "--exec", "python3", "-u", "-c", &Self::bootstrap_source()]
+            .map(String::from).to_vec()))
+    }
+    #[cfg(transport = "docker")]
+    pub fn launch(&self) -> Result<(&'static str, Vec<String>), String> {
+        self.validate()?;
+        Ok(("docker", ["exec", "-i", self.target.as_str(), "python3", "-u", "-c", &Self::bootstrap_source()]
+            .map(String::from).to_vec()))
+    }
+    #[cfg(transport = "ssh")]
+    pub fn launch(&self) -> Result<(&'static str, Vec<String>), String> {
+        self.arguments().map(|arguments| ("ssh", arguments))
+    }
+    #[cfg(transport = "ssh")]
     pub fn arguments(&self) -> Result<Vec<String>, String> {
         self.validate()?;
         let digest = format!("{:x}", Sha256::digest(AGENT));
@@ -242,6 +279,22 @@ fn malformed() -> Failure { Failure::new(FailureKind::Failed, "Invalid Agent res
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(transport = "ssh"))]
+    #[test]
+    fn the_channel_starts_with_one_fixed_argument_and_a_target_cannot_be_an_option() {
+        let profile = Profile::for_target("Ubuntu-22.04").unwrap();
+        let (program, args) = profile.launch().unwrap();
+        assert_eq!(program, if cfg!(transport = "wsl") { "wsl.exe" } else { "docker" });
+        let code = args.last().unwrap();
+        // The Agent is checked against its digest, and nothing else is built into the code.
+        assert!(code.contains(&format!("{:x}", Sha256::digest(AGENT))));
+        assert!(!code.contains('"'), "only the single quote survives every channel");
+        assert!(args.contains(&"Ubuntu-22.04".to_owned()));
+        assert!(Profile::for_target("-oProxyCommand=bad").is_err());
+        assert!(Profile::for_target("").is_err());
+        assert!(Profile::for_target("a;b").is_err());
+    }
+    #[cfg(transport = "ssh")]
     #[test]
     fn shell_text_never_contains_the_user_folder_and_aliases_cannot_be_options() {
         let profile = Profile { target: "user@host".into(), port: 2222, root: "/work/';echo injected".into(), ..Profile::default() };
@@ -249,6 +302,7 @@ mod tests {
         assert!(!args.last().unwrap().contains("injected"));
         assert!(Profile { target: "-oProxyCommand=bad".into(), ..profile }.arguments().is_err());
     }
+    #[cfg(transport = "ssh")]
     #[test]
     fn typed_hosts_split_into_target_and_port() {
         let host = |text: &str| Profile::from_input(text).map(|profile| (profile.target, profile.port));
@@ -262,6 +316,7 @@ mod tests {
         assert_eq!(Profile::from_input("a:2222").unwrap().label(), "a:2222");
         assert_eq!(Profile::from_input("a").unwrap().label(), "a");
     }
+    #[cfg(transport = "ssh")]
     #[test]
     fn a_chosen_key_is_the_only_one_offered_and_cannot_be_an_option() {
         let profile = Profile { target: "host".into(), key: "C:/keys/id".into(), ..Profile::default() };
