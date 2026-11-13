@@ -8,13 +8,14 @@ import {validRange, validVersion} from './semver.mjs';
 
 // Keep in step with `CAPABILITIES` and `EVENTS` in Loog's src/features/extensions/manifest.rs.
 export const CAPABILITIES = ['documents.read', 'workspace.edit', 'workspace.files.read', 'workspace.files.write',
-  'events', 'settings', 'languages', 'storage', 'network', 'tasks', 'process.execute-local'];
+  'events', 'settings', 'languages', 'storage', 'network', 'tasks', 'process.execute-local',
+  'workspace.provide', 'process.execute-tool', 'process.execute-environment', 'terminal.provide'];
 // The categories an extension may list, at most three; and the size limits for its documents.
 export const CATEGORIES = ['Themes', 'Syntax Highlighting', 'Language Services', 'Snippets', 'Linters', 'Formatters', 'Editing', 'Source control', 'Productivity', 'Other'];
 export const MAX_ICON_BYTES = 256 * 1024;
 export const MAX_DOCUMENT_BYTES = 512 * 1024;
 export const EVENTS = ['document.open', 'document.change', 'document.close', 'document.save',
-  'selection.change', 'focus.change', 'root.change', 'workspace.files'];
+  'selection.change', 'focus.change', 'root.change', 'workspace.files', 'workspace.restore', 'resource.documents'];
 
 const SEGMENT = /^[a-z0-9][a-z0-9-]*$/;
 export const validId = id => typeof id === 'string' && id.split('.').length >= 2 && id.split('.').every(part => SEGMENT.test(part));
@@ -184,6 +185,11 @@ export function checkExtension(dir, {built = false, publishing = true} = {}) {
       if (!fs.existsSync(path.join(dir, ...entry.path.split('/')))) add(`${what} ${entry.id}: ${entry.path} does not exist`);
     } catch (error) { add(error.message); }
   };
+  for (const command of contributes.commands ?? []) {
+    namespaced(command?.id, 'command');
+    if (typeof command?.title !== 'string' || !command.title.trim()) add('command title must not be empty');
+    if (command.context !== undefined && !['document', 'window'].includes(command.context)) add('command context must be document or window');
+  }
   for (const [kind, what] of [['themes', 'theme'], ['highlight', 'highlight'], ['languages', 'language identity'], ['snippets', 'snippet']]) {
     for (const entry of contributes[kind] ?? []) resource(entry, what);
   }

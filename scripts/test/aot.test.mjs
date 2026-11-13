@@ -42,6 +42,8 @@ test('native interoperability gates publication and uses immutable compiler arti
  assert.match(workflow,/artifact-ids:[^\n]+\n\s+path: \.work\/aot-corpus\n\s+merge-multiple: true/);
  assert.match(workflow,/needs.aot-native.result == 'success'/);
  assert.match(workflow,/needs.aot-native.result == 'skipped'.*needs.aot-corpus.outputs.count == '0'/);
+ assert.match(workflow,/inputs.publish && github.ref == 'refs\/heads\/main' && github.event_name != 'pull_request'/);
+ assert.match(workflow,/merge-base --is-ancestor "\$SDK_REVISION" HEAD/);
  for(const target of Object.values(TARGETS))assert.ok(workflow.includes('target: '+target));
 });
 

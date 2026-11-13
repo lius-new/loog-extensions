@@ -1,0 +1,13 @@
+[package]
+name = "loog-remote-acceptance"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+loog-extension-host = { path = "../../.work/loog-sdk/crates/extension-host" }
+loog-workspace-api = { path = "../../.work/loog-sdk/crates/workspace-api" }
+loog-language-workspace = { path = "../../language-clients/rust/workspace" }
+serde_json = "1"
+
+[workspace]

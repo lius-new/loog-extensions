@@ -13,7 +13,7 @@ export const TARGETS={
  'linux-x86_64':'x86_64-unknown-linux-gnu','linux-aarch64':'aarch64-unknown-linux-gnu',
  'macos-x86_64':'x86_64-apple-darwin','macos-aarch64':'aarch64-apple-darwin',
 };
-const CLIENTS=new Set(['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server']);
+const CLIENTS=new Set(['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server','loog.lsp.vscode-langservers-extracted','loog.remote.ssh']);
 const DOMAIN=Buffer.from('loog.extension.aot.v1\0');
 export async function prepareAot(files,{compiler,privatePem,keyId,keys,out,work,compile}={}){
  assert(publicKeyOf(privatePem)===keys[keyId],'The AOT compiler signing key is not the configured publication authority');

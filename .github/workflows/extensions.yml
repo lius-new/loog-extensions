@@ -57,15 +57,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Read the pinned Loog source for Rust language clients
+      - name: Read the pinned Loog source for Rust components
         id: loog
         env:
           LOOG_EXTENSION: ${{ matrix.extension }}
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          is_client=$(node -p 'Object.hasOwn(require("./language-clients/rust/clients.json"), process.env.LOOG_EXTENSION)')
-          if [[ "$is_client" != "true" ]]; then exit 0; fi
+          if [[ ! -f "extensions/$LOOG_EXTENSION/rust/Cargo.toml" ]]; then exit 0; fi
           echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
           echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
       - name: Check out the general Loog SDK
@@ -76,13 +75,13 @@ jobs:
           ref: ${{ steps.loog.outputs.revision }}
           path: .work/loog-sdk
           persist-credentials: false
-      - name: Install the Rust language-client toolchain
+      - name: Install the Rust component toolchain
         if: steps.loog.outputs.revision != ''
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.98.0
-          targets: wasm32-unknown-unknown
-      - name: Test the private Rust language client
+          targets: wasm32-unknown-unknown,x86_64-unknown-linux-musl
+      - name: Test the private Rust component
         if: steps.loog.outputs.revision != ''
         run: cargo test --manifest-path rust/Cargo.toml --locked --lib
       - uses: actions/setup-go@v5
@@ -91,6 +90,10 @@ jobs:
           go-version: stable
       - run: npm ci
       - run: node build.mjs
+      - name: Verify the bundled Linux search worker
+        if: matrix.extension == 'loog.remote.ssh'
+        working-directory: ${{ github.workspace }}
+        run: python3 -m unittest discover -s remote -p 'test_search.py'
       - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.extension }}
@@ -100,15 +103,16 @@ jobs:
 
   publish:
     needs: [plan, build]
-    # Wait for the entire matrix. Successful builds can publish even if another fails;
-    # the failed build still makes the overall workflow fail. PRs never publish.
+    # PRs run the same AOT interoperability checks without publication credentials.
+    # Main may publish successful builds after the complete matrix finishes.
     if: >-
       ${{ !cancelled() && needs.plan.result == 'success' &&
-          needs.plan.outputs.has-extensions == 'true' &&
-          github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+          needs.plan.outputs.has-extensions == 'true' }}
     permissions:
       contents: write
       actions: read
     uses: ./.github/workflows/publish.yml
+    with:
+      publish: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     secrets:
       LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}

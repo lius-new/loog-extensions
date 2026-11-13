@@ -1,0 +1,12 @@
+{
+  "loog.lsp.rust-analyzer": {
+    "kind": "native",
+    "pins": "extensions/loog.lsp.rust-analyzer/pins.json"
+  },
+  "loog.lsp.vscode-langservers-extracted": {
+    "kind": "node",
+    "pins": "extensions/loog.runtime.node/pins.json",
+    "lock": "extensions/loog.lsp.vscode-langservers-extracted/payload/package-lock.json",
+    "entry": "node_modules/vscode-langservers-extracted/bin/vscode-json-language-server"
+  }
+}

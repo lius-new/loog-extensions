@@ -3,6 +3,11 @@ node_modules/
 dist/
 .work/
 /extensions/*/rust/target/
+/remote/acceptance/target/
+/remote/search/target/
+__pycache__/
+/extensions/*/extension.wasm
+/language-clients/rust/workspace/target/
 # Downloaded validator, see tools/validator.lock.
 tools/bin/
 *.tmp
