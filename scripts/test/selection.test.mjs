@@ -65,7 +65,7 @@ test('every language service recipe has a matching component profile and selecto
 
 test('provider source and shared component tooling select the SSH package', () => {
   const available = [...ids, 'loog.remote.ssh'];
-  assert.deepEqual(selectExtensions(available, ['remote/agent.py']), ['loog.remote.ssh']);
+  assert.deepEqual(selectExtensions(available, ['remote/agent/src/main.rs']), ['loog.remote.ssh']);
   assert.deepEqual(selectExtensions(available, ['remote/manager.rs']), ['loog.remote.ssh']);
   assert.deepEqual(selectExtensions(available, ['language-clients/rust/build.mjs']), ['loog.lsp.gopls', 'loog.remote.ssh']);
 });

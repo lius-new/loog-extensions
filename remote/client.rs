@@ -15,7 +15,7 @@ use serde_json::{Value, json};
 use std::{cell::RefCell, collections::{BTreeMap, VecDeque}};
 
 use transport::ID;
-enum Pending { Hello, Bundle(usize), BundleReady, Mount, Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
+enum Pending { Hello, Mount, Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
 enum Ticket { Register(u64), Mount(u64), Started { process: u64, capability: api::Capability, handle: u64 }, Other }
 struct Outgoing { id: Option<u64>, bytes: Vec<u8> }
 #[derive(Default)]
@@ -43,6 +43,8 @@ struct Client {
     /// Why the last attempt ended, until the next attempt starts.
     failure: Option<String>,
     heartbeat: Option<u64>,
+    /// What the target has said before the agent runs: waiting for its architecture.
+    boot: Option<Vec<u8>>,
 }
 thread_local! { static CLIENT: RefCell<manager::Connections> = RefCell::new(manager::Connections::default()); }
 struct Extension;
@@ -78,7 +80,8 @@ impl Client {
         if self.pending.len() >= 128 { return Err("Agent request budget exceeded".into()); }
         self.next = self.next.checked_add(1).ok_or("Request identity exhausted")?;
         let bytes = protocol::frame(self.next, method, params);
-        let queued: usize = self.outgoing.iter().map(|item| item.bytes.len()).sum();
+        // The agent upload is not a request: only requests count against the input budget.
+        let queued: usize = self.outgoing.iter().filter(|item| item.id.is_some()).map(|item| item.bytes.len()).sum();
         if bytes.len() > protocol::MAX_FRAME || queued + bytes.len() > 2 * protocol::MAX_FRAME {
             return Err("Agent input budget exceeded".into());
         }
@@ -88,7 +91,8 @@ impl Client {
     }
     fn flush(&mut self) -> Result<(), String> {
         let Some(process) = self.process else { return Ok(()) };
-        for _ in 0..32 {
+        // Whole-message admission: a zero means wait for process-writable, which runs another round.
+        for _ in 0..1024 {
             let Some(item) = self.outgoing.front() else { break };
             let count = host::process_write(process, &item.bytes).map_err(|e| e.message)? as usize;
             if count == 0 { break; }
@@ -108,13 +112,14 @@ impl Client {
         self.failure = None;
         self.process = Some(tools::launch(program, &args)?);
         self.connected = Some(self.profile.clone());
-        self.outgoing.push_back(Outgoing { id: None, bytes: protocol::AGENT.to_vec() });
-        self.send("hello", json!({}), Pending::Hello)?;
+        // The target answers with its architecture first; the agent is sent after that.
+        self.boot = Some(Vec::new());
         self.heartbeat = Some(host::timer_start(10_000).map_err(|error| error.message)?);
         self.label("Connecting")
     }
     fn disconnect(&mut self, forget: bool) -> Result<(), String> {
         if let Some(timer) = self.heartbeat.take() { host::timer_cancel(timer); }
+        self.boot = None;
         if forget && self.scope.is_some() && let Some(profile) = &self.connected {
             let resource = api::ResourceRef::provided(api::EnvironmentKey::new(ID, profile.identity())?, self.canonical_root.clone())?;
             self.submit(Command::Forget { resource }, Ticket::Other)?;
@@ -162,7 +167,8 @@ impl Client {
             Inbound::TimerElapsed(timer) if self.heartbeat == Some(timer) => {
                 self.heartbeat = None;
                 if self.process.is_some() {
-                    self.send("ping", json!({}), Pending::Cleanup)?;
+                    // Nothing may precede the upload on the channel.
+                    if self.boot.is_none() { self.send("ping", json!({}), Pending::Cleanup)?; }
                     self.heartbeat = Some(host::timer_start(10_000).map_err(|error| error.message)?);
                 }
             }
@@ -172,6 +178,8 @@ impl Client {
                         let bytes = &output.bytes[..output.bytes.len().min(4096 - self.error_text.len())];
                         self.error_text.push_str(&listing::decode(bytes));
                     }
+                } else if self.boot.is_some() {
+                    self.arrival(&output.bytes)?;
                 } else {
                     for value in self.frames.push(&output.bytes)? { self.agent(value)?; }
                 }
@@ -183,6 +191,33 @@ impl Client {
                 }));
             }
             _ => {}
+        }
+        Ok(())
+    }
+    /// The target's first words: look for its architecture, then send the matching agent.
+    /// A login script can print before the loader does, so other lines are skipped.
+    fn arrival(&mut self, bytes: &[u8]) -> Result<(), String> {
+        let boot = self.boot.as_mut().ok_or("The agent is already running")?;
+        boot.extend_from_slice(bytes);
+        if boot.len() > 16 * 1024 { return Err("The target did not start the agent loader".into()); }
+        let mut start = 0;
+        while let Some(length) = boot[start..].iter().position(|byte| *byte == b'\n') {
+            let line = String::from_utf8_lossy(&boot[start..start + length]).trim_end_matches('\r').to_owned();
+            start += length + 1;
+            let Some(answer) = line.strip_prefix(protocol::ARCH_PREFIX) else { continue };
+            let rest = boot[start..].to_vec();
+            self.boot = None;
+            let agent = protocol::agent_for(answer).ok_or_else(|| format!(
+                "This package supports Linux x86_64 and aarch64 targets, not {}", protocol::machine_name(answer)))?;
+            self.label("Starting the agent")?;
+            self.outgoing.push_back(Outgoing { id: None, bytes: protocol::upload_header(agent).into_bytes() });
+            // Chunks stay far below the host's whole-message admission window.
+            for chunk in agent.bytes.chunks(32 * 1024) {
+                self.outgoing.push_back(Outgoing { id: None, bytes: chunk.to_vec() });
+            }
+            self.send("hello", json!({}), Pending::Hello)?;
+            for value in self.frames.push(&rest)? { self.agent(value)?; }
+            return Ok(());
         }
         Ok(())
     }
@@ -200,29 +235,9 @@ impl Client {
         match pending {
             Pending::Hello => {
                 let value = result.map_err(|e| e.message)?;
-                if value["protocol"] != 1 || value["platform"] != "linux" {
+                if value["protocol"] != 2 || value["platform"] != "linux" {
                     return Err("This provider requires the bundled Agent on Linux".into());
                 }
-                if value["machine"] != "x86_64" {
-                    return Err("This package currently supports Linux x86_64 targets".into());
-                }
-                self.label("Preparing workspace search")?;
-                self.send("search_bundle_begin", json!({"size":protocol::SEARCH_SIZE.parse::<usize>().map_err(|_| "Invalid bundled search size")?,
-                    "sha256":protocol::SEARCH_SHA256}), Pending::Bundle(0))?;
-            }
-            Pending::Bundle(offset) => {
-                use base64::Engine;
-                result.map_err(|e| e.message)?;
-                let end = (offset + 128 * 1024).min(protocol::SEARCH_BUNDLE.len());
-                if end > offset {
-                    self.send("search_bundle_append", json!({"offset":offset,
-                        "data":base64::engine::general_purpose::STANDARD.encode(&protocol::SEARCH_BUNDLE[offset..end])}), Pending::Bundle(end))?;
-                } else {
-                    self.send("search_bundle_finish", json!({}), Pending::BundleReady)?;
-                }
-            }
-            Pending::BundleReady => {
-                result.map_err(|e| e.message)?;
                 let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
                 self.send("mount", json!({"path":profile.root}), Pending::Mount)?;
             }

@@ -1,15 +1,15 @@
 # Remote SSH (development)
 
-The component owns SSH connection settings, connection UI, the bundled Linux
-Python Agent and a Linux x86_64 search executable. Loog supplies generic window commands, user tools and asynchronous
+The component owns SSH connection settings, connection UI and the bundled static
+Linux agents (x86_64 and aarch64, search included). Loog supplies generic window commands, user tools and asynchronous
 resource operations; it does not recognize SSH or this package's ID.
 
 Build with LOOG_SOURCE pointing to the matching Loog checkout:
 
 ~~~powershell
 node scripts/sdk.mjs
-rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
-node --input-type=module -e "import {buildSearch} from './remote/search/build.mjs'; buildSearch();"
+rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl aarch64-unknown-linux-musl
+node --input-type=module -e "import {buildAgents} from './remote/agent/build.mjs'; buildAgents();"
 cargo build --locked --release --target wasm32-unknown-unknown --manifest-path extensions/loog.remote.ssh/rust/Cargo.toml
 cargo run --locked --release --manifest-path language-clients/rust/componentize/Cargo.toml -- extensions/loog.remote.ssh/rust/target/wasm32-unknown-unknown/release/loog_remote_ssh.wasm extensions/loog.remote.ssh/extension.wasm
 ~~~
@@ -32,20 +32,22 @@ palette shows a turning mark while connecting and a cross when it failed; pressi
 Enter after a failure tries again. Authentication is noninteractive, so password
 login and passphrase-protected keys that are not loaded into an SSH agent are not
 supported. A host seen for the first time is trusted and recorded in the SSH known
-hosts file; a host whose recorded key changed is refused. Python 3 must be available on
-the Linux x86_64 target. The extension asks to start with the application so saved
+hosts file; a host whose recorded key changed is refused. The target needs a POSIX shell and
+nothing else: no Python and no other runtime. It may be Linux x86_64 or aarch64. The extension asks to start with the application so saved
 hosts are listed before any command runs.
 
-The Agent source travels over SSH and is checked against its bundled SHA-256
-before execution; no persistent Agent installation is required. Configuration
+The target answers its architecture, then the matching static agent travels over
+SSH and is checked against its bundled SHA-256 before it runs from a private
+temporary folder (the runtime directory, `~/.cache`, `/tmp` or `/dev/shm`, the
+first that allows execution). The agent removes its own file as it starts, so no
+persistent installation is left behind. Configuration
 stores connection values only. This package never stores passwords or private
 keys.
 
-The search executable is compiled from plugin-owned Rust source and shares pure
-text decoding/matching rules with the editor. The component transfers its gzip
-bundle in 128 KiB chunks, checks the expanded SHA-256 and seals an anonymous
-Linux file before execution. It does not install a target Rust compiler or a
-WebAssembly runtime. Directory descriptors and no-follow file opens keep disk
+The agent, including its search, is compiled from plugin-owned Rust source and
+shares pure text decoding/matching rules with the editor. A search runs as a
+disposable child of the same executable. It does not install a target Rust
+compiler or a WebAssembly runtime. Directory descriptors and no-follow file opens keep disk
 reads inside the mounted folder; links and special files are skipped.
 
 Search supports literal/regular expressions, case/word options, include/exclude
@@ -59,7 +61,7 @@ using the same text rules. Limits are 4 MiB per decoded file, 10,000 matches,
 1 MiB / 8,192-line budget; worker address space is capped at 256 MiB. Four
 searches, including cancelled children awaiting collection, may run per
 connection; cancellation closes their processes and unused handles expire.
-The standalone Linux scanner passes encoding, ignore, bounds and cancellation
+The Linux agent's search passes encoding, ignore, bounds and cancellation
 tests, including 100 cancellation cycles with children reaped and file
 descriptors returning to baseline. Native search/navigation also passes the
 complete headless SSH test, including dirty buffers, UTF-16, cancellation and

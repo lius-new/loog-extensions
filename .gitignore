@@ -4,7 +4,7 @@ dist/
 .work/
 /extensions/*/rust/target/
 /remote/acceptance/target/
-/remote/search/target/
+/remote/agent/target/
 __pycache__/
 /extensions/*/extension.wasm
 /language-clients/rust/workspace/target/

@@ -84,9 +84,13 @@ fn one_line(text: &str) -> String {
 
 /// What a failure means to the person, when it is a failure they can fix.
 fn explain(line: String) -> String {
+    // The agent loader says in its own words why it could not go on.
+    if let Some((_, reason)) = line.rsplit_once(crate::protocol::ERROR_PREFIX.trim_end()) {
+        return reason.trim().to_owned();
+    }
     let lower = line.to_lowercase();
-    if lower.contains("python3") && (lower.contains("no such file") || lower.contains("not found")) {
-        return "Python 3 is not installed in the target. Install it and try again".into();
+    if lower.contains("execvpe(sh)") || (lower.contains("exec") && lower.contains("\"sh\"") && lower.contains("not found")) {
+        return "The target has no POSIX shell (sh) to start the agent".into();
     }
     line
 }
@@ -624,16 +628,18 @@ mod tests {
     }
     #[test]
     fn a_long_note_keeps_its_end_and_fits_the_palette_in_bytes_whatever_the_script() {
-        for text in ["é".repeat(300), "检测到代理配置 ".repeat(40) + "execvpe(python3) failed", "a\0b\u{7}c".repeat(100)] {
+        for text in ["é".repeat(300), "检测到代理配置 ".repeat(40) + "execvpe(sh) failed", "a\0b\u{7}c".repeat(100)] {
             let line = one_line(&text);
             assert!(line.len() <= 200 && !line.contains(['\n', '\0', '\r']), "{line}");
         }
         assert!(one_line(&("x ".repeat(200) + "the cause")).ends_with("the cause"));
     }
     #[test]
-    fn a_missing_python_is_said_plainly() {
-        let line = one_line("<3>WSL (12 - Relay) ERROR: CreateProcessCommon:800: execvpe(python3) failed: No such file or directory");
-        assert!(explain(line).starts_with("Python 3 is not installed"));
+    fn a_loader_failure_is_said_in_its_own_words() {
+        let line = one_line("Warning: Permanently added 'h' to the list of known hosts.\nloog-error: no directory on this machine allows running the agent");
+        assert_eq!(explain(line), "no directory on this machine allows running the agent");
+        let line = one_line("<3>WSL (12 - Relay) ERROR: CreateProcessCommon:800: execvpe(sh) failed: No such file or directory");
+        assert!(explain(line).starts_with("The target has no POSIX shell"));
         assert_eq!(explain("Host key verification failed.".into()), "Host key verification failed.");
     }
     #[test]
