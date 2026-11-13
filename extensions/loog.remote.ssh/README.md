@@ -20,10 +20,21 @@ existing SDK. Both Cargo API dependencies and WIT use that checkout; the plugin
 repository does not need to live inside the Loog repository. For an installable
 development archive, run `npm ci` and `node build.mjs` in this extension folder.
 
-Run **Remote SSH: Connect** from the command palette. Enter an SSH alias or
-user@host, port, absolute Linux folder, and optionally a local SSH configuration
-file. Authentication uses existing noninteractive SSH credentials. Host keys must
-already be trusted by SSH. Python 3 must be available on the Linux x86_64 target.
+Everything happens in the command palette. Type `ssh` to list the saved hosts
+and choose one to connect to it. **Remote SSH: Connect to New Host…** takes an
+SSH alias or `user@host`, with `:port` for a port that is not 22, then asks how to
+select the private key: **Default Location** (the keys in `~/.ssh` and those named
+in the SSH configuration, preselected) or **Choose Key File…**, which opens the
+system file dialog and offers only that key. A host that
+connected is saved and opens its folder next time; a new host opens the login
+folder. Port, jump hosts and other options belong in the SSH configuration. The
+palette shows a turning mark while connecting and a cross when it failed; pressing
+Enter after a failure tries again. Authentication is noninteractive, so password
+login and passphrase-protected keys that are not loaded into an SSH agent are not
+supported. A host seen for the first time is trusted and recorded in the SSH known
+hosts file; a host whose recorded key changed is refused. Python 3 must be available on
+the Linux x86_64 target. The extension asks to start with the application so saved
+hosts are listed before any command runs.
 
 The Agent source travels over SSH and is checked against its bundled SHA-256
 before execution; no persistent Agent installation is required. Configuration

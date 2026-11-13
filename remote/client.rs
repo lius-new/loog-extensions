@@ -4,6 +4,7 @@ mod protocol;
 mod manager;
 use exports::loog::extension::guest::Guest;
 use loog::extension::{host, types::*};
+use loog::palette::picker;
 use loog::workspace::{session, tools};
 use loog_workspace_api::{self as api, session::{Command, Event, Reply}};
 use protocol::{Profile, Frames};
@@ -29,12 +30,13 @@ struct Client {
     scope: Option<u64>,
     agent_root: Option<u64>,
     canonical_root: String,
-    ui: Option<u64>,
+    /// The status bar entry; selecting it opens this connection's menu.
     controls: BTreeMap<u64, &'static str>,
-    status: Option<u64>,
     status_entry: Option<u64>,
     status_text: String,
     error_text: String,
+    /// Why the last attempt ended, until the next attempt starts.
+    failure: Option<String>,
     heartbeat: Option<u64>,
 }
 thread_local! { static CLIENT: RefCell<manager::Connections> = RefCell::new(manager::Connections::default()); }
@@ -52,6 +54,7 @@ impl Guest for Extension {
                     .map(|event| client.workspace(event));
                 if let Err(error) = result { host::log(2, &error); }
             }
+            for event in picker::poll() { client.palette(event); }
             client.flush();
             Ok(RoundStatus::Idle)
         })
@@ -94,10 +97,10 @@ impl Client {
             return Err("Disconnect the current connection before connecting again".into());
         }
         let args = self.profile.arguments()?;
-        host::storage_set(StorageScope::User, "profile", &serde_json::to_string(&self.profile).unwrap())
-            .map_err(|e| e.message)?;
+        self.ensure_entry()?;
         self.frames = Frames::default();
         self.error_text.clear();
+        self.failure = None;
         self.process = Some(tools::launch("ssh", &args)?);
         self.connected = Some(self.profile.clone());
         self.outgoing.push_back(Outgoing { id: None, bytes: protocol::AGENT.to_vec() });
@@ -139,6 +142,7 @@ impl Client {
     fn fail(&mut self, message: &str) {
         let _ = self.disconnect(false);
         let short: String = message.chars().take(300).collect();
+        self.failure = Some(short.clone());
         let _ = self.label(&short);
         host::log(2, &format!("Remote SSH: {short}"));
     }
@@ -151,17 +155,6 @@ impl Client {
                     self.heartbeat = Some(host::timer_start(10_000).map_err(|error| error.message)?);
                 }
             }
-            Inbound::UiEvent(event) => match (self.controls.get(&event.node).copied().unwrap_or(""), event.payload) {
-                ("target", UiEventPayload::Input(text)) => self.profile.target = text,
-                ("root", UiEventPayload::Input(text)) => self.profile.root = text,
-                ("config", UiEventPayload::Input(text)) => self.profile.config = text,
-                ("port", UiEventPayload::Input(text)) => self.profile.port = text.parse().unwrap_or(0),
-                ("connect", UiEventPayload::Click) => self.connect()?,
-                ("disconnect", UiEventPayload::Click) => self.disconnect(true)?,
-                ("close", UiEventPayload::Click) => self.hide()?,
-                ("show", UiEventPayload::Click) => self.show()?,
-                _ => {}
-            },
             Inbound::ProcessOutput(output) if Some(output.process) == self.process => {
                 if matches!(output.channel, OutputChannel::Stderr) {
                     if self.error_text.len() < 4096 {
@@ -363,76 +356,27 @@ impl Client {
     }
     fn label(&mut self, text: &str) -> Result<(), String> {
         self.status_text = text.into();
-        if let Some(status) = self.status {
-            let mut desc = description("status", UiKind::Text, text, Some(480.0));
-            desc.height = Some(68.0);
-            host::ui_update(status, &desc).map_err(|e| e.message)?;
-        }
         if let Some(entry) = self.status_entry {
-            let state = if self.scope.is_some() { "Connected" } else if self.process.is_some() { "Connecting" } else { "Disconnected" };
+            let state = if self.scope.is_some() { "Connected" } else if self.process.is_some() { "Connecting" }
+                else if self.failure.is_some() { "Failed" } else { "Disconnected" };
             let target = self.connected.as_ref().unwrap_or(&self.profile).target.chars().take(48).collect::<String>();
             let caption = if target.is_empty() { "SSH".into() } else { format!("SSH {target}: {state}") };
             host::ui_update(entry, &description(&self.status_id(), UiKind::Button, &caption, None)).map_err(|e| e.message)?;
         }
         Ok(())
     }
-    fn hide(&mut self) -> Result<(), String> {
-        if let Some(node) = self.ui {
-            host::ui_remove(node).map_err(|e| e.message)?;
-            self.ui = None;
-        }
-        self.status = None;
-        self.controls.retain(|node, _| Some(*node) == self.status_entry);
-        Ok(())
-    }
-    fn show(&mut self) -> Result<(), String> {
-        if self.ui.is_some() { return Ok(()) }
-        if self.status_entry.is_none() {
-            let entry = host::ui_create(&UiParent::Mount("ui.detached".into()),
-                &description(&self.status_id(), UiKind::Button, "SSH", None)).map_err(|e| e.message)?;
-            loog::ui::tree::place(entry, &loog::ui::tree::Placement {
-                target: loog::ui::tree::Target::PublicId("statusbar.extensions".into()),
-                relation: loog::ui::tree::Relation::Append, order: 0,
-            })?;
-            self.status_entry = Some(entry);
-            self.controls.insert(entry, "show");
-        }
-        if self.profile.target.is_empty() && let Some(saved) = host::storage_get(StorageScope::User, "profile") {
-            self.profile = serde_json::from_str(&saved).unwrap_or_default();
-        }
-        let mut panel = description("connection", UiKind::Column, "", Some(512.0));
-        panel.height = Some(326.0);
-        panel.padding = 16.0;
-        panel.gap = 8.0;
-        panel.background = Some(0xff202228);
-        let node = host::ui_create(&UiParent::Mount("ui.detached".into()),
-            &panel).map_err(|e| e.message)?;
-        loog::ui::tree::place(node, &loog::ui::tree::Placement {
-            target: loog::ui::tree::Target::PublicId("window.overlays".into()),
+    /// The status bar entry of this connection, made the first time it connects.
+    fn ensure_entry(&mut self) -> Result<(), String> {
+        if self.status_entry.is_some() { return Ok(()) }
+        let entry = host::ui_create(&UiParent::Mount("ui.detached".into()),
+            &description(&self.status_id(), UiKind::Button, "SSH", None)).map_err(|e| e.message)?;
+        loog::ui::tree::place(entry, &loog::ui::tree::Placement {
+            target: loog::ui::tree::Target::PublicId("statusbar.extensions".into()),
             relation: loog::ui::tree::Relation::Append, order: 0,
         })?;
-        self.ui = Some(node);
-        host::ui_create(&UiParent::Node(node), &description("title", UiKind::Text, "Remote SSH", None)).map_err(|e| e.message)?;
-        for (id, title, value) in [("target", "SSH target", self.profile.target.clone()),
-            ("port", "Port", self.profile.port.to_string()), ("root", "Folder", self.profile.root.clone()),
-            ("config", "Config file", self.profile.config.clone())] {
-            let row = host::ui_create(&UiParent::Node(node), &description(&format!("{id}-row"), UiKind::Row, "", Some(480.0))).map_err(|e| e.message)?;
-            host::ui_create(&UiParent::Node(row), &description(&format!("{id}-label"), UiKind::Text, title, Some(92.0))).map_err(|e| e.message)?;
-            let mut input = description(id, UiKind::TextInput, &value, Some(374.0));
-            input.background = Some(0xff141519);
-            let control = host::ui_create(&UiParent::Node(row), &input)
-                .map_err(|e| e.message)?;
-            self.controls.insert(control, id);
-        }
-        let buttons = host::ui_create(&UiParent::Node(node), &description("actions", UiKind::Row, "", None)).map_err(|e| e.message)?;
-        for (id, text) in [("connect", "Connect"), ("disconnect", "Disconnect"), ("close", "Close")] {
-            let control = host::ui_create(&UiParent::Node(buttons), &description(id, UiKind::Button, text, Some(112.0))).map_err(|e| e.message)?;
-            self.controls.insert(control, id);
-        }
-        self.status = Some(host::ui_create(&UiParent::Node(node),
-            &description("status", UiKind::Text, "", Some(480.0))).map_err(|e| e.message)?);
-        let status = if self.status_text.is_empty() { "Use an existing SSH key or agent. Config file is optional.".into() } else { self.status_text.clone() };
-        self.label(&status)
+        self.status_entry = Some(entry);
+        self.controls.insert(entry, "menu");
+        Ok(())
     }
     fn status_id(&self) -> String {
         if self.index == 0 { "show".into() } else { format!("show-{}", self.index) }
@@ -441,7 +385,5 @@ impl Client {
 fn description(id: &str, kind: UiKind, text: &str, width: Option<f32>) -> UiDescription {
     UiDescription { id: id.into(), kind, text: Some(text.into()), width, height: None,
         icon: None, foreground: None, background: None, padding: 2.0, gap: 6.0, visible: true,
-        label: Some(match id { "target" => "SSH alias or user@host", "port" => "SSH port",
-            "config" => "Optional SSH configuration file",
-            "root" => "Remote folder", _ => text }.into()) }
+        label: Some(text.into()) }
 }

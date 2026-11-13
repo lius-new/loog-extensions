@@ -17,13 +17,14 @@
   "engines": {"loog": ">=0.1.10 <0.3"},
   "capabilities": ["workspace.provide", "process.execute-tool", "storage"],
   "activation": [
+    {"kind": "event", "name": "application.start"},
     {"kind": "event", "name": "workspace.restore"},
     {"kind": "command", "id": "loog.remote.ssh.connect"},
     {"kind": "command", "id": "loog.remote.ssh.disconnect"}
   ],
   "contributes": {
     "commands": [
-      {"id": "loog.remote.ssh.connect", "title": "Remote SSH: Connect", "context": "window"},
+      {"id": "loog.remote.ssh.connect", "title": "Remote SSH: Connect to New Host…", "context": "window"},
       {"id": "loog.remote.ssh.disconnect", "title": "Remote SSH: Disconnect", "context": "window"}
     ]
   }

@@ -28,23 +28,50 @@ pub struct Profile {
     pub root: String,
     #[serde(default)]
     pub config: String,
+    /// A private key file to offer instead of the default keys; empty uses the defaults.
+    #[serde(default)]
+    pub key: String,
 }
+/// The remote folder that stands for the login directory of the SSH user.
+pub const HOME: &str = "~";
 impl Default for Profile {
     fn default() -> Self {
-        Self { target: String::new(), port: 22, root: String::from("/root"), config: String::new() }
+        Self { target: String::new(), port: 22, root: HOME.into(), config: String::new(), key: String::new() }
     }
 }
 impl Profile {
+    /// Split what a person types for a host — `alias`, `user@host` or either with
+    /// `:port` — into a target and a port. Bracketed IPv6 literals keep their colons.
+    pub fn from_input(text: &str) -> Result<Self, String> {
+        let text = text.trim();
+        let (target, port) = match text.rsplit_once(':') {
+            Some((target, port)) if !target.is_empty() && !port.is_empty() && !port.contains(']')
+                && (!target.contains(':') || target.ends_with(']')) =>
+                (target, port.parse::<u16>().map_err(|_| "The port is a number from 1 to 65535".to_owned())?),
+            _ => (text, 22),
+        };
+        let profile = Self { target: target.into(), port, ..Self::default() };
+        profile.validate()?;
+        Ok(profile)
+    }
+    /// What is shown for the host: its target, with a port that is not the usual one.
+    pub fn label(&self) -> String {
+        if self.port == 22 { self.target.clone() } else { format!("{}:{}", self.target, self.port) }
+    }
     pub fn validate(&self) -> Result<(), String> {
         if self.target.is_empty() || self.target.len() > 512 || self.target.starts_with('-')
             || !self.target.bytes().all(|c| c.is_ascii_alphanumeric() || b".@:_-[]".contains(&c)) {
             return Err("Enter an SSH alias or user@host".into());
         }
-        if self.port == 0 || !self.root.starts_with('/') || self.root.len() > 4096 || self.root.contains('\0') {
+        if self.port == 0 || self.root.len() > 4096 || self.root.contains('\0')
+            || !(self.root == HOME || self.root.starts_with('/')) {
             return Err("Enter a valid port and an absolute Linux folder path".into());
         }
         if self.config.len() > 4096 || self.config.contains('\0') {
             return Err("Enter a valid SSH configuration file path".into());
+        }
+        if self.key.len() > 4096 || self.key.contains('\0') || self.key.starts_with('-') {
+            return Err("Enter a valid private key file path".into());
         }
         Ok(())
     }
@@ -60,10 +87,16 @@ impl Profile {
             "python3 -u -c 'import sys,hashlib; s=sys.stdin.buffer.read({}); assert hashlib.sha256(s).hexdigest()==\"{}\"; exec(compile(s,\"<loog-agent>\",\"exec\"))'",
             AGENT.len(), digest);
         let mut arguments = vec!["-T".into(), "-o".into(), "BatchMode=yes".into(),
-            "-o".into(), "StrictHostKeyChecking=yes".into(), "-o".into(), "ConnectTimeout=10".into(),
+            // A host seen for the first time is trusted and recorded, as a person typing its
+            // address expects; a host whose recorded key changed is still refused.
+            "-o".into(), "StrictHostKeyChecking=accept-new".into(), "-o".into(), "ConnectTimeout=10".into(),
             "-o".into(), "ServerAliveInterval=10".into(), "-o".into(), "ServerAliveCountMax=3".into(),
             "-p".into(), self.port.to_string()];
         if !self.config.is_empty() { arguments.extend(["-F".into(), self.config.clone()]); }
+        // Only the chosen key is offered: another key must not be tried first.
+        if !self.key.is_empty() {
+            arguments.extend(["-i".into(), self.key.clone(), "-o".into(), "IdentitiesOnly=yes".into()]);
+        }
         arguments.extend(["--".into(), self.target.clone(), bootstrap]);
         Ok(arguments)
     }
@@ -211,10 +244,32 @@ mod tests {
     use super::*;
     #[test]
     fn shell_text_never_contains_the_user_folder_and_aliases_cannot_be_options() {
-        let profile = Profile { target: "user@host".into(), port: 2222, root: "/work/';echo injected".into(), config: String::new() };
+        let profile = Profile { target: "user@host".into(), port: 2222, root: "/work/';echo injected".into(), ..Profile::default() };
         let args = profile.arguments().unwrap();
         assert!(!args.last().unwrap().contains("injected"));
         assert!(Profile { target: "-oProxyCommand=bad".into(), ..profile }.arguments().is_err());
+    }
+    #[test]
+    fn typed_hosts_split_into_target_and_port() {
+        let host = |text: &str| Profile::from_input(text).map(|profile| (profile.target, profile.port));
+        assert_eq!(host("dev-box"), Ok(("dev-box".into(), 22)));
+        assert_eq!(host(" liu@10.0.0.21:2222 "), Ok(("liu@10.0.0.21".into(), 2222)));
+        assert_eq!(host("[::1]:2200"), Ok(("[::1]".into(), 2200)));
+        assert_eq!(host("[::1]"), Ok(("[::1]".into(), 22)));
+        assert!(host("host:99999").is_err());
+        assert!(host("-oProxyCommand=x").is_err());
+        assert!(host("").is_err());
+        assert_eq!(Profile::from_input("a:2222").unwrap().label(), "a:2222");
+        assert_eq!(Profile::from_input("a").unwrap().label(), "a");
+    }
+    #[test]
+    fn a_chosen_key_is_the_only_one_offered_and_cannot_be_an_option() {
+        let profile = Profile { target: "host".into(), key: "C:/keys/id".into(), ..Profile::default() };
+        let args = profile.arguments().unwrap();
+        let at = args.iter().position(|arg| arg == "-i").unwrap();
+        assert_eq!(args[at + 1], "C:/keys/id");
+        assert!(args.contains(&"IdentitiesOnly=yes".to_owned()));
+        assert!(Profile { key: "-oProxyCommand=bad".into(), ..profile }.arguments().is_err());
     }
     #[test]
     fn frames_accept_split_utf8_and_multiple_replies_and_bound_unterminated_input() {

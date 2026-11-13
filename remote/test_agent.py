@@ -13,6 +13,11 @@ from agent import Agent, MAX_RECEIPTS
 
 
 class FilesystemTests(unittest.TestCase):
+    def test_a_lone_tilde_mounts_the_login_directory_and_nothing_else_expands(self):
+        home = os.path.realpath(os.path.expanduser("~"))
+        self.assertEqual(self.call("mount", path="~")["result"]["path"], home)
+        self.assertEqual(self.call("mount", path="~/missing")["error"]["kind"], "not_found")
+
     def test_relative_resource_paths_use_target_names_and_enforce_scope(self):
         base = os.path.join(self.directory.name, "src")
         os.mkdir(base)

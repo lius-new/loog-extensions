@@ -14,7 +14,7 @@ export const CAPABILITIES = ['documents.read', 'workspace.edit', 'workspace.file
 export const CATEGORIES = ['Themes', 'Syntax Highlighting', 'Language Services', 'Snippets', 'Linters', 'Formatters', 'Editing', 'Source control', 'Productivity', 'Other'];
 export const MAX_ICON_BYTES = 256 * 1024;
 export const MAX_DOCUMENT_BYTES = 512 * 1024;
-export const EVENTS = ['document.open', 'document.change', 'document.close', 'document.save',
+export const EVENTS = ['application.start', 'document.open', 'document.change', 'document.close', 'document.save',
   'selection.change', 'focus.change', 'root.change', 'workspace.files', 'workspace.restore', 'resource.documents'];
 
 const SEGMENT = /^[a-z0-9][a-z0-9-]*$/;

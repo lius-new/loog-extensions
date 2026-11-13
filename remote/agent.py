@@ -372,7 +372,8 @@ class Agent:
         self.next_search = 0
 
     def mount(self, path):
-        root = os.path.realpath(path)
+        # A lone "~" stands for the login directory; no other path is expanded.
+        root = os.path.realpath(os.path.expanduser("~") if path == "~" else path)
         if not os.path.isdir(root):
             raise AgentError("not_found", "workspace directory does not exist")
         for handle, existing in self.roots.items():
