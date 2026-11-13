@@ -8,6 +8,10 @@
   new hosts take `user@host[:port]`, and the private key (Default Location or
   a chosen file) is selected in the same place. Requires the matching development
   Loog palette interface.
+- A new host asks which folder to open: the palette becomes a path field starting
+  at the login folder, with the last five folders of the host and a file tree
+  from `/`. Added `Open Folder…` to change the folder of a connection. Requires
+  the matching development Loog palette interface.
 - Added independent connection routing and target process support for language
   plugins. Requires the matching development Loog workspace interface.
 - Replaced the Python agent with a static Rust agent (Linux x86_64 and aarch64)

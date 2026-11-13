@@ -51,12 +51,16 @@ pub struct Profile {
     /// A private key file to offer instead of the default keys; empty uses the defaults.
     #[serde(default)]
     pub key: String,
+    /// The folders opened on this target before, the latest first.
+    #[serde(default)]
+    pub recent: Vec<String>,
 }
-/// The remote folder that stands for the login directory of the SSH user.
+/// The remote folder that stands for the login directory of the SSH user. A target that
+/// has not had a folder opened yet carries it, and the person is asked which to open.
 pub const HOME: &str = "~";
 impl Default for Profile {
     fn default() -> Self {
-        Self { target: String::new(), port: 22, root: HOME.into(), config: String::new(), key: String::new() }
+        Self { target: String::new(), port: 22, root: HOME.into(), config: String::new(), key: String::new(), recent: Vec::new() }
     }
 }
 impl Profile {
@@ -100,7 +104,17 @@ impl Profile {
         if self.key.len() > 4096 || self.key.contains('\0') || self.key.starts_with('-') {
             return Err("Enter a valid private key file path".into());
         }
+        if self.recent.len() > crate::folders::MAX_RECENT
+            || self.recent.iter().any(|path| !path.starts_with('/') || path.len() > 4096 || path.contains('\0')) {
+            return Err("The recent folders are absolute Linux folder paths".into());
+        }
         Ok(())
+    }
+    /// Note that `folder` was opened: it leads the recent folders, once, and only so many are kept.
+    pub fn remember_folder(&mut self, folder: &str) {
+        self.recent.retain(|path| path != folder);
+        self.recent.insert(0, folder.to_owned());
+        self.recent.truncate(crate::folders::MAX_RECENT);
     }
     pub fn identity(&self) -> String {
         #[cfg(transport = "ssh")]

@@ -30,6 +30,8 @@ pub const NEW: &str = "Connect to New Host…";
 pub const NEW: &str = "Connect to Another Distribution…";
 #[cfg(transport = "docker")]
 pub const NEW: &str = "Connect to Another Container…";
+/// The words of the palette for choosing another folder of the current connection.
+pub const OPEN_FOLDER: &str = "Open Folder…";
 /// What the field asks for while the list of targets is shown.
 #[cfg(not(transport = "ssh"))]
 pub const PICK: &str = if cfg!(transport = "wsl") { "Select a distribution" } else { "Select a container" };

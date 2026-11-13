@@ -32,8 +32,19 @@ enum Step {
     Failed(Profile),
     /// One connection is being made, or has failed.
     Connecting { client: usize, profile: Profile, failed: bool },
+    /// The folder to open is being chosen from the tree.
+    Browse(Box<BrowseStep>),
     /// The actions of one connection.
     Menu(usize),
+}
+/// A connection whose Agent is ready, while the person chooses which folder it opens.
+struct BrowseStep {
+    client: usize,
+    browse: folders::Browse,
+    /// The login folder has been asked for, to start from.
+    home_pending: bool,
+    /// A folder has been chosen and is being opened.
+    opening: bool,
 }
 struct Flow {
     session: u64,
@@ -97,11 +108,48 @@ fn explain(line: String) -> String {
 
 fn view(tags: &[&str], placeholder: &str, mode: Mode, choices: Vec<Choice>, activity: Activity, note: Option<String>) -> View {
     View { tags: tags.iter().map(|tag| (*tag).to_owned()).collect(), placeholder: placeholder.into(),
-        mode, choices, activity, note: note.map(|note| explain(one_line(&note))) }
+        mode, choices, activity, note: note.map(|note| explain(one_line(&note))), text: None, selected: None }
 }
 fn choice(id: &str, title: &str, detail: Option<&str>, trailing: Option<&str>) -> Choice {
     Choice { id: id.into(), title: title.into(), detail: detail.map(Into::into), group: None,
-        trailing: trailing.map(Into::into) }
+        trailing: trailing.map(Into::into), depth: 0, expanded: None, icon: None, action: None, dim: false }
+}
+
+/// The most rows of the folder tree the palette is given; a longer tree is cut with a note.
+const MAX_TREE_ROWS: usize = 960;
+
+/// The palette view of a folder picker: the recent folders, then the tree from `/`. `text` puts
+/// that text in the field and scrolls to the folder it names.
+fn folder_view(browse: &folders::Browse, label: &str, busy: bool, text: Option<String>, scroll: bool) -> View {
+    let mut choices: Vec<Choice> = Vec::new();
+    for (id, path) in folders::recent_ids(&browse.recent) {
+        choices.push(Choice { group: Some("RECENT".into()), icon: Some(picker::Icon::Folder), ..choice(&id, &path, None, None) });
+    }
+    let rows = browse.rows();
+    let cut = rows.len() > MAX_TREE_ROWS;
+    for row in rows.into_iter().take(MAX_TREE_ROWS) {
+        choices.push(Choice {
+            group: Some("FILE TREE".into()),
+            depth: row.depth,
+            expanded: row.expanded,
+            icon: Some(if row.dir { picker::Icon::Folder } else { picker::Icon::File }),
+            action: (row.dir && !row.note).then(|| "Open this folder".to_owned()),
+            dim: row.dim,
+            ..choice(&row.id, &row.title, None, None)
+        });
+    }
+    if cut {
+        choices.push(Choice { group: Some("FILE TREE".into()), icon: Some(picker::Icon::File), dim: true,
+            ..choice("more:/", "…", Some("more rows are not shown"), None) });
+    }
+    let (activity, note) = match (&browse.error, busy || !browse.loading.is_empty()) {
+        (Some(why), _) => (Activity::Failed, Some(why.clone())),
+        (None, true) => (Activity::Busy, None),
+        (None, false) => (Activity::Idle, None),
+    };
+    let selected = (scroll || text.is_some()).then(|| browse.selected());
+    View { tags: vec![TITLE.to_owned(), label.to_owned()], placeholder: "Enter a folder path".into(),
+        mode: Mode::Browse, choices, activity, note: note.map(|note| explain(one_line(&note))), text, selected }
 }
 
 impl Connections {
@@ -330,9 +378,11 @@ impl Connections {
                     _ => self.flow.as_mut().unwrap().step = Step::Connecting { client, profile, failed },
                 }
             }
+            Step::Browse(step) => self.browse_accepted(step, accepted),
             Step::Menu(index) => {
                 self.flow.as_mut().unwrap().step = Step::Menu(index);
                 match accepted.choice.as_deref() {
+                    Some("folder") => self.change_folder(index),
                     Some("reconnect") => {
                         let profile = self.clients[index].connected.clone().unwrap_or_else(|| self.clients[index].profile.clone());
                         self.connect_in_palette(profile);
@@ -346,6 +396,132 @@ impl Connections {
                 }
             }
         }
+    }
+
+    /// Choose another folder for a connection: it is made again and asks which folder to open.
+    fn change_folder(&mut self, index: usize) {
+        let mut profile = self.clients[index].connected.clone().unwrap_or_else(|| self.clients[index].profile.clone());
+        profile.root = protocol::HOME.into();
+        let _ = self.clients[index].disconnect(false);
+        self.connect_in_palette(profile);
+    }
+
+    /// The Agent is ready and no folder is chosen yet: the palette becomes the folder picker,
+    /// which starts at the login folder.
+    fn begin_browse(&mut self, client: usize) {
+        let Some(profile) = self.clients[client].connected.clone() else { return };
+        let mut step = BrowseStep { client, browse: folders::Browse::new(profile.recent.clone()),
+            home_pending: true, opening: false };
+        if let Err(error) = self.clients[client].browse(protocol::HOME) {
+            step.browse.error = Some(error);
+            step.home_pending = false;
+        }
+        let shown = folder_view(&step.browse, &profile.label(), true, Some(String::new()), false);
+        self.show(Step::Browse(Box::new(step)), shown);
+    }
+
+    /// Ask for the folders that are open and not yet read, and draw the picker again. `text`
+    /// replaces what the field holds; `scroll` brings the folder it names into view.
+    fn refresh_browse(&mut self, text: Option<String>, scroll: bool) {
+        let Some(Flow { session, step: Step::Browse(step) }) = &mut self.flow else { return };
+        for path in step.browse.reveal() {
+            if let Err(error) = self.clients[step.client].browse(&path) {
+                step.browse.loading.remove(&path);
+                step.browse.error = Some(error);
+            }
+        }
+        let label = self.clients[step.client].connected.as_ref().map(Profile::label).unwrap_or_default();
+        let shown = folder_view(&step.browse, &label, step.opening, text, scroll);
+        if let Err(error) = picker::update(*session, &shown) { host::log(2, &format!("{TITLE}: {error}")); }
+    }
+
+    /// Take what the Agent listed since the last look, and open the folder it was asked for.
+    fn pump_browse(&mut self) {
+        let Some(Flow { step: Step::Browse(step), .. }) = &mut self.flow else { return };
+        let client = &mut self.clients[step.client];
+        let results = std::mem::take(&mut client.browsed);
+        let refused = client.mount_error.take();
+        if results.is_empty() && refused.is_none() { return; }
+        let mut text = None;
+        for (requested, result) in results {
+            if requested == protocol::HOME && step.home_pending {
+                // The login folder is where the field starts.
+                step.home_pending = false;
+                match result {
+                    Ok((canonical, listing)) => {
+                        step.browse.apply(&requested, &canonical, Ok(listing));
+                        text = Some(if canonical == "/" { canonical } else { format!("{canonical}/") });
+                    }
+                    Err(why) => {
+                        step.browse.apply(&requested, "/", Err(why));
+                        text = Some("/".to_owned());
+                    }
+                }
+                step.browse.text = text.clone().unwrap_or_default();
+            } else {
+                let canonical = result.as_ref().map_or_else(|_| requested.clone(), |(path, _)| path.clone());
+                step.browse.apply(&requested, &canonical, result.map(|(_, listing)| listing));
+            }
+        }
+        if let Some(why) = refused {
+            step.opening = false;
+            step.browse.error = Some(why);
+        }
+        let scroll = text.is_some();
+        self.refresh_browse(text, scroll);
+    }
+
+    /// Open `path` as the folder of the connection being made.
+    fn open_chosen(&mut self, path: &str) {
+        let Some(Flow { step: Step::Browse(step), .. }) = &mut self.flow else { return };
+        let path = folders::normalize(path);
+        step.browse.error = None;
+        step.opening = true;
+        if let Err(error) = self.clients[step.client].open_folder(&path) {
+            step.opening = false;
+            step.browse.error = Some(error);
+        }
+        self.refresh_browse(None, false);
+    }
+
+    /// Enter, a click or the mark on a row of the folder picker.
+    fn browse_accepted(&mut self, step: Box<BrowseStep>, accepted: Accepted) {
+        let busy = step.opening;
+        self.flow.as_mut().unwrap().step = Step::Browse(step);
+        // While a folder is being opened nothing else is chosen.
+        if busy { return; }
+        let choice = accepted.choice.as_deref();
+        match (accepted.trigger, choice) {
+            (picker::Trigger::Enter, _) => self.open_chosen(&accepted.text),
+            (picker::Trigger::Action, Some(id)) if !id.starts_with("more:") => self.open_chosen(id),
+            (picker::Trigger::Click, Some(id)) if id.starts_with("recent:") => self.open_chosen(&id["recent:".len()..]),
+            (picker::Trigger::Click, Some(id)) if !id.starts_with("more:") => {
+                let Some(Flow { step: Step::Browse(step), .. }) = &mut self.flow else { return };
+                let dir = step.browse.is_dir(id);
+                let text = step.browse.click(id, dir);
+                self.refresh_browse(Some(text), true);
+            }
+            _ => {}
+        }
+    }
+
+    /// The text of the folder picker's field changed.
+    fn typed(&mut self, input: picker::Input) {
+        let Some(Flow { session, step: Step::Browse(step) }) = &mut self.flow else { return };
+        if *session != input.session { return; }
+        step.browse.text = input.text;
+        self.refresh_browse(None, true);
+    }
+
+    /// Tab on a row of the folder picker.
+    fn completed(&mut self, accepted: Accepted) {
+        let Some(Flow { session, step: Step::Browse(step) }) = &mut self.flow else { return };
+        if *session != accepted.session { return; }
+        let Some(id) = accepted.choice.as_deref().filter(|id| !id.starts_with("more:")) else { return };
+        let id = id.strip_prefix("recent:").unwrap_or(id);
+        let text = step.browse.completion(id);
+        step.browse.text = text.clone();
+        self.refresh_browse(Some(text), true);
     }
 
     /// Start connecting while the palette stays open to show how it goes.
@@ -387,6 +563,15 @@ impl Connections {
         }
         let index = self.candidate()?;
         self.selected = index;
+        let mut profile = profile;
+        // A host typed again still has the folders opened on it before.
+        if profile.recent.is_empty() {
+            if let Some(saved) = self.saved.iter().find(|saved| saved.identity() == profile.identity()) {
+                profile.recent = saved.recent.clone();
+            }
+        }
+        // A host with no folder yet asks the person which to open; one with a folder opens it.
+        self.clients[index].choose_folder = profile.root == protocol::HOME;
         self.clients[index].profile = profile;
         if let Err(error) = self.clients[index].connect() {
             self.clients[index].fail(&error);
@@ -399,6 +584,11 @@ impl Connections {
         if self.flow.as_ref().is_none_or(|flow| flow.session != session) { return; }
         if let Some(Flow { step: Step::Connecting { client, .. }, .. }) = &self.flow {
             let client = *client;
+            if self.clients[client].scope.is_none() { let _ = self.clients[client].disconnect(false); }
+        }
+        // Leaving the folder picker ends the connection that was waiting for a folder.
+        if let Some(Flow { step: Step::Browse(step), .. }) = &self.flow {
+            let client = step.client;
             if self.clients[client].scope.is_none() { let _ = self.clients[client].disconnect(false); }
         }
         #[cfg(not(transport = "ssh"))]
@@ -418,6 +608,7 @@ impl Connections {
         let label = profile.label();
         let live = client.scope.is_some() || client.process.is_some();
         let mut choices = Vec::new();
+        if client.scope.is_some() { choices.push(choice("folder", crate::transport::OPEN_FOLDER, None, None)); }
         if !live { choices.push(choice("reconnect", "Reconnect", None, None)); }
         if live { choices.push(choice("disconnect", "Disconnect", None, None)); }
         choices.push(choice("new", crate::transport::NEW, None, None));
@@ -430,6 +621,8 @@ impl Connections {
         self.start();
         match event {
             picker::Event::Accepted(accepted) => self.accepted(accepted),
+            picker::Event::Input(input) => self.typed(input),
+            picker::Event::Complete(accepted) => self.completed(accepted),
             picker::Event::Cancelled(session) => self.cancelled(session),
             picker::Event::Entry(id) => self.entry(&id),
             #[cfg(transport = "ssh")]
@@ -484,13 +677,37 @@ impl Connections {
     }
 
     /// Follow the connection the palette is showing: leave when it connected, say why when it failed.
+    /// The folder is open: the host is remembered with it, and the palette is done.
+    fn finish(&mut self, client: usize) {
+        let canonical = self.clients[client].canonical_root.clone();
+        let mut profile = self.clients[client].connected.clone().unwrap_or_else(|| self.clients[client].profile.clone());
+        profile.root = canonical.clone();
+        profile.remember_folder(&canonical);
+        self.clients[client].connected = Some(profile.clone());
+        self.remember(profile);
+        self.close();
+    }
+
     fn sync(&mut self) {
-        if let Some(Flow { step: Step::Connecting { client, profile, failed }, .. }) = &self.flow {
-            let (client, mut profile, failed) = (*client, profile.clone(), *failed);
+        self.pump_browse();
+        if let Some(Flow { step: Step::Browse(step), .. }) = &self.flow {
+            let client = step.client;
             if self.clients[client].scope.is_some() {
-                profile.root = self.clients[client].canonical_root.clone();
-                self.remember(profile);
-                self.close();
+                self.finish(client);
+            } else if let Some(why) = self.clients[client].failure.clone() {
+                // The connection ended while a folder was being chosen.
+                let label = self.clients[client].profile.label();
+                let profile = self.clients[client].profile.clone();
+                self.note(&why, &[TITLE, &label], "Connection failed", Mode::Choose, Self::failed_choices());
+                if let Some(flow) = &mut self.flow { flow.step = Step::Connecting { client, profile, failed: true }; }
+            }
+        }
+        if let Some(Flow { step: Step::Connecting { client, profile, failed }, .. }) = &self.flow {
+            let (client, profile, failed) = (*client, profile.clone(), *failed);
+            if self.clients[client].scope.is_some() {
+                self.finish(client);
+            } else if self.clients[client].awaiting_folder && !failed {
+                self.begin_browse(client);
             } else if let (Some(why), false) = (self.clients[client].failure.clone(), failed) {
                 let label = profile.label();
                 self.note(&why, &[TITLE, &label], "Connection failed", Mode::Choose, Self::failed_choices());
@@ -514,6 +731,18 @@ impl Connections {
         if let Inbound::RunCommand(command) = &message {
             if command.command == format!("{ID}.connect") {
                 self.begin();
+                return;
+            }
+            if command.command == format!("{ID}.folder") {
+                // The menu of the current connection has the action; with none, there is nothing to change.
+                let index = self.selected;
+                if self.clients.get(index).is_some_and(|client| client.scope.is_some()) {
+                    let label = self.clients[index].profile.label();
+                    let shown = view(&[TITLE, &label], "Connecting…", Mode::Choose, vec![], Activity::Busy, None);
+                    self.open(Step::Menu(usize::MAX), shown);
+                    if self.flow.is_some() { self.change_folder(index); }
+                    self.sync();
+                }
                 return;
             }
             if command.command == format!("{ID}.disconnect") {

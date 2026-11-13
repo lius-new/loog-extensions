@@ -199,6 +199,45 @@ pub fn list(parent: &Parent, limit: usize, cursor: Option<&str>) -> Result<Value
     Ok(json!({"entries": entries, "cursor": next}))
 }
 
+/// The most entries one `browse` answers; a larger folder is cut and says so.
+pub const MAX_BROWSE: usize = 2000;
+
+/// What a folder holds, for choosing a folder to open: names and kinds only, read
+/// outside any mounted root. Nothing of a file's content or size crosses. A link is
+/// described by what it points at, and marked, so a link to a folder can be opened
+/// and a broken one is shown as a file that is not there.
+pub fn browse(path: &str, limit: usize) -> Result<Value> {
+    if path.is_empty() || path.contains('\0') || !path.starts_with('/') {
+        return Err(error("invalid_request", "enter an absolute folder path"));
+    }
+    let canonical = realpath(&normalize(Path::new(path)));
+    let reader = std::fs::read_dir(&canonical).map_err(|source| match source.kind() {
+        std::io::ErrorKind::NotFound => error("not_found", "no such folder"),
+        std::io::ErrorKind::PermissionDenied => error("permission_denied", "permission denied"),
+        _ if source.raw_os_error() == Some(libc::ENOTDIR) => error("invalid_request", "not a folder"),
+        _ => AgentError::from(source),
+    })?;
+    let mut names: Vec<Vec<u8>> = reader.filter_map(|entry| entry.ok()).map(|entry| entry.file_name().into_vec()).collect();
+    names.sort();
+    let more = names.len() > limit;
+    names.truncate(limit);
+    let mut entries = Vec::with_capacity(names.len());
+    for name in names {
+        // A name that is not UTF-8 cannot be an identity here; it is left out.
+        let Ok(text) = String::from_utf8(name.clone()) else { continue };
+        let full = canonical.join(OsString::from_vec(name));
+        let Ok(link) = std::fs::symlink_metadata(&full) else { continue };
+        let linked = link.file_type().is_symlink();
+        let kind = match if linked { std::fs::metadata(&full).ok() } else { Some(link) } {
+            Some(meta) if meta.is_dir() => "directory",
+            Some(meta) if meta.is_file() => "file",
+            _ => "other",
+        };
+        entries.push(json!({"name": text, "kind": kind, "link": linked}));
+    }
+    Ok(json!({"path": utf8(&canonical)?, "entries": entries, "more": more}))
+}
+
 pub fn read(parent: &Parent, offset: u64, limit: usize) -> Result<Value> {
     use base64::Engine;
     let (fd, before) = open_regular(parent)?;
@@ -217,4 +256,45 @@ pub fn read(parent: &Parent, offset: u64, limit: usize) -> Result<Value> {
         "eof": offset + filled as u64 >= after.st_size as u64,
         "revision": signature(&after),
         "observation": [after.st_size, mtime_ns(&after) as i64, ctime_ns(&after) as i64]}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scratch(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("loog-vfs-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn browse_names_folders_files_and_links_in_order_and_says_why_it_cannot() {
+        let dir = scratch("browse");
+        std::fs::create_dir(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("b.txt"), "x").unwrap();
+        std::os::unix::fs::symlink(dir.join("sub"), dir.join("link")).unwrap();
+        std::os::unix::fs::symlink(dir.join("missing"), dir.join("broken")).unwrap();
+        let listed = browse(dir.to_str().unwrap(), MAX_BROWSE).unwrap();
+        let rows: Vec<(String, String, bool)> = listed["entries"].as_array().unwrap().iter()
+            .map(|e| (e["name"].as_str().unwrap().into(), e["kind"].as_str().unwrap().into(), e["link"].as_bool().unwrap()))
+            .collect();
+        assert_eq!(rows, [
+            ("b.txt".into(), "file".into(), false),
+            ("broken".into(), "other".into(), true),
+            ("link".into(), "directory".into(), true),
+            ("sub".into(), "directory".into(), false),
+        ]);
+        assert!(listed["entries"][0].get("size").is_none(), "only names and kinds cross");
+        assert_eq!(listed["more"], false);
+        let cut = browse(dir.to_str().unwrap(), 2).unwrap();
+        assert_eq!((cut["entries"].as_array().unwrap().len(), cut["more"].as_bool()), (2, Some(true)));
+        let failure = |path: &str| browse(path, MAX_BROWSE).unwrap_err().kind;
+        assert_eq!(failure(dir.join("missing").to_str().unwrap()), "not_found");
+        assert_eq!(failure(dir.join("b.txt").to_str().unwrap()), "invalid_request");
+        assert_eq!(failure("relative/path"), "invalid_request");
+        assert_eq!(failure(""), "invalid_request");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

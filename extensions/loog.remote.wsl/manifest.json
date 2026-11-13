@@ -20,12 +20,14 @@
     {"kind": "event", "name": "application.start"},
     {"kind": "event", "name": "workspace.restore"},
     {"kind": "command", "id": "loog.remote.wsl.connect"},
-    {"kind": "command", "id": "loog.remote.wsl.disconnect"}
+    {"kind": "command", "id": "loog.remote.wsl.disconnect"},
+    {"kind": "command", "id": "loog.remote.wsl.folder"}
   ],
   "contributes": {
     "commands": [
       {"id": "loog.remote.wsl.connect", "title": "Remote WSL: Connect to Distribution…", "context": "window"},
-      {"id": "loog.remote.wsl.disconnect", "title": "Remote WSL: Disconnect", "context": "window"}
+      {"id": "loog.remote.wsl.disconnect", "title": "Remote WSL: Disconnect", "context": "window"},
+      {"id": "loog.remote.wsl.folder", "title": "Remote WSL: Open Folder…", "context": "window"}
     ]
   }
 }

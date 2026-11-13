@@ -4,6 +4,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 mod protocol;
 mod transport;
 mod listing;
+mod folders;
 mod manager;
 use exports::loog::extension::guest::Guest;
 use loog::extension::{host, types::*};
@@ -15,7 +16,7 @@ use serde_json::{Value, json};
 use std::{cell::RefCell, collections::{BTreeMap, VecDeque}};
 
 use transport::ID;
-enum Pending { Hello, Mount, Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
+enum Pending { Hello, Mount, Browse(String), Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
 enum Ticket { Register(u64), Mount(u64), Started { process: u64, capability: api::Capability, handle: u64 }, Other }
 struct Outgoing { id: Option<u64>, bytes: Vec<u8> }
 #[derive(Default)]
@@ -45,6 +46,15 @@ struct Client {
     heartbeat: Option<u64>,
     /// What the target has said before the agent runs: waiting for its architecture.
     boot: Option<Vec<u8>>,
+    /// The folder is to be chosen by the person, after the Agent is ready and before one is mounted.
+    choose_folder: bool,
+    /// The Agent is ready and the connection waits for a folder to be opened.
+    awaiting_folder: bool,
+    /// Why the folder that was chosen could not be opened, for the person to choose again.
+    mount_error: Option<String>,
+    /// Folders the Agent has listed since they were last taken: what was asked, what the
+    /// Agent named it, and the listing or the reason.
+    browsed: Vec<(String, Result<(String, folders::Listing), String>)>,
 }
 thread_local! { static CLIENT: RefCell<manager::Connections> = RefCell::new(manager::Connections::default()); }
 struct Extension;
@@ -110,6 +120,9 @@ impl Client {
         self.frames = Frames::default();
         self.error_text.clear();
         self.failure = None;
+        self.awaiting_folder = false;
+        self.mount_error = None;
+        self.browsed.clear();
         self.process = Some(tools::launch(program, &args)?);
         self.connected = Some(self.profile.clone());
         // The target answers with its architecture first; the agent is sent after that.
@@ -238,11 +251,35 @@ impl Client {
                 if value["protocol"] != 2 || value["platform"] != "linux" {
                     return Err("This provider requires the bundled Agent on Linux".into());
                 }
+                if self.choose_folder {
+                    // The person picks the folder; the Agent is idle until one is opened.
+                    self.awaiting_folder = true;
+                    return self.label("Choose a folder");
+                }
                 let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
                 self.send("mount", json!({"path":profile.root}), Pending::Mount)?;
             }
+            Pending::Browse(path) => {
+                self.browsed.push((path, result.map_err(|e| e.message).and_then(|value| {
+                    let canonical = value["path"].as_str().ok_or("Invalid folder listing")?.to_owned();
+                    let entries = value["entries"].as_array().ok_or("Invalid folder listing")?.iter().filter_map(|entry| {
+                        Some(folders::Entry { name: entry["name"].as_str()?.to_owned(), dir: entry["kind"] == "directory" })
+                    }).collect();
+                    Ok((canonical, folders::Listing::new(entries, value["more"].as_bool().unwrap_or(false))))
+                })));
+            }
             Pending::Mount => {
-                let value = result.map_err(|e| e.message)?;
+                // A folder the person chose may not open; the connection stays for another choice.
+                let value = match result {
+                    Ok(value) => value,
+                    Err(error) if self.choose_folder => {
+                        self.mount_error = Some(error.message);
+                        self.awaiting_folder = true;
+                        return Ok(());
+                    }
+                    Err(error) => return Err(error.message),
+                };
+                self.choose_folder = false;
                 self.agent_root = Some(value["root"].as_u64().ok_or("Invalid root handle")?);
                 self.canonical_root = value["path"].as_str().ok_or("Invalid root identity")?.into();
                 let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
@@ -405,6 +442,17 @@ impl Client {
         host::ui_update(icon, &icon_node).map_err(|e| e.message)?;
         host::ui_update(text, &entry_node("host", UiKind::Text, &target, None, foreground, None)).map_err(|e| e.message)?;
         Ok(())
+    }
+    /// Ask the Agent what a folder holds, for choosing one. The answer is in `browsed`.
+    fn browse(&mut self, path: &str) -> Result<(), String> {
+        self.send("browse", json!({"path": path}), Pending::Browse(path.to_owned()))
+    }
+    /// Open the folder the person chose, which goes on with the connection.
+    fn open_folder(&mut self, path: &str) -> Result<(), String> {
+        self.awaiting_folder = false;
+        self.mount_error = None;
+        if let Some(profile) = &mut self.connected { profile.root = path.to_owned(); }
+        self.send("mount", json!({"path": path}), Pending::Mount)
     }
     /// The status bar entry of this connection, made the first time it connects: a mark and the
     /// host, at the start of the bar's right side, before the language services. Selecting it

@@ -85,6 +85,14 @@ impl Agent {
                 "write_guarantee": "revision-check-then-atomic-replace"})),
             "ping" => return Ok(json!({})),
             "mount" => return self.mount(text(params, "path")?),
+            // Reading a folder to choose it needs no root: it is what a shell would show.
+            "browse" => {
+                let path = text(params, "path")?;
+                let wanted = if path == "~" { home().ok_or_else(|| error("not_found", "no login folder"))? } else { path.to_owned() };
+                let limit = params.get("limit").and_then(Value::as_u64).unwrap_or(vfs::MAX_BROWSE as u64)
+                    .clamp(1, vfs::MAX_BROWSE as u64) as usize;
+                return vfs::browse(&wanted, limit);
+            }
             _ => {}
         }
         let (root_id, root) = Self::root_of(&self.roots, params)?;

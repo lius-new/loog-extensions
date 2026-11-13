@@ -23,6 +23,40 @@ fn a_lone_tilde_mounts_the_login_directory_and_nothing_else_expands() {
 }
 
 #[test]
+fn browse_lists_folders_and_files_outside_any_root_and_says_why_it_cannot() {
+    let dir = workspace("browse");
+    std::fs::create_dir(dir.join("sub")).unwrap();
+    std::fs::write(dir.join("b.txt"), "x").unwrap();
+    std::os::unix::fs::symlink(dir.join("sub"), dir.join("link")).unwrap();
+    std::os::unix::fs::symlink(dir.join("missing"), dir.join("broken")).unwrap();
+    let mut session = Session::start();
+    // No folder is mounted: choosing one comes before opening one.
+    let listed = session.ok("browse", json!({"path": dir.to_str().unwrap()}));
+    assert_eq!(Path::new(listed["path"].as_str().unwrap()), std::fs::canonicalize(&dir).unwrap());
+    let entry = |name: &str| listed["entries"].as_array().unwrap().iter().find(|e| e["name"] == name).unwrap().clone();
+    let names: Vec<_> = listed["entries"].as_array().unwrap().iter().map(|e| e["name"].as_str().unwrap()).collect();
+    assert_eq!(names, ["b.txt", "broken", "link", "sub"], "in name order");
+    assert_eq!((entry("sub")["kind"].as_str(), entry("sub")["link"].as_bool()), (Some("directory"), Some(false)));
+    assert_eq!((entry("b.txt")["kind"].as_str(), entry("b.txt")["link"].as_bool()), (Some("file"), Some(false)));
+    assert_eq!((entry("link")["kind"].as_str(), entry("link")["link"].as_bool()), (Some("directory"), Some(true)));
+    assert_eq!((entry("broken")["kind"].as_str(), entry("broken")["link"].as_bool()), (Some("other"), Some(true)));
+    assert!(listed["entries"][0].get("size").is_none(), "only names and kinds cross");
+    assert_eq!(listed["more"], false);
+
+    let cut = session.ok("browse", json!({"path": dir.to_str().unwrap(), "limit": 2}));
+    assert_eq!(cut["entries"].as_array().unwrap().len(), 2);
+    assert_eq!(cut["more"], true);
+
+    // The login folder by its lone mark, nothing else expanded.
+    let home = session.ok("browse", json!({"path": "~"}));
+    assert_eq!(Path::new(home["path"].as_str().unwrap()), std::fs::canonicalize(std::env::var("HOME").unwrap()).unwrap());
+    assert_eq!(session.kind("browse", json!({"path": dir.join("missing").to_str().unwrap()})), "not_found");
+    assert_eq!(session.kind("browse", json!({"path": dir.join("b.txt").to_str().unwrap()})), "invalid_request");
+    assert_eq!(session.kind("browse", json!({"path": "relative/path"})), "invalid_request");
+    assert_eq!(session.kind("browse", json!({"path": "~/nothing-here"})), "invalid_request");
+}
+
+#[test]
 fn stat_list_and_read_use_target_names_and_stable_cursors() {
     let dir = workspace("read");
     std::fs::create_dir(dir.join("sub")).unwrap();
