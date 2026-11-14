@@ -192,7 +192,7 @@ impl Connections {
         }
         for profile in &self.saved {
             entries.push((format!("host:{}", profile.identity()), format!("{TITLE}: {}", profile.label()),
-                Some(folder(&profile.root)), SAVED.to_owned()));
+                None, SAVED.to_owned()));
         }
         if entries == self.published { return; }
         let list: Vec<Entry> = entries.iter().map(|(id, title, detail, category)| Entry {
@@ -695,7 +695,10 @@ impl Connections {
         if let Some(index) = id.strip_prefix("disconnect:").and_then(|index| index.parse::<usize>().ok()) {
             if let Some(client) = self.clients.get_mut(index) { let _ = client.disconnect(true); }
         } else if let Some(identity) = id.strip_prefix("host:") {
-            if let Some(profile) = self.saved.iter().find(|profile| profile.identity() == identity).cloned() {
+            if let Some(mut profile) = self.saved.iter().find(|profile| profile.identity() == identity).cloned() {
+                // A host that is used again asks which folder to open; the ones opened before are
+                // offered first in the picker.
+                profile.root = protocol::HOME.into();
                 // Already connected: the host is just the one to work with, and the palette is done.
                 if let Some(index) = self.active(&profile) {
                     self.selected = index;
