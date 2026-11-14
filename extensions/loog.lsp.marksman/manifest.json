@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.lsp.marksman",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
   "activation": [{ "kind": "document", "selector": { "languages": ["markdown"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],

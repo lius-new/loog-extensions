@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Rebuilt with the shared language client updated for provider-owned workspaces.
+
 ## 0.1.5
 
 - Rebuilt with the expanded shared language client configuration.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.theme.aura",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Aura Themes",
   "publisher": "Loog",
   "description": "The Aura Light, Ember and High Contrast color themes.",

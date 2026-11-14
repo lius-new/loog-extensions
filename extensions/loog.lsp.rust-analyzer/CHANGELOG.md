@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Rebuilt with the shared language client updated for provider-owned workspaces.
+
 ## 0.1.7
 
 - Rebuilt with the expanded shared language client configuration.
