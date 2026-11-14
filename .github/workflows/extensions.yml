@@ -116,3 +116,4 @@ jobs:
       publish: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     secrets:
       LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}
+      LOOG_WEBSITE_DEPLOY_HOOK: ${{ secrets.LOOG_WEBSITE_DEPLOY_HOOK }}
