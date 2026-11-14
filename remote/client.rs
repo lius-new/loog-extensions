@@ -52,12 +52,30 @@ struct Client {
     awaiting_folder: bool,
     /// Why the folder that was chosen could not be opened, for the person to choose again.
     mount_error: Option<String>,
+    /// The machine's own name, as its Agent said it, to show a host that was given by address.
+    hostname: Option<String>,
     /// How many folders the application has accepted on this connection. A folder picker
     /// that is open on a live connection is done when this goes up, not when a scope exists.
     mounts: u32,
     /// Folders the Agent has listed since they were last taken: what was asked, what the
     /// Agent named it, and the listing or the reason.
     browsed: Vec<(String, Result<(String, folders::Listing), String>)>,
+}
+/// The last part of a folder's path, which is how a folder is named; `/` for the root.
+fn folder_name(path: &str) -> &str {
+    match path.trim_end_matches('/').rsplit('/').next() {
+        Some(name) if !name.is_empty() => name,
+        _ => "/",
+    }
+}
+/// The host's name as a badge, which the application takes up to 64 bytes of.
+fn badge_of(name: &str) -> Option<String> {
+    let mut badge = String::new();
+    for c in name.chars().filter(|c| !c.is_control()) {
+        if badge.len() + c.len_utf8() > 64 { break; }
+        badge.push(c);
+    }
+    (!badge.is_empty()).then_some(badge)
 }
 thread_local! { static CLIENT: RefCell<manager::Connections> = RefCell::new(manager::Connections::default()); }
 struct Extension;
@@ -125,6 +143,7 @@ impl Client {
         self.failure = None;
         self.awaiting_folder = false;
         self.mount_error = None;
+        self.hostname = None;
         self.browsed.clear();
         self.process = Some(tools::launch(program, &args)?);
         self.connected = Some(self.profile.clone());
@@ -250,6 +269,12 @@ impl Client {
                 if value["protocol"] != 2 || value["platform"] != "linux" {
                     return Err("This provider requires the bundled Agent on Linux".into());
                 }
+                // A name the machine gives itself is shown as it is, but only if it is plain.
+                self.hostname = value["hostname"].as_str()
+                    .filter(|name| !name.is_empty() && name.chars().count() <= 64
+                        && name.chars().all(|c| !c.is_control() && !c.is_whitespace()))
+                    .map(str::to_owned);
+                self.paint_entry()?;
                 if self.choose_folder {
                     // The person picks the folder; the Agent is idle until one is opened.
                     self.awaiting_folder = true;
@@ -299,7 +324,10 @@ impl Client {
                 let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
                 self.submit(Command::Register { descriptor: api::EnvironmentDescriptor {
                     key: api::EnvironmentKey::new(ID, profile.identity())?,
-                    name: profile.target.clone(), platform: "linux".into(),
+                    // The file tree names the root by its folder and shows the host as a badge.
+                    name: folder_name(&self.canonical_root).to_owned(),
+                    badge: badge_of(&profile.host_name(self.hostname.as_deref())),
+                    platform: "linux".into(),
                     capabilities: vec![api::Capability::FilesRead, api::Capability::FilesWrite, api::Capability::Watch, api::Capability::Search, api::Capability::Process, api::Capability::Terminal],
                 } }, Ticket::Register(process))?;
             }
@@ -445,10 +473,12 @@ impl Client {
     fn paint_entry(&mut self) -> Result<(), String> {
         let (Some(entry), Some((icon, text))) = (self.status_entry, self.entry_parts) else { return Ok(()) };
         let (state, foreground, background, mark) = self.entry_look();
-        let target = self.connected.as_ref().unwrap_or(&self.profile).label();
-        let target: String = target.chars().take(40).collect();
+        let profile = self.connected.as_ref().unwrap_or(&self.profile);
+        let full = profile.label();
+        let target: String = profile.host_name(self.hostname.as_deref()).chars().take(40).collect();
         let mut root = entry_node(&self.status_id(), UiKind::Block, "", None, foreground, Some(background));
-        root.label = Some(format!("{}: {target}, {state}", transport::TITLE));
+        // What is read aloud keeps the whole target; the bar shows the short name.
+        root.label = Some(format!("{}: {full}, {state}", transport::TITLE));
         host::ui_update(entry, &root).map_err(|e| e.message)?;
         let mut icon_node = entry_node("icon", UiKind::Icon, "", Some(14.0), foreground, None);
         icon_node.icon = Some(mark.into());

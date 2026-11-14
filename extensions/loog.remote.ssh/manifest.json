@@ -21,13 +21,15 @@
     {"kind": "event", "name": "workspace.restore"},
     {"kind": "command", "id": "loog.remote.ssh.connect"},
     {"kind": "command", "id": "loog.remote.ssh.disconnect"},
-    {"kind": "command", "id": "loog.remote.ssh.folder"}
+    {"kind": "command", "id": "loog.remote.ssh.folder"},
+    {"kind": "command", "id": "loog.remote.ssh.rename"}
   ],
   "contributes": {
     "commands": [
       {"id": "loog.remote.ssh.connect", "title": "Remote SSH: Connect to New Host…", "context": "window"},
       {"id": "loog.remote.ssh.disconnect", "title": "Remote SSH: Disconnect", "context": "window"},
-      {"id": "loog.remote.ssh.folder", "title": "Remote SSH: Open Folder…", "context": "window"}
+      {"id": "loog.remote.ssh.folder", "title": "Remote SSH: Open Folder…", "context": "window"},
+      {"id": "loog.remote.ssh.rename", "title": "Remote SSH: Rename Host…", "context": "window"}
     ]
   }
 }

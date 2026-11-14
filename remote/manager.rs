@@ -21,6 +21,12 @@ enum Step {
     /// The system file dialog is open to choose a private key.
     #[cfg(transport = "ssh")]
     Key { profile: Profile, request: u64 },
+    /// The host to give another name is being chosen.
+    #[cfg(transport = "ssh")]
+    RenamePick,
+    /// The new name of the host with this identity is being typed.
+    #[cfg(transport = "ssh")]
+    Rename(String),
     /// The list of targets is being read.
     #[cfg(not(transport = "ssh"))]
     List,
@@ -191,12 +197,13 @@ impl Connections {
             }
         }
         for profile in &self.saved {
-            entries.push((format!("host:{}", profile.identity()), format!("{TITLE}: {}", profile.label()),
-                None, SAVED.to_owned()));
+            // The name the person knows it by, with the target it stands for beside it.
+            entries.push((format!("host:{}", profile.identity()), format!("{TITLE}: {}", self.display(profile)),
+                Some(profile.label()), SAVED.to_owned()));
         }
         // Typing "remove" lists these; a host that is gone from the list is not asked for again.
         for profile in &self.saved {
-            entries.push((format!("forget:{}", profile.identity()), format!("{TITLE}: Remove {}", profile.label()),
+            entries.push((format!("forget:{}", profile.identity()), format!("{TITLE}: Remove {}", self.display(profile)),
                 Some("Forget this saved host".to_owned()), SAVED.to_owned()));
         }
         if entries == self.published { return; }
@@ -206,6 +213,75 @@ impl Connections {
             Ok(()) => self.published = entries,
             Err(error) => host::log(2, &format!("{TITLE}: {error}")),
         }
+    }
+
+    /// The name a host is shown by: the one it was given, else what its target and, for a
+    /// host that is connected, its machine say.
+    fn display(&self, profile: &Profile) -> String {
+        let machine = self.clients.iter()
+            .find(|client| client.connected.as_ref().is_some_and(|active| active.identity() == profile.identity()))
+            .and_then(|client| client.hostname.as_deref());
+        profile.host_name(machine)
+    }
+
+    /// Open the palette on the choice of the host to rename.
+    #[cfg(transport = "ssh")]
+    fn begin_rename(&mut self) {
+        let choices = self.saved.iter()
+            .map(|profile| choice(&profile.identity(), &self.display(profile), Some(&profile.label()), None))
+            .collect();
+        let shown = view(&[TITLE, "Rename"], "Select a host to rename", Mode::Choose, choices, Activity::Idle, None);
+        self.open(Step::RenamePick, shown);
+    }
+
+    /// Ask for the new name of the saved host `identity`, starting from the one it has.
+    #[cfg(transport = "ssh")]
+    fn ask_name(&mut self, identity: &str) {
+        let Some(profile) = self.saved.iter().find(|profile| profile.identity() == identity).cloned() else {
+            if let Some(flow) = &mut self.flow { flow.step = Step::RenamePick; }
+            return;
+        };
+        let label = profile.label();
+        let mut shown = view(&[TITLE, "Rename", &label], "Name shown for this host; empty for the default",
+            Mode::Text, vec![], Activity::Idle, None);
+        shown.text = Some(self.display(&profile));
+        self.show(Step::Rename(identity.to_owned()), shown);
+    }
+
+    /// Give the saved host `identity` the name that was typed. Empty, or the name it has
+    /// without one, takes the name away; a name another host has is refused.
+    #[cfg(transport = "ssh")]
+    fn rename(&mut self, identity: &str, typed: &str) {
+        let Some(position) = self.saved.iter().position(|profile| profile.identity() == identity) else {
+            self.close();
+            return;
+        };
+        let label = self.saved[position].label();
+        let default = self.display(&Profile { name: String::new(), ..self.saved[position].clone() });
+        let typed = typed.trim();
+        let name = if typed.is_empty() || typed == default { String::new() } else { typed.to_owned() };
+        let shown = if name.is_empty() { default } else { name.clone() };
+        let refused = if name.is_empty() { Ok(()) } else { protocol::valid_name(&name) }.and_then(|()| {
+            if self.saved.iter().any(|other| other.identity() != identity && self.display(other) == shown) {
+                Err(format!("Another host is already named {shown}"))
+            } else { Ok(()) }
+        });
+        if let Err(error) = refused {
+            self.flow.as_mut().unwrap().step = Step::Rename(identity.to_owned());
+            self.note(&error, &[TITLE, "Rename", &label], "Name shown for this host; empty for the default", Mode::Text, vec![]);
+            return;
+        }
+        self.saved[position].name = name.clone();
+        self.store_saved();
+        // A host that is connected shows the new name at once.
+        for client in &mut self.clients {
+            if client.connected.as_ref().is_some_and(|active| active.identity() == identity) {
+                client.profile.name = name.clone();
+                if let Some(active) = &mut client.connected { active.name = name.clone(); }
+                if let Err(error) = client.paint_entry() { host::log(2, &format!("{TITLE}: {error}")); }
+            }
+        }
+        self.close();
     }
 
     /// Remember a host that connected, most recent first.
@@ -360,6 +436,13 @@ impl Connections {
             },
             #[cfg(transport = "ssh")]
             Step::Key { profile, request } => self.flow.as_mut().unwrap().step = Step::Key { profile, request },
+            #[cfg(transport = "ssh")]
+            Step::RenamePick => match accepted.choice {
+                Some(identity) => self.ask_name(&identity),
+                None => self.flow.as_mut().unwrap().step = Step::RenamePick,
+            },
+            #[cfg(transport = "ssh")]
+            Step::Rename(identity) => self.rename(&identity, &accepted.text),
             #[cfg(not(transport = "ssh"))]
             Step::List => self.flow.as_mut().unwrap().step = Step::List,
             #[cfg(not(transport = "ssh"))]
@@ -396,6 +479,12 @@ impl Connections {
                 self.flow.as_mut().unwrap().step = Step::Menu(index);
                 match accepted.choice.as_deref() {
                     Some("folder") => self.change_folder(index),
+                    #[cfg(transport = "ssh")]
+                    Some("rename") => {
+                        if let Some(identity) = self.clients[index].connected.as_ref().map(Profile::identity) {
+                            self.ask_name(&identity);
+                        }
+                    }
                     Some("reconnect") => {
                         let profile = self.clients[index].connected.clone().unwrap_or_else(|| self.clients[index].profile.clone());
                         self.connect_in_palette(profile);
@@ -607,10 +696,10 @@ impl Connections {
         self.selected = index;
         let mut profile = profile;
         // A host typed again still has the folders opened on it before.
-        if profile.recent.is_empty() {
-            if let Some(saved) = self.saved.iter().find(|saved| saved.identity() == profile.identity()) {
-                profile.recent = saved.recent.clone();
-            }
+        if let Some(saved) = self.saved.iter().find(|saved| saved.identity() == profile.identity()) {
+            if profile.recent.is_empty() { profile.recent = saved.recent.clone(); }
+            // So is the name it was given.
+            if profile.name.is_empty() { profile.name = saved.name.clone(); }
         }
         // A host with no folder yet asks the person which to open; one with a folder opens it.
         self.clients[index].choose_folder = profile.root == protocol::HOME;
@@ -657,6 +746,8 @@ impl Connections {
         let live = client.scope.is_some() || client.process.is_some();
         let mut choices = Vec::new();
         if client.scope.is_some() { choices.push(choice("folder", crate::transport::OPEN_FOLDER, None, None)); }
+        #[cfg(transport = "ssh")]
+        if client.scope.is_some() { choices.push(choice("rename", "Rename…", Some("Name shown for this host"), None)); }
         if !live { choices.push(choice("reconnect", "Reconnect", None, None)); }
         if live { choices.push(choice("disconnect", "Disconnect", None, None)); }
         choices.push(choice("new", crate::transport::NEW, None, None));
@@ -793,6 +884,12 @@ impl Connections {
         if let Inbound::RunCommand(command) = &message {
             if command.command == format!("{ID}.connect") {
                 self.begin();
+                return;
+            }
+            #[cfg(transport = "ssh")]
+            if command.command == format!("{ID}.rename") {
+                self.begin_rename();
+                self.sync();
                 return;
             }
             if command.command == format!("{ID}.folder") {

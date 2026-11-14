@@ -54,13 +54,28 @@ pub struct Profile {
     /// The folders opened on this target before, the latest first.
     #[serde(default)]
     pub recent: Vec<String>,
+    /// The name the person gave the host; empty uses the name the target itself gives.
+    #[serde(default)]
+    pub name: String,
+}
+/// The longest name a person can give a host.
+#[cfg(transport = "ssh")]
+pub const MAX_NAME: usize = 32;
+/// Whether `name` can name a host: one to [`MAX_NAME`] characters, none of them a control.
+#[cfg(transport = "ssh")]
+pub fn valid_name(name: &str) -> Result<(), String> {
+    let count = name.chars().count();
+    if count == 0 || count > MAX_NAME || name.chars().any(char::is_control) {
+        return Err(format!("A name is 1 to {MAX_NAME} characters"));
+    }
+    Ok(())
 }
 /// The remote folder that stands for the login directory of the SSH user. A target that
 /// has not had a folder opened yet carries it, and the person is asked which to open.
 pub const HOME: &str = "~";
 impl Default for Profile {
     fn default() -> Self {
-        Self { target: String::new(), port: 22, root: HOME.into(), config: String::new(), key: String::new(), recent: Vec::new() }
+        Self { target: String::new(), port: 22, root: HOME.into(), config: String::new(), key: String::new(), recent: Vec::new(), name: String::new() }
     }
 }
 impl Profile {
@@ -89,6 +104,19 @@ impl Profile {
     /// What is shown for the host: its target, with a port that is not the usual one.
     pub fn label(&self) -> String {
         if self.port == 22 || cfg!(not(transport = "ssh")) { self.target.clone() } else { format!("{}:{}", self.target, self.port) }
+    }
+    /// The host as a person names it, for the file tree and the status bar: the name they gave
+    /// it, else no user name and the name the target itself gives. A bare address says little,
+    /// so the machine's own name, when the Agent has told it, stands in for it.
+    pub fn host_name(&self, machine: Option<&str>) -> String {
+        if !self.name.is_empty() { return self.name.clone(); }
+        let host = self.target.rsplit_once('@').map_or(self.target.as_str(), |(_, host)| host);
+        let bare = host.trim_start_matches('[').trim_end_matches(']');
+        let name = match machine {
+            Some(machine) if bare.parse::<std::net::IpAddr>().is_ok() => machine,
+            _ => host,
+        };
+        if self.port == 22 || cfg!(not(transport = "ssh")) { name.to_owned() } else { format!("{name}:{}", self.port) }
     }
     pub fn validate(&self) -> Result<(), String> {
         if !crate::transport::target_valid(&self.target) {
@@ -301,6 +329,31 @@ fn malformed() -> Failure { Failure::new(FailureKind::Failed, "Invalid Agent res
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(transport = "ssh")]
+    #[test]
+    fn a_host_is_named_without_its_user_and_an_address_gives_way_to_the_machine_name() {
+        let named = |target: &str, port: u16, machine: Option<&str>| {
+            Profile { target: target.into(), port, ..Profile::default() }.host_name(machine)
+        };
+        assert_eq!(named("root@141.11.91.114", 22, Some("web-01")), "web-01");
+        assert_eq!(named("root@141.11.91.114", 22, None), "141.11.91.114", "no name to give way to");
+        assert_eq!(named("root@[::1]", 22, Some("web-01")), "web-01");
+        // An alias or a DNS name is already a name: the machine does not replace it.
+        assert_eq!(named("prod", 22, Some("web-01")), "prod");
+        assert_eq!(named("deploy@build.example.com", 2222, Some("web-01")), "build.example.com:2222");
+    }
+    #[cfg(transport = "ssh")]
+    #[test]
+    fn a_name_given_to_a_host_wins_and_must_be_short_and_plain() {
+        let host = Profile { target: "root@141.11.91.114".into(), port: 2222, name: "prod-hk".into(), ..Profile::default() };
+        assert_eq!(host.host_name(Some("web-01")), "prod-hk", "over the machine name and the port");
+        assert_eq!(Profile { name: String::new(), ..host }.host_name(Some("web-01")), "web-01:2222");
+        assert!(valid_name("prod-hk").is_ok() && valid_name("生产 香港").is_ok());
+        assert!(valid_name("").is_err() && valid_name(&"x".repeat(33)).is_err() && valid_name("a\nb").is_err());
+        // Hosts saved before names existed still load.
+        let old = r#"{"target":"root@h","port":22,"root":"~"}"#;
+        assert_eq!(serde_json::from_str::<Profile>(old).unwrap().name, "");
+    }
     #[cfg(not(transport = "ssh"))]
     #[test]
     fn the_channel_starts_with_one_fixed_argument_and_a_target_cannot_be_an_option() {

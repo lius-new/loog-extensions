@@ -79,6 +79,7 @@ impl Agent {
         for id in idle { self.retire(id); }
         match method {
             "hello" => return Ok(json!({"protocol": PROTOCOL, "platform": "linux", "machine": machine(),
+                "hostname": hostname(),
                 "lease_seconds": LEASE_SECONDS,
                 "capabilities": ["files_read", "files_write", "watch", "process", "terminal", "search"],
                 "max_chunk": vfs::MAX_CHUNK,
@@ -259,6 +260,13 @@ fn machine() -> String {
     let mut data: libc::utsname = unsafe { std::mem::zeroed() };
     unsafe { libc::uname(&mut data) };
     unsafe { std::ffi::CStr::from_ptr(data.machine.as_ptr()) }.to_string_lossy().into_owned()
+}
+
+/// The machine's own name, for showing a connection that was made by address.
+fn hostname() -> String {
+    let mut data: libc::utsname = unsafe { std::mem::zeroed() };
+    unsafe { libc::uname(&mut data) };
+    unsafe { std::ffi::CStr::from_ptr(data.nodename.as_ptr()) }.to_string_lossy().into_owned()
 }
 
 impl Agent {
