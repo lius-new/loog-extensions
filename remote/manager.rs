@@ -47,6 +47,8 @@ struct BrowseStep {
     opening: bool,
     /// The picker as last drawn, so an unchanged picker is not drawn again.
     last_view: String,
+    /// The client's mounts when the picker opened; the picker is done when it goes up.
+    mounts: u32,
 }
 struct Flow {
     session: u64,
@@ -400,12 +402,19 @@ impl Connections {
         }
     }
 
-    /// Choose another folder for a connection: it is made again and asks which folder to open.
+    /// Choose another folder for a connection. A connection that is up stays up and the picker
+    /// opens on it; one that is not is made again and asks which folder to open.
     fn change_folder(&mut self, index: usize) {
+        let client = &mut self.clients[index];
+        if client.process.is_some() && client.environment.is_some() && client.scope.is_some() && client.agent_root.is_some() {
+            client.choose_folder = true;
+            self.begin_browse(index);
+            return;
+        }
         let mut profile = self.clients[index].connected.clone().unwrap_or_else(|| self.clients[index].profile.clone());
         profile.root = protocol::HOME.into();
         let _ = self.clients[index].disconnect(false);
-        self.connect_in_palette(profile);
+        self.connect_in_palette_at(Some(index), profile);
     }
 
     /// The Agent is ready and no folder is chosen yet: the palette becomes the folder picker,
@@ -413,7 +422,7 @@ impl Connections {
     fn begin_browse(&mut self, client: usize) {
         let Some(profile) = self.clients[client].connected.clone() else { return };
         let mut step = BrowseStep { client, browse: folders::Browse::new(profile.recent.clone()),
-            home_pending: true, opening: false, last_view: String::new() };
+            home_pending: true, opening: false, last_view: String::new(), mounts: self.clients[client].mounts };
         if let Err(error) = self.clients[client].browse(protocol::HOME) {
             step.browse.error = Some(error);
             step.home_pending = false;
@@ -536,8 +545,12 @@ impl Connections {
 
     /// Start connecting while the palette stays open to show how it goes.
     fn connect_in_palette(&mut self, profile: Profile) {
+        self.connect_in_palette_at(None, profile);
+    }
+
+    fn connect_in_palette_at(&mut self, slot: Option<usize>, profile: Profile) {
         let label = profile.label();
-        match self.connect(profile.clone()) {
+        match self.connect_at(slot, profile.clone()) {
             Ok(client) => {
                 let shown = view(&[TITLE, &label], "Connecting…", Mode::Choose, vec![], Activity::Busy, None);
                 self.show(Step::Connecting { client, profile, failed: false }, shown);
@@ -566,12 +579,22 @@ impl Connections {
 
     /// Begin one connection on a free slot, or say why it cannot.
     fn connect(&mut self, profile: Profile) -> Result<usize, String> {
+        self.connect_at(None, profile)
+    }
+
+    /// [`Self::connect`], on the slot `slot` when given: a connection made again to choose
+    /// another folder keeps its own slot instead of taking a free one, which a slot that
+    /// still waits for the answer to its last request is not.
+    fn connect_at(&mut self, slot: Option<usize>, profile: Profile) -> Result<usize, String> {
         profile.validate()?;
         if let Some(index) = self.active(&profile) {
             self.selected = index;
             return Err("Already connected".into());
         }
-        let index = self.candidate()?;
+        let index = match slot {
+            Some(index) if index < self.clients.len() => index,
+            _ => self.candidate()?,
+        };
         self.selected = index;
         let mut profile = profile;
         // A host typed again still has the folders opened on it before.
@@ -599,7 +622,13 @@ impl Connections {
         // Leaving the folder picker ends the connection that was waiting for a folder.
         if let Some(Flow { step: Step::Browse(step), .. }) = &self.flow {
             let client = step.client;
-            if self.clients[client].scope.is_none() { let _ = self.clients[client].disconnect(false); }
+            if self.clients[client].scope.is_none() {
+                let _ = self.clients[client].disconnect(false);
+            } else {
+                // A connection that was up stays up with the folder it had.
+                self.clients[client].choose_folder = false;
+                self.clients[client].awaiting_folder = false;
+            }
         }
         #[cfg(not(transport = "ssh"))]
         self.stop_listing();
@@ -702,7 +731,7 @@ impl Connections {
         self.pump_browse();
         if let Some(Flow { step: Step::Browse(step), .. }) = &self.flow {
             let client = step.client;
-            if self.clients[client].scope.is_some() {
+            if self.clients[client].scope.is_some() && self.clients[client].mounts != step.mounts {
                 self.finish(client);
             } else if let Some(why) = self.clients[client].failure.clone() {
                 // The connection ended while a folder was being chosen.
@@ -789,25 +818,10 @@ impl Connections {
     }
     pub(super) fn workspace(&mut self, event: Event) {
         self.start();
-        if let Event::Restore { bookmark } = &event {
-            let result = (|| {
-                let profile: Profile = serde_json::from_str(&bookmark.state).map_err(|_| "Invalid saved connection profile".to_owned())?;
-                profile.validate()?;
-                let expected = api::ResourceRef::provided(api::EnvironmentKey::new(ID, profile.identity())?, profile.root.clone())?;
-                if expected != bookmark.resource { return Err("Saved connection identity does not match its profile".into()); }
-                if let Some(client) = self.clients.iter().find(|client| client.connected.as_ref()
-                    .is_some_and(|active| active.identity() == profile.identity())) {
-                    if client.connected.as_ref().unwrap().root != profile.root && client.canonical_root != profile.root {
-                        return Err("This environment already has another folder connected".into());
-                    }
-                    return Ok(());
-                }
-                self.connect(profile).map(|_| ())
-            })();
-            if let Err(error) = result { host::log(2, &format!("{TITLE}: {error}")); }
-            self.sync();
-            return;
-        }
+        // A connection is never made on its own when the application starts: a remote folder
+        // left in the file tree by an earlier version stays offline until the person
+        // connects again from the palette.
+        if matches!(event, Event::Restore { .. }) { return; }
         let Some(index) = self.event_owner(&event) else { return };
         if let Err(error) = self.clients[index].workspace(event) { self.clients[index].fail(&error); }
         self.sync();

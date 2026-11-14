@@ -52,6 +52,9 @@ struct Client {
     awaiting_folder: bool,
     /// Why the folder that was chosen could not be opened, for the person to choose again.
     mount_error: Option<String>,
+    /// How many folders the application has accepted on this connection. A folder picker
+    /// that is open on a live connection is done when this goes up, not when a scope exists.
+    mounts: u32,
     /// Folders the Agent has listed since they were last taken: what was asked, what the
     /// Agent named it, and the listing or the reason.
     browsed: Vec<(String, Result<(String, folders::Listing), String>)>,
@@ -133,10 +136,6 @@ impl Client {
     fn disconnect(&mut self, forget: bool) -> Result<(), String> {
         if let Some(timer) = self.heartbeat.take() { host::timer_cancel(timer); }
         self.boot = None;
-        if forget && self.scope.is_some() && let Some(profile) = &self.connected {
-            let resource = api::ResourceRef::provided(api::EnvironmentKey::new(ID, profile.identity())?, self.canonical_root.clone())?;
-            self.submit(Command::Forget { resource }, Ticket::Other)?;
-        }
         if let Some(process) = self.process.take() { host::process_kill(process); }
         let mut failure = None;
         for (_, pending) in std::mem::take(&mut self.pending) {
@@ -275,15 +274,29 @@ impl Client {
                     Err(error) if self.choose_folder => {
                         self.mount_error = Some(error.message);
                         self.awaiting_folder = true;
+                        // A live connection keeps the folder it had.
+                        if self.scope.is_some() {
+                            let kept = self.canonical_root.clone();
+                            if let Some(profile) = &mut self.connected { profile.root = kept; }
+                        }
                         return Ok(());
                     }
                     Err(error) => return Err(error.message),
                 };
                 self.choose_folder = false;
-                self.agent_root = Some(value["root"].as_u64().ok_or("Invalid root handle")?);
-                self.canonical_root = value["path"].as_str().ok_or("Invalid root identity")?.into();
-                let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
+                let root = value["root"].as_u64().ok_or("Invalid root handle")?;
+                let canonical: String = value["path"].as_str().ok_or("Invalid root identity")?.into();
                 let process = self.process.ok_or("Connection ended during handshake")?;
+                if let Some(environment) = self.environment.take() {
+                    // Another folder on a connection that stays up: the environment of the folder
+                    // it had is let go, which takes that folder out of the file tree, and the
+                    // new folder is registered below. The process and the Agent are not touched.
+                    self.scope = None;
+                    self.submit(Command::Unregister { environment }, Ticket::Other)?;
+                }
+                self.agent_root = Some(root);
+                self.canonical_root = canonical;
+                let profile = self.connected.as_ref().ok_or("Connection ended during handshake")?;
                 self.submit(Command::Register { descriptor: api::EnvironmentDescriptor {
                     key: api::EnvironmentKey::new(ID, profile.identity())?,
                     name: profile.target.clone(), platform: "linux".into(),
@@ -355,10 +368,10 @@ impl Client {
                     }
                     (Ticket::Mount(process), Reply::Scope { id }) if self.process == Some(process) => {
                         self.scope = Some(id);
+                        self.mounts += 1;
+                        // Presented for this session only: the file tree does not keep connections.
+                        // The palette lists the hosts used before.
                         self.submit(Command::Present { scope: id }, Ticket::Other)?;
-                        let mut profile = self.connected.clone().ok_or("Connection profile is unavailable")?;
-                        profile.root = self.canonical_root.clone();
-                        self.submit(Command::Remember { scope: id, state: serde_json::to_string(&profile).unwrap() }, Ticket::Other)?;
                         self.label("Connected")?;
                     }
                     _ => {}
