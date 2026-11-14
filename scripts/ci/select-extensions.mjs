@@ -21,7 +21,9 @@ export function selectExtensions(available, files, {all = false, requested = ''}
   const changed = new Set(files.filter(file => file.startsWith('extensions/')).map(file => file.split('/')[1]));
   if (files.some(file => file.startsWith('language-clients/'))) {
     for (const id of Object.keys(clients)) changed.add(id);
+    changed.add('loog.remote.ssh');
   }
+  if (files.some(file => file.startsWith('remote/'))) changed.add('loog.remote.ssh');
   return ids.filter(id => changed.has(id));
 }
 

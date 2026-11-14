@@ -4,7 +4,7 @@
   "version": "0.1.5",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
-  "activation": [{ "kind": "document", "selector": { "languages": ["json"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "activation": [{ "kind": "document", "selector": { "languages": ["json"] } }, { "kind": "event", "name": "resource.documents" }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "JSON Language Server",
   "publisher": "Loog",
   "description": "JSON and JSON with Comments completion, validation and formatting.",
@@ -25,7 +25,7 @@
     "loog": ">=0.2.0 <0.3"
   },
   "capabilities": [
-    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+    "process.execute-local", "process.execute-environment", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "requires": [
     "loog.runtime.node@^0.1.0"
@@ -37,6 +37,10 @@
     "settings": [
       { "key": "loog.lsp.vscode-langservers-extracted.configuration", "kind": "string", "default": "{\"json\":{\"validate\":{\"enable\":true}}}" },
       { "key": "loog.lsp.vscode-langservers-extracted.initialization", "kind": "string", "default": "{\"provideFormatter\":true}" },
+      { "key": "loog.lsp.vscode-langservers-extracted.environmentProgram", "kind": "string", "default": "@bundled" },
+      { "key": "loog.lsp.vscode-langservers-extracted.environmentArguments", "kind": "string", "default": "[\"--stdio\"]" },
+      { "key": "loog.lsp.vscode-langservers-extracted.environmentPython", "kind": "string", "default": "python3", "scope": "user" },
+      { "key": "loog.lsp.vscode-langservers-extracted.environmentCache", "kind": "string", "default": "", "scope": "user" },
       { "key": "loog.lsp.vscode-langservers-extracted.performance", "kind": "boolean", "default": false }
     ],
     "language_service": {

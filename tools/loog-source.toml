@@ -3,8 +3,9 @@
 # host from it, and until tools/validator.lock names a published validator the
 # production validator is built from it. When Loog changes its extension interface,
 # move this commit forward in the same change that adapts the extensions.
-# The commit must be reachable on Loog's main branch; never point it at a branch that
-# may be deleted.
+# Development PRs may pin a full commit from their paired Loog PR. Publication
+# verifies that this exact commit is on Loog's main branch. After a squash merge,
+# repin to the resulting main commit and rerun validation before publishing.
 schema = 1
 repository = "lius-new/loog"
-revision = "e05182c217537e203c75303ae6925a440870c09c"
+revision = "6ddfcac8613bd76a6c92bb18c2a1e50600d4cc7b"

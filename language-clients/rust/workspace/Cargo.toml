@@ -1,0 +1,12 @@
+[package]
+name = "loog-language-workspace"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+loog-workspace-api = { path = "../../../.work/loog-sdk/crates/workspace-api" }
+serde_json = "1"
+
+[workspace]

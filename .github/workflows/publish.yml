@@ -6,9 +6,13 @@ name: Publish
 # the index signing key; the extensions' build jobs never see it.
 on:
   workflow_call:
+    inputs:
+      publish:
+        type: boolean
+        default: false
     secrets:
       LOOG_INDEX_KEY:
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -115,7 +119,7 @@ jobs:
   publish:
     needs: [aot-corpus, aot-native]
     if: >-
-      ${{ !cancelled() && needs.aot-corpus.result == 'success' && (needs.aot-native.result == 'success' || (needs.aot-native.result == 'skipped' && needs.aot-corpus.outputs.count == '0')) }}
+      ${{ inputs.publish && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && !cancelled() && needs.aot-corpus.result == 'success' && (needs.aot-native.result == 'success' || (needs.aot-native.result == 'skipped' && needs.aot-corpus.outputs.count == '0')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -135,6 +139,23 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Read publication SDK revision
+        id: sdk
+        run: |
+          echo "repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
+          echo "revision=$(sed -n 's/^revision = "\(.*\)"$/\1/p' tools/loog-source.toml)" >> "$GITHUB_OUTPUT"
+      - name: Check out publication SDK history
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.sdk.outputs.repository }}
+          ref: main
+          fetch-depth: 0
+          path: .work/publication-sdk
+          persist-credentials: false
+      - name: Require the SDK to have landed on main before publication
+        env:
+          SDK_REVISION: ${{ steps.sdk.outputs.revision }}
+        run: git -C .work/publication-sdk merge-base --is-ancestor "$SDK_REVISION" HEAD
       - name: Download this run's completed build packages
         uses: actions/download-artifact@v4
         with:

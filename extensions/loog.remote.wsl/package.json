@@ -1,0 +1,7 @@
+{
+  "name": "build-loog-remote-wsl",
+  "private": true,
+  "type": "module",
+  "description": "Builds the plugin-owned WSL provider and embedded Linux Agent.",
+  "dependencies": {"tar": "7.5.22"}
+}

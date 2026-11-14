@@ -8,7 +8,7 @@ import {extractPackage,createPackage} from './lib/archive.mjs';
 import {packageFiles,platformOf} from './lib/intake.mjs';
 import {generateKeyPair} from './lib/sign.mjs';
 import {prepareAot} from './prepare-aot.mjs';
-const clients=['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server'];
+const clients=['loog.lsp.gopls','loog.lsp.rust-analyzer','loog.lsp.typescript-language-server','loog.lsp.vscode-langservers-extracted','loog.remote.ssh'];
 export function officialInputs(paths){return packageFiles(paths).filter(file=>clients.some(id=>path.basename(file).startsWith(id+'-')));}
 const output=value=>{if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,value+'\n');};
 export async function emitCorpus(files,destination,{compiler,work=path.join(ROOT,'.work/aot-contract')}={}){

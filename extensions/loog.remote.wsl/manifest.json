@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "loog.remote.wsl",
+  "version": "0.1.0",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "name": "Remote WSL",
+  "publisher": "Loog",
+  "description": "Open a folder of a Windows Subsystem for Linux distribution.",
+  "license": "MIT OR Apache-2.0",
+  "categories": ["Productivity"],
+  "keywords": ["WSL", "remote", "workspace"],
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {"loog": ">=0.1.10 <0.3"},
+  "capabilities": ["workspace.provide", "process.execute-tool", "storage"],
+  "activation": [
+    {"kind": "event", "name": "application.start"},
+    {"kind": "event", "name": "workspace.restore"},
+    {"kind": "command", "id": "loog.remote.wsl.connect"},
+    {"kind": "command", "id": "loog.remote.wsl.disconnect"},
+    {"kind": "command", "id": "loog.remote.wsl.folder"}
+  ],
+  "contributes": {
+    "commands": [
+      {"id": "loog.remote.wsl.connect", "title": "Remote WSL: Connect to Distribution…", "context": "window"},
+      {"id": "loog.remote.wsl.disconnect", "title": "Remote WSL: Disconnect", "context": "window"},
+      {"id": "loog.remote.wsl.folder", "title": "Remote WSL: Open Folder…", "context": "window"}
+    ]
+  }
+}

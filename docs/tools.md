@@ -47,6 +47,17 @@ It exits with 0 when Loog can import the folder. Samples are optional: with a
 sample to be colored; publishing does not ask for them. List its builds, with their
 SHA-256, in `tools/validator.lock`.
 
+The resource workspace ABI requires the matching SDK and validator. Until new
+validator binaries are published, the lock deliberately has no platform entries;
+CI builds the validator from `tools/loog-source.toml`. Local development can set
+`LOOG_EXT_VALIDATE` to a validator built from that same checkout. Do not reuse an
+older binary left in `tools/bin` for workspace components.
+
+Paired development PRs pin an immutable Loog commit and run AOT instantiation on
+all six native hosts, including the SSH and JSON components. These checks use
+ephemeral test signatures. Publication additionally requires that exact SDK commit
+to be reachable from Loog main. A squash merge requires repinning and validation.
+
 ## Signing
 
 The index is signed with Ed25519 over the exact bytes of `index.json`; the signature

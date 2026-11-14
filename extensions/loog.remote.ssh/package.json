@@ -1,0 +1,7 @@
+{
+  "name": "build-loog-remote-ssh",
+  "private": true,
+  "type": "module",
+  "description": "Builds the plugin-owned SSH provider and embedded Linux Agent.",
+  "dependencies": {"tar": "7.5.22"}
+}

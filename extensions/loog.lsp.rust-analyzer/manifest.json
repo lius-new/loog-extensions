@@ -4,7 +4,7 @@
   "version": "0.1.7",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
-  "activation": [{ "kind": "document", "selector": { "languages": ["rust"] } }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
+  "activation": [{ "kind": "document", "selector": { "languages": ["rust"] } }, { "kind": "event", "name": "resource.documents" }, { "kind": "event", "name": "workspace.files" }, { "kind": "event", "name": "document.open" }, { "kind": "event", "name": "document.change" }, { "kind": "event", "name": "document.close" }, { "kind": "event", "name": "document.save" }],
   "name": "rust-analyzer Language Server",
   "publisher": "Loog",
   "description": "The rust-analyzer language server.",
@@ -25,13 +25,17 @@
     "loog": ">=0.1.10 <0.3"
   },
   "capabilities": [
-    "process.execute-local", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
+    "process.execute-local", "process.execute-environment", "documents.read", "workspace.files.read", "workspace.files.write", "workspace.edit", "languages", "events", "settings"
   ],
   "contributes": {
     "languages": [{ "id": "loog.lsp.rust-analyzer.language", "path": "languages/rust/language.json" }],
     "settings": [
       { "key": "loog.lsp.rust-analyzer.configuration", "kind": "string", "default": "{}" },
       { "key": "loog.lsp.rust-analyzer.initialization", "kind": "string", "default": "{}" },
+      { "key": "loog.lsp.rust-analyzer.environmentProgram", "kind": "string", "default": "@bundled" },
+      { "key": "loog.lsp.rust-analyzer.environmentArguments", "kind": "string", "default": "[]" },
+      { "key": "loog.lsp.rust-analyzer.environmentPython", "kind": "string", "default": "python3", "scope": "user" },
+      { "key": "loog.lsp.rust-analyzer.environmentCache", "kind": "string", "default": "", "scope": "user" },
       { "key": "loog.lsp.rust-analyzer.performance", "kind": "boolean", "default": false }
     ],
     "language_service": {

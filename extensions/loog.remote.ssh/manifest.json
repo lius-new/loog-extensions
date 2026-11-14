@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "loog.remote.ssh",
+  "version": "0.1.0",
+  "api": "loog:extension@0.1.0",
+  "component": "extension.wasm",
+  "name": "Remote SSH",
+  "publisher": "Loog",
+  "description": "Open a Linux workspace through your SSH configuration.",
+  "license": "MIT OR Apache-2.0",
+  "categories": ["Productivity"],
+  "keywords": ["SSH", "remote", "workspace"],
+  "repository": "https://github.com/lius-new/loog-extensions",
+  "icon": "icon.svg",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "engines": {"loog": ">=0.1.10 <0.3"},
+  "capabilities": ["workspace.provide", "process.execute-tool", "storage"],
+  "activation": [
+    {"kind": "event", "name": "application.start"},
+    {"kind": "event", "name": "workspace.restore"},
+    {"kind": "command", "id": "loog.remote.ssh.connect"},
+    {"kind": "command", "id": "loog.remote.ssh.disconnect"},
+    {"kind": "command", "id": "loog.remote.ssh.folder"},
+    {"kind": "command", "id": "loog.remote.ssh.rename"}
+  ],
+  "contributes": {
+    "commands": [
+      {"id": "loog.remote.ssh.connect", "title": "Remote SSH: Connect to New Host…", "context": "window"},
+      {"id": "loog.remote.ssh.disconnect", "title": "Remote SSH: Disconnect", "context": "window"},
+      {"id": "loog.remote.ssh.folder", "title": "Remote SSH: Open Folder…", "context": "window"},
+      {"id": "loog.remote.ssh.rename", "title": "Remote SSH: Rename Host…", "context": "window"}
+    ]
+  }
+}

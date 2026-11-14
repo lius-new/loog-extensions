@@ -2,9 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {prepareSdk} from '../../scripts/lib/sdk.mjs';
 
 export function buildClient(directory, {checkOnly = false} = {}) {
-  const loog=path.resolve(process.env.LOOG_SOURCE??path.join(directory,'../../../..'));
+  const loog=prepareSdk(path.resolve(import.meta.dirname,'../..'),process.env.LOOG_SOURCE);
   // The clients say how their service is doing (loog:service/status) and what it
   // found in files that are not open (loog:service/findings); Loog draws both.
   const world=fs.existsSync(path.join(loog,'wit/loog-extension/world.wit'))?fs.readFileSync(path.join(loog,'wit/loog-extension/world.wit'),'utf8'):'';
@@ -25,13 +26,17 @@ export function buildClient(directory, {checkOnly = false} = {}) {
   return output;
 }
 
-export function clientNotices(folder,directory,{source=path.resolve(directory,'../..')}={}){
+export function clientNotices(folder,directory,{source=path.resolve(directory,'../..'),componentSource='language-clients/rust',extraCrates=[]}={}){
   const licenses=path.join(folder,'licenses');fs.mkdirSync(licenses,{recursive:true});
   for(const name of ['LICENSE-MIT','LICENSE-APACHE'])fs.copyFileSync(path.join(source,name),path.join(licenses,`loog-client-${name}`));
   const manifest=path.join(directory,'rust/Cargo.toml');
-  const metadata=JSON.parse(execFileSync('cargo',['metadata','--manifest-path',manifest,'--locked','--format-version','1','--filter-platform','wasm32-unknown-unknown'],{cwd:directory,encoding:'utf8',windowsHide:true}));
+  const packages=new Map();
+  for(const entry of [{manifest,platform:'wasm32-unknown-unknown'},...extraCrates]){
+    const metadata=JSON.parse(execFileSync('cargo',['metadata','--manifest-path',entry.manifest,'--locked','--format-version','1','--filter-platform',entry.platform],{cwd:directory,encoding:'utf8',windowsHide:true}));
+    for(const pkg of metadata.packages)packages.set(`${pkg.name}-${pkg.version}`,pkg);
+  }
   const notices=[];
-  for(const pkg of metadata.packages){
+  for(const pkg of packages.values()){
     if(path.resolve(pkg.manifest_path)===path.resolve(manifest))continue;
     const source=path.dirname(pkg.manifest_path),files=fs.readdirSync(source,{withFileTypes:true}).filter(entry=>entry.isFile()&&/^(LICENSE|COPYING|NOTICE)([.-]|$)/i.test(entry.name));
     if(!files.length)throw new Error(`Missing redistribution notices for ${pkg.name}`);
@@ -40,7 +45,7 @@ export function clientNotices(folder,directory,{source=path.resolve(directory,'.
     notices.push(`${pkg.name} ${pkg.version}: ${pkg.license??'see included license'}; ${pkg.repository??'https://crates.io/crates/'+pkg.name}`);
   }
   fs.writeFileSync(path.join(licenses,'CLIENT-NOTICES.txt'),
-    'Private Rust language client: MIT OR Apache-2.0.\nSource: https://github.com/lius-new/loog-extensions/tree/main/language-clients/rust\n'+
+    'Private Rust component: MIT OR Apache-2.0.\nSource: https://github.com/lius-new/loog-extensions/tree/main/'+componentSource+'\n'+
     'The component contains no JavaScript engine. Rust dependency licenses are included below licenses/rust.\n'+
     'Status icons: Material Design Icons by Pictogrammers (https://github.com/Templarian/MaterialDesign), Apache-2.0; see loog-client-LICENSE-APACHE.\n\n'+notices.sort().join('\n')+'\n');
 }
