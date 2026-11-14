@@ -13,6 +13,9 @@ on:
     secrets:
       LOOG_INDEX_KEY:
         required: false
+      # Cloudflare deploy hook of the website: asks it to rebuild after a publication.
+      LOOG_WEBSITE_DEPLOY_HOOK:
+        required: false
 
 permissions:
   contents: read
@@ -219,6 +222,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LOOG_INDEX_KEY: ${{ secrets.LOOG_INDEX_KEY }}
         run: node scripts/loog-ext.mjs release publish
+      - name: Ask Cloudflare to rebuild the website
+        # The website's extensions pages are built from the signed index; this makes them pick up what was just
+        # published. A failure here does not undo the publication: the website's own refresh workflow
+        # (loog-website: refresh-extensions.yml) notices a stale site and asks again.
+        continue-on-error: true
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.LOOG_WEBSITE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "No website deploy hook configured; skipping."
+            exit 0
+          fi
+          curl -fsS --retry 3 -X POST "$DEPLOY_HOOK_URL"
       - name: Keep the delivery results
         if: always()
         uses: actions/upload-artifact@v4
