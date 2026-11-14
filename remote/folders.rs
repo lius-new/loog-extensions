@@ -103,6 +103,8 @@ pub struct Browse {
     pub expanded: BTreeSet<String>,
     /// Folders asked for and not yet answered.
     pub loading: BTreeSet<String>,
+    /// The folder a click just closed while the field still names it; cleared by typing.
+    pub closed: Option<String>,
     /// Why the last attempt failed, until the next one.
     pub error: Option<String>,
     pub recent: Vec<String>,
@@ -121,7 +123,9 @@ impl Browse {
     /// Open every folder down to the one the field names, and say which of the folders
     /// that are open still have to be read. They are marked as being read.
     pub fn reveal(&mut self) -> Vec<String> {
-        for path in ancestors(&self.dir()) { self.expanded.insert(path); }
+        for path in ancestors(&self.dir()) {
+            if self.closed.as_deref() != Some(path.as_str()) { self.expanded.insert(path); }
+        }
         let wanted: Vec<String> = self.expanded.iter()
             .filter(|path| !self.loaded.contains_key(*path) && !self.loading.contains(*path))
             .cloned().collect();
@@ -151,9 +155,18 @@ impl Browse {
 
     /// A click on a folder opens or closes it and puts its path in the field; a click on a
     /// file puts its folder there. Returns the text the field is to hold.
+    ///
+    /// A folder closed by a click stays named in the field, so it stays selected, but is
+    /// remembered in `closed`: `reveal` opens every folder down to the one the field
+    /// names and would otherwise open it again.
     pub fn click(&mut self, id: &str, dir: bool) -> String {
+        self.closed = None;
         if dir {
-            if !self.expanded.remove(id) { self.expanded.insert(id.to_owned()); }
+            if id != "/" && self.expanded.remove(id) {
+                self.closed = Some(id.to_owned());
+            } else {
+                self.expanded.insert(id.to_owned());
+            }
             self.text = if id == "/" { "/".into() } else { format!("{id}/") };
         } else {
             self.text = format!("{}/", parent_of(id).trim_end_matches('/'));
@@ -178,7 +191,14 @@ impl Browse {
     }
 
     /// The row the list is to scroll to: the folder the field names.
-    pub fn selected(&self) -> String { self.dir() }
+    ///
+    /// Only a row the field names whole counts, with or without its closing `/`: `/etc`
+    /// and `/etc/` are the row `/etc`, while `/et` names none and activates nothing.
+    pub fn selected(&self) -> Option<String> {
+        if self.text.trim().is_empty() { return None; }
+        let path = normalize(self.text.trim());
+        self.rows().into_iter().any(|row| !row.note && row.id == path).then_some(path)
+    }
 
     /// The rows of the tree, from `/` down, with the folders that are open.
     pub fn rows(&self) -> Vec<Row> {
@@ -259,7 +279,11 @@ mod tests {
         assert_eq!(rows[3].expanded, Some(false), "a folder not read is closed");
         assert_eq!(rows[4].expanded, None, "a file has no arrow");
         assert!(rows[4].dim && !rows[5].dim, "a dot name is faint");
-        assert_eq!(browse.selected(), "/home/liu");
+        assert_eq!(browse.selected().as_deref(), Some("/home/liu"));
+        browse.text = "/home/liu".into();
+        assert_eq!(browse.selected().as_deref(), Some("/home/liu"), "no closing slash needed");
+        browse.text = "/home/li".into();
+        assert_eq!(browse.selected(), None, "a half-typed name is no row");
     }
 
     #[test]
@@ -271,6 +295,11 @@ mod tests {
         assert!(browse.expanded.contains("/home/liu"));
         assert_eq!(browse.click("/home/liu", true), "/home/liu/");
         assert!(!browse.expanded.contains("/home/liu"), "a second click closes it");
+        browse.reveal();
+        browse.apply("/", "/", Ok(listing(&[("home", true)])));
+        browse.apply("/home", "/home", Ok(listing(&[("liu", true)])));
+        assert!(!browse.expanded.contains("/home/liu"), "and a refresh does not reopen it");
+        assert_eq!(browse.selected().as_deref(), Some("/home/liu"), "it stays selected");
         assert_eq!(browse.click("/home/liu/todo.txt", false), "/home/liu/");
         assert_eq!(browse.click("/", true), "/");
     }

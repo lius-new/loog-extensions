@@ -45,6 +45,8 @@ struct BrowseStep {
     home_pending: bool,
     /// A folder has been chosen and is being opened.
     opening: bool,
+    /// The picker as last drawn, so an unchanged picker is not drawn again.
+    last_view: String,
 }
 struct Flow {
     session: u64,
@@ -147,7 +149,7 @@ fn folder_view(browse: &folders::Browse, label: &str, busy: bool, text: Option<S
         (None, true) => (Activity::Busy, None),
         (None, false) => (Activity::Idle, None),
     };
-    let selected = (scroll || text.is_some()).then(|| browse.selected());
+    let selected = if scroll || text.is_some() { browse.selected() } else { None };
     View { tags: vec![TITLE.to_owned(), label.to_owned()], placeholder: "Enter a folder path".into(),
         mode: Mode::Browse, choices, activity, note: note.map(|note| explain(one_line(&note))), text, selected }
 }
@@ -411,7 +413,7 @@ impl Connections {
     fn begin_browse(&mut self, client: usize) {
         let Some(profile) = self.clients[client].connected.clone() else { return };
         let mut step = BrowseStep { client, browse: folders::Browse::new(profile.recent.clone()),
-            home_pending: true, opening: false };
+            home_pending: true, opening: false, last_view: String::new() };
         if let Err(error) = self.clients[client].browse(protocol::HOME) {
             step.browse.error = Some(error);
             step.home_pending = false;
@@ -432,6 +434,10 @@ impl Connections {
         }
         let label = self.clients[step.client].connected.as_ref().map(Profile::label).unwrap_or_default();
         let shown = folder_view(&step.browse, &label, step.opening, text, scroll);
+        // Redrawing the same list makes it flicker and drops the scroll position.
+        let drawn = format!("{shown:?}");
+        if drawn == step.last_view { return; }
+        step.last_view = drawn;
         if let Err(error) = picker::update(*session, &shown) { host::log(2, &format!("{TITLE}: {error}")); }
     }
 
@@ -509,7 +515,11 @@ impl Connections {
     fn typed(&mut self, input: picker::Input) {
         let Some(Flow { session, step: Step::Browse(step) }) = &mut self.flow else { return };
         if *session != input.session { return; }
+        // The field echoing a click's own text is not typing.
+        if step.browse.text != input.text { step.browse.closed = None; }
         step.browse.text = input.text;
+        // The picker activates the folder the field names when it is in the list, and
+        // moves the list only as far as that takes.
         self.refresh_browse(None, true);
     }
 
