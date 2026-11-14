@@ -194,6 +194,11 @@ impl Connections {
             entries.push((format!("host:{}", profile.identity()), format!("{TITLE}: {}", profile.label()),
                 None, SAVED.to_owned()));
         }
+        // Typing "remove" lists these; a host that is gone from the list is not asked for again.
+        for profile in &self.saved {
+            entries.push((format!("forget:{}", profile.identity()), format!("{TITLE}: Remove {}", profile.label()),
+                Some("Forget this saved host".to_owned()), SAVED.to_owned()));
+        }
         if entries == self.published { return; }
         let list: Vec<Entry> = entries.iter().map(|(id, title, detail, category)| Entry {
             id: id.clone(), title: title.clone(), detail: detail.clone(), category: category.clone() }).collect();
@@ -208,6 +213,10 @@ impl Connections {
         self.saved.retain(|saved| saved.identity() != profile.identity());
         self.saved.insert(0, profile);
         self.saved.truncate(MAX_SAVED);
+        self.store_saved();
+    }
+
+    fn store_saved(&self) {
         if let Err(error) = host::storage_set(StorageScope::User, STORAGE_KEY, &serde_json::to_string(&self.saved).unwrap()) {
             host::log(2, &format!("{TITLE}: {}", error.message));
         }
@@ -694,14 +703,25 @@ impl Connections {
     fn entry(&mut self, id: &str) {
         if let Some(index) = id.strip_prefix("disconnect:").and_then(|index| index.parse::<usize>().ok()) {
             if let Some(client) = self.clients.get_mut(index) { let _ = client.disconnect(true); }
+        } else if let Some(identity) = id.strip_prefix("forget:") {
+            // Only the saved entry goes; a connection that is up is not touched.
+            self.saved.retain(|profile| profile.identity() != identity);
+            self.store_saved();
         } else if let Some(identity) = id.strip_prefix("host:") {
             if let Some(mut profile) = self.saved.iter().find(|profile| profile.identity() == identity).cloned() {
                 // A host that is used again asks which folder to open; the ones opened before are
                 // offered first in the picker.
                 profile.root = protocol::HOME.into();
-                // Already connected: the host is just the one to work with, and the palette is done.
+                // Already connected: it is the host to work with, and the palette opens again to
+                // choose another of its folders on the connection that is up.
                 if let Some(index) = self.active(&profile) {
                     self.selected = index;
+                    if self.clients[index].scope.is_some() {
+                        let label = profile.label();
+                        let shown = view(&[TITLE, &label], "Connecting…", Mode::Choose, vec![], Activity::Busy, None);
+                        self.open(Step::Menu(usize::MAX), shown);
+                        if self.flow.is_some() { self.change_folder(index); }
+                    }
                     return;
                 }
                 // Choosing a host closed the palette; it opens again to show how the connection goes.
