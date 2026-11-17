@@ -8,7 +8,7 @@ mod folders;
 mod manager;
 use exports::loog::extension::guest::Guest;
 use loog::extension::{host, types::*};
-use loog::palette::picker;
+use loog::palette::{picker, retained};
 use loog::workspace::{session, tools};
 use loog_workspace_api::{self as api, session::{Command, Event, Reply}};
 use protocol::{Profile, Frames};
@@ -18,7 +18,10 @@ use std::{cell::RefCell, collections::{BTreeMap, VecDeque}};
 use transport::ID;
 enum Pending { Hello, Mount, Browse(String), Operation(api::Request), AbandonedStart(api::Capability), Cleanup }
 enum Ticket { Register(u64), Mount(u64), Started { process: u64, capability: api::Capability, handle: u64 }, Other }
-struct Outgoing { id: Option<u64>, bytes: Vec<u8> }
+/// What waits to be written to the channel: a message, or the agent, which is inflated piece by
+/// piece as it is written instead of being held whole in the queue (it is megabytes).
+enum Payload { Bytes(Vec<u8>), Upload { stream: protocol::Inflater, piece: Vec<u8> } }
+struct Outgoing { id: Option<u64>, payload: Payload }
 #[derive(Default)]
 struct Client {
     index: usize,
@@ -112,23 +115,42 @@ impl Client {
         self.next = self.next.checked_add(1).ok_or("Request identity exhausted")?;
         let bytes = protocol::frame(self.next, method, params);
         // The agent upload is not a request: only requests count against the input budget.
-        let queued: usize = self.outgoing.iter().filter(|item| item.id.is_some()).map(|item| item.bytes.len()).sum();
+        let queued: usize = self.outgoing.iter().map(|item| match (&item.id, &item.payload) {
+            (Some(_), Payload::Bytes(bytes)) => bytes.len(),
+            _ => 0,
+        }).sum();
         if bytes.len() > protocol::MAX_FRAME || queued + bytes.len() > 2 * protocol::MAX_FRAME {
             return Err("Agent input budget exceeded".into());
         }
         self.pending.insert(self.next, pending);
-        self.outgoing.push_back(Outgoing { id: Some(self.next), bytes });
+        self.outgoing.push_back(Outgoing { id: Some(self.next), payload: Payload::Bytes(bytes) });
         Ok(())
     }
     fn flush(&mut self) -> Result<(), String> {
         let Some(process) = self.process else { return Ok(()) };
         // Whole-message admission: a zero means wait for process-writable, which runs another round.
         for _ in 0..1024 {
-            let Some(item) = self.outgoing.front() else { break };
-            let count = host::process_write(process, &item.bytes).map_err(|e| e.message)? as usize;
-            if count == 0 { break; }
-            if count != item.bytes.len() { return Err("Incomplete process write".into()); }
-            self.outgoing.pop_front();
+            let Some(item) = self.outgoing.front_mut() else { break };
+            let finished = match &mut item.payload {
+                Payload::Bytes(bytes) => {
+                    let count = host::process_write(process, bytes).map_err(|e| e.message)? as usize;
+                    if count == 0 { break; }
+                    if count != bytes.len() { return Err("Incomplete process write".into()); }
+                    true
+                }
+                Payload::Upload { stream, piece } => {
+                    // A piece that the channel has not yet taken stays until it does.
+                    if piece.is_empty() { stream.next(piece)?; }
+                    if piece.is_empty() { true } else {
+                        let count = host::process_write(process, piece).map_err(|e| e.message)? as usize;
+                        if count == 0 { break; }
+                        if count != piece.len() { return Err("Incomplete process write".into()); }
+                        piece.clear();
+                        false
+                    }
+                }
+            };
+            if finished { self.outgoing.pop_front(); }
         }
         Ok(())
     }
@@ -241,31 +263,33 @@ impl Client {
             let agent = protocol::agent_for(answer).ok_or_else(|| format!(
                 "This package supports Linux x86_64 and aarch64 targets, not {}", protocol::machine_name(answer)))?;
             self.label("Starting the agent")?;
-            self.outgoing.push_back(Outgoing { id: None, bytes: protocol::upload_header(agent).into_bytes() });
-            // Chunks stay far below the host's whole-message admission window.
-            for chunk in agent.bytes.chunks(32 * 1024) {
-                self.outgoing.push_back(Outgoing { id: None, bytes: chunk.to_vec() });
-            }
+            self.outgoing.push_back(Outgoing { id: None, payload: Payload::Bytes(protocol::upload_header(agent).into_bytes()) });
+            // Written in pieces far below the host's whole-message admission window; the
+            // queue holds the stream that makes them, not the agent.
+            self.outgoing.push_back(Outgoing { id: None, payload: Payload::Upload { stream: protocol::Inflater::new(agent), piece: Vec::new() } });
             self.send("hello", json!({}), Pending::Hello)?;
             for value in self.frames.push(&rest)? { self.agent(value)?; }
             return Ok(());
         }
         Ok(())
     }
-    fn agent(&mut self, value: Value) -> Result<(), String> {
-        if let Some(value) = value.get("event") {
-            let event = protocol::notification(value.clone()).map_err(|error| error.message)?;
+    /// One line from the Agent. It is split into its parts and the result is read once, into what
+    /// the request needs; no tree is built for the replies that can be large.
+    fn agent(&mut self, line: Vec<u8>) -> Result<(), String> {
+        let reply: protocol::Reply = serde_json::from_slice(&line).map_err(|_| "Invalid Agent response")?;
+        if let Some(event) = reply.event {
+            let event = protocol::notification(event).map_err(|error| error.message)?;
             if let Some(scope) = self.scope {
                 self.submit(Command::Notify { scope, event }, Ticket::Other)?;
             }
             return Ok(());
         }
-        let id = value["id"].as_u64().ok_or("Agent reply has no request id")?;
+        let id = reply.id.ok_or("Agent reply has no request id")?;
         let Some(pending) = self.pending.remove(&id) else { return Ok(()) };
-        let result = protocol::response(&value);
+        let result = reply.outcome();
         match pending {
             Pending::Hello => {
-                let value = result.map_err(|e| e.message)?;
+                let value = result.and_then(protocol::tree).map_err(|e| e.message)?;
                 if value["protocol"] != 2 || value["platform"] != "linux" {
                     return Err("This provider requires the bundled Agent on Linux".into());
                 }
@@ -284,7 +308,7 @@ impl Client {
                 self.send("mount", json!({"path":profile.root}), Pending::Mount)?;
             }
             Pending::Browse(path) => {
-                self.browsed.push((path, result.map_err(|e| e.message).and_then(|value| {
+                self.browsed.push((path, result.and_then(protocol::tree).map_err(|e| e.message).and_then(|value| {
                     let canonical = value["path"].as_str().ok_or("Invalid folder listing")?.to_owned();
                     let entries = value["entries"].as_array().ok_or("Invalid folder listing")?.iter().filter_map(|entry| {
                         Some(folders::Entry { name: entry["name"].as_str()?.to_owned(), dir: entry["kind"] == "directory" })
@@ -294,7 +318,7 @@ impl Client {
             }
             Pending::Mount => {
                 // A folder the person chose may not open; the connection stays for another choice.
-                let value = match result {
+                let value = match result.and_then(protocol::tree) {
                     Ok(value) => value,
                     Err(error) if self.choose_folder => {
                         self.mount_error = Some(error.message);
@@ -332,7 +356,7 @@ impl Client {
                 } }, Ticket::Register(process))?;
             }
             Pending::Operation(request) => {
-                let result = result.and_then(|value| protocol::answer(&request.operation, value));
+                let result = result.and_then(|raw| protocol::answer(&request.operation, raw));
                 let ticket = match &result {
                     Ok(api::Answer::Started { handle }) => Ticket::Started {
                         process: self.process.unwrap_or(0), capability: request.operation.capability(), handle: *handle },
@@ -341,7 +365,7 @@ impl Client {
                 self.submit(Command::Complete { request: request.id, result }, ticket)?;
             }
             Pending::AbandonedStart(capability) => {
-                if let Ok(value) = result {
+                if let Ok(value) = result.and_then(protocol::tree) {
                     let field = match capability {
                         api::Capability::Watch => "watch",
                         api::Capability::Search => "search",

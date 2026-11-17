@@ -13,7 +13,9 @@ then `npm ci` and `node build.mjs` in this extension folder; it builds both agen
 Everything happens in the command palette. **Remote Containers: Connect to
 Container…** lists the running containers with their image and status; choose one
 to open the folder the container starts in. A container that connected is saved:
-type `container` to list the saved ones and connect with Enter. The palette shows
+type `container` to list the saved ones and connect with Enter (the plugin does not start
+with the application; choosing a saved one, running a Remote Containers command or
+restoring a remote workspace starts it). The palette shows
 a turning mark while connecting and a cross when it failed, with **Retry** to try
 again.
 

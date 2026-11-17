@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Reduced memory: the plugin no longer starts with the application. It starts on its
+  first command, when a saved distribution is chosen in the palette, or when a remote
+  workspace is restored. The palette lists the saved distributions from the rows the plugin
+  last asked the application to keep (`loog:palette/retained`). Requires the matching
+  development Loog palette interface. The bundled Linux agents are stored compressed
+  and inflated while they are sent, and large Agent replies are read without an
+  intermediate copy.
 - Added plugin-owned WSL workspace connections from the command palette, with the
   installed distributions listed by state and version, saved distributions, a
   status bar entry and retry after a failure. Shares its Agent with Remote SSH.

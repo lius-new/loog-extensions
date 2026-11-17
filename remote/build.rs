@@ -21,8 +21,18 @@ fn main() {
             assert!(["x86_64", "aarch64"].contains(&machine));
             assert!(size > 0 && size <= 32 * 1024 * 1024 && hash.len() == 64 && hash.bytes().all(|b| b.is_ascii_hexdigit()));
             println!("cargo:rerun-if-changed={}", bundle.join(machine).display());
-            agents.push_str(&format!("    Agent {{ machine: {machine:?}, sha256: {hash:?}, bytes: include_bytes!({:?}) }},\n",
-                bundle.join(machine).to_str().expect("UTF-8 bundle path")));
+            // The agent is stored deflated and inflated piece by piece as it is sent: kept whole it
+            // would sit in the component's memory (and its compiled image) for as long as the
+            // package is running, though only one is ever used and only while connecting.
+            let raw = fs::read(bundle.join(machine)).expect("read the bundled agent");
+            assert_eq!(raw.len(), size, "agents.txt names the size of the {machine} agent");
+            let packed = miniz_oxide::deflate::compress_to_vec(&raw, 10);
+            assert!(miniz_oxide::inflate::decompress_to_vec(&packed).is_ok_and(|back| back == raw),
+                "the {machine} agent must survive compression");
+            let stored = out.join(format!("agent-{machine}.deflate"));
+            fs::write(&stored, &packed).expect("write the compressed agent");
+            agents.push_str(&format!("    Agent {{ machine: {machine:?}, sha256: {hash:?}, size: {size}, bytes: include_bytes!({:?}) }},\n",
+                stored.to_str().expect("UTF-8 output path")));
         }
     }
     agents.push_str("];\n");

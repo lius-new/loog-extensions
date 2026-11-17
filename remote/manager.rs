@@ -77,16 +77,30 @@ pub(super) struct Connections {
     started: bool,
     /// What was last published as palette entries, to publish again only a change.
     published: Vec<(String, String, Option<String>, String)>,
+    /// What was last handed to the application to keep for when this plugin is not running.
+    kept: Vec<(String, String, Option<String>, String)>,
     #[cfg(not(transport = "ssh"))]
     lister: Option<Lister>,
 }
 impl Default for Connections {
     fn default() -> Self {
         Self { clients: vec![Client::default()], selected: 0, flow: None, saved: Vec::new(),
-            started: false, published: Vec::new(),
+            started: false, published: Vec::new(), kept: Vec::new(),
             #[cfg(not(transport = "ssh"))]
             lister: None }
     }
+}
+
+/// The palette rows as the application takes them.
+fn as_entries(rows: &[(String, String, Option<String>, String)]) -> Vec<Entry> {
+    rows.iter().map(|(id, title, detail, category)| Entry {
+        id: id.clone(), title: title.clone(), detail: detail.clone(), category: category.clone() }).collect()
+}
+/// The rows worth showing when this plugin is not running: the saved hosts and the way to remove
+/// one. A connection that is up ends with the plugin, so its row is not kept. A kept row can be
+/// out of date by the time it is chosen; `entry` ignores an id it no longer knows.
+fn kept_rows(rows: &[(String, String, Option<String>, String)]) -> Vec<(String, String, Option<String>, String)> {
+    rows.iter().filter(|(id, ..)| id.starts_with("host:") || id.starts_with("forget:")).cloned().collect()
 }
 
 /// The most bytes of a note the palette takes (it takes 200); text in other scripts is wider than its length.
@@ -206,10 +220,17 @@ impl Connections {
             entries.push((format!("forget:{}", profile.identity()), format!("{TITLE}: Remove {}", self.display(profile)),
                 Some("Forget this saved host".to_owned()), SAVED.to_owned()));
         }
+        // The palette lists the saved hosts while this plugin is not running too, from what it
+        // was last handed to keep; it need not start with the application.
+        let kept = kept_rows(&entries);
+        if kept != self.kept {
+            match retained::retain(&as_entries(&kept)) {
+                Ok(()) => self.kept = kept,
+                Err(error) => host::log(2, &format!("{TITLE}: {error}")),
+            }
+        }
         if entries == self.published { return; }
-        let list: Vec<Entry> = entries.iter().map(|(id, title, detail, category)| Entry {
-            id: id.clone(), title: title.clone(), detail: detail.clone(), category: category.clone() }).collect();
-        match picker::publish_entries(&list) {
+        match picker::publish_entries(&as_entries(&entries)) {
             Ok(()) => self.published = entries,
             Err(error) => host::log(2, &format!("{TITLE}: {error}")),
         }
@@ -1019,5 +1040,16 @@ mod tests {
     fn a_remote_folder_is_named_for_the_person() {
         assert_eq!(folder(protocol::HOME), "Home folder");
         assert_eq!(folder("/srv/app"), "/srv/app");
+    }
+    #[test]
+    fn only_the_saved_hosts_are_kept_for_when_the_plugin_is_not_running() {
+        let row = |id: &str| (id.to_owned(), format!("Title {id}"), Some("detail".to_owned()), "Saved".to_owned());
+        let rows = vec![row("disconnect:0"), row("host:a"), row("host:b"), row("forget:a"), row("forget:b")];
+        let kept: Vec<String> = kept_rows(&rows).into_iter().map(|(id, ..)| id).collect();
+        assert_eq!(kept, ["host:a", "host:b", "forget:a", "forget:b"], "a live connection is not kept");
+        assert!(kept_rows(&[row("disconnect:1")]).is_empty());
+        assert!(kept_rows(&[]).is_empty());
+        let shown = as_entries(&kept_rows(&rows[1..2]));
+        assert_eq!((shown[0].id.as_str(), shown[0].category.as_str()), ("host:a", "Saved"));
     }
 }

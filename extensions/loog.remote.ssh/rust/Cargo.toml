@@ -12,10 +12,14 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 wit-bindgen = "0.57"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["raw_value"] }
 base64 = "0.22"
 sha2 = "0.10"
+miniz_oxide = { version = "0.9", default-features = false, features = ["with-alloc"] }
 loog-workspace-api = { path = "../../../.work/loog-sdk/crates/workspace-api" }
+
+[build-dependencies]
+miniz_oxide = { version = "0.9", default-features = false, features = ["with-alloc"] }
 
 [workspace]
 

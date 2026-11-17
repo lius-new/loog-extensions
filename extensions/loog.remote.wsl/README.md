@@ -13,7 +13,9 @@ then `npm ci` and `node build.mjs` in this extension folder; it builds both agen
 Everything happens in the command palette. **Remote WSL: Connect to Distribution…**
 lists the distributions that are installed, with their state and WSL version;
 choose one to open its login folder. A distribution that connected is saved: type
-`wsl` to list the saved ones and connect with Enter. The palette shows a turning
+`wsl` to list the saved ones and connect with Enter (the plugin does not start with the
+application; choosing a saved one, running a Remote WSL command or restoring a remote
+workspace starts it). The palette shows a turning
 mark while connecting and a cross when it failed, with **Retry** to try again.
 Distributions of Docker Desktop are not listed. A stopped distribution is started
 by the connection.

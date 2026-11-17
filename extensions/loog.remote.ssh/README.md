@@ -20,8 +20,11 @@ existing SDK. Both Cargo API dependencies and WIT use that checkout; the plugin
 repository does not need to live inside the Loog repository. For an installable
 development archive, run `npm ci` and `node build.mjs` in this extension folder.
 
-Everything happens in the command palette. Type `ssh` to list the saved hosts
-and choose one to connect to it. **Remote SSH: Connect to New Host…** takes an
+Everything happens in the command palette. The plugin does not start with the
+application, so it takes no memory until it is used. The palette lists the saved
+hosts from what the plugin last handed it to keep: type `ssh` and choose one to
+connect to it, which starts the plugin. It also starts when a Remote SSH command is
+run or a remote workspace is restored. **Remote SSH: Connect to New Host…** takes an
 SSH alias or `user@host`, with `:port` for a port that is not 22, then asks how to
 select the private key: **Default Location** (the keys in `~/.ssh` and those named
 in the SSH configuration, preselected) or **Choose Key File…**, which opens the

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Reduced memory: the plugin no longer starts with the application. It starts on its
+  first command, when a saved host is chosen in the palette, or when a remote
+  workspace is restored. The palette lists the saved hosts from the rows the plugin
+  last asked the application to keep (`loog:palette/retained`). Requires the matching
+  development Loog palette interface. The bundled Linux agents are stored compressed
+  and inflated while they are sent, and large Agent replies are read without an
+  intermediate copy.
 - Added plugin-owned SSH workspace connections with native file editing,
   revision-aware saves, monitoring, recovery and terminals.
 - Moved connection into the command palette: saved hosts are listed by name,
