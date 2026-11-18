@@ -1,14 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
+- Requires Loog 0.2.310 or newer for the retained command palette entries and
+  workspace interfaces used by this release.
 - Reduced memory: the plugin no longer starts with the application. It starts on its
   first command, when a saved host is chosen in the palette, or when a remote
   workspace is restored. The palette lists the saved hosts from the rows the plugin
-  last asked the application to keep (`loog:palette/retained`). Requires the matching
-  development Loog palette interface. The bundled Linux agents are stored compressed
-  and inflated while they are sent, and large Agent replies are read without an
-  intermediate copy.
+  last asked the application to keep (`loog:palette/retained`). The bundled Linux
+  agents are stored compressed and inflated while they are sent, and large Agent
+  replies are read without an intermediate copy.
+
+## 0.1.0
+
 - Added plugin-owned SSH workspace connections with native file editing,
   revision-aware saves, monitoring, recovery and terminals.
 - Moved connection into the command palette: saved hosts are listed by name,
@@ -24,6 +28,3 @@
 - Replaced the Python agent with a static Rust agent (Linux x86_64 and aarch64)
   with search built in. The target now needs only a POSIX shell: Python is no
   longer required, and nothing remains installed after the connection ends.
-
-This development package has not been published. See README.md for verified
-behavior and current limitations.

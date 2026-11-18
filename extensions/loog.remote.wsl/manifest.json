@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "loog.remote.wsl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "api": "loog:extension@0.1.0",
   "component": "extension.wasm",
   "name": "Remote WSL",
@@ -14,7 +14,7 @@
   "icon": "icon.svg",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
-  "engines": {"loog": ">=0.1.10 <0.3"},
+  "engines": {"loog": ">=0.2.310 <0.3"},
   "capabilities": ["workspace.provide", "process.execute-tool", "storage"],
   "activation": [
     {"kind": "event", "name": "workspace.restore"},
