@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Declared Markdown hover support so hover text keeps code blocks and structure.
+
 ## 0.1.3
 
 - Rebuilt with the shared language client updated for provider-owned workspaces.
