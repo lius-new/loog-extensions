@@ -7,7 +7,11 @@
   },
   "textDocument": {
     "hover": {
-      "dynamicRegistration": true
+      "dynamicRegistration": true,
+      "contentFormat": [
+        "markdown",
+        "plaintext"
+      ]
     },
     "definition": {
       "dynamicRegistration": true,
