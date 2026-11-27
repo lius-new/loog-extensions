@@ -8,4 +8,4 @@
 # repin to the resulting main commit and rerun validation before publishing.
 schema = 1
 repository = "lius-new/loog"
-revision = "d67945b8d496bb19c2fde57f6e19ae1a0a6f619a"
+revision = "d38cfa9b15114bf11ae9ff0ec06285a598c7f14d"

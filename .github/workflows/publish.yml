@@ -158,7 +158,15 @@ jobs:
       - name: Require the SDK to have landed on main before publication
         env:
           SDK_REVISION: ${{ steps.sdk.outputs.revision }}
-        run: git -C .work/publication-sdk merge-base --is-ancestor "$SDK_REVISION" HEAD
+        run: |
+          if ! git -C .work/publication-sdk cat-file -e "$SDK_REVISION^{commit}"; then
+            echo "::error file=tools/loog-source.toml::Pinned SDK commit $SDK_REVISION is missing from Loog main history. Repin to the corresponding main commit after a squash merge or history rewrite, then rerun validation."
+            exit 1
+          fi
+          if ! git -C .work/publication-sdk merge-base --is-ancestor "$SDK_REVISION" HEAD; then
+            echo "::error file=tools/loog-source.toml::Pinned SDK commit $SDK_REVISION has not landed on Loog main. Merge the matching Loog changes and repin before publishing."
+            exit 1
+          fi
       - name: Download this run's completed build packages
         uses: actions/download-artifact@v4
         with:
